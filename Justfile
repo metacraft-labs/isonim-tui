@@ -24,7 +24,7 @@ nim-flags := "--styleCheck:usages --styleCheck:error"
 
 # The ordered list of test files. Adding a new test_*.nim here gates it
 # on CI.
-tests := "tests/test_renderer_concept_conformance.nim tests/test_threadvar_id_isolation.nim tests/test_strip_diff.nim tests/test_screenbuffer_diff_empty.nim tests/test_repo_requirements_envrc.nim tests/test_repo_requirements_agents_md_symlinks.nim tests/test_repo_requirements_justfile_recipes.nim tests/test_repo_requirements_ci_yaml.nim tests/test_repo_requirements_flake.nim"
+tests := "tests/test_renderer_concept_conformance.nim tests/test_threadvar_id_isolation.nim tests/test_strip_diff.nim tests/test_screenbuffer_diff_empty.nim tests/test_repo_requirements_envrc.nim tests/test_repo_requirements_agents_md_symlinks.nim tests/test_repo_requirements_justfile_recipes.nim tests/test_repo_requirements_ci_yaml.nim tests/test_repo_requirements_flake.nim tests/test_grapheme_cluster_corpus.nim tests/test_grapheme_width_emoji_zwj.nim tests/test_sgr_minimal_transition.nim tests/test_sgr_truecolor.nim tests/test_content_word_wrap_grapheme_aware.nim tests/test_ambiguous_width_default_narrow.nim tests/test_content_basics.nim"
 
 # --- Default targets (per repo-requirements.md) ---
 

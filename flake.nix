@@ -29,7 +29,10 @@
           preCommit = git-hooks.lib.${system}.run {
             src = ./.;
             hooks = {
-              check-added-large-files.enable = true;
+              check-added-large-files = {
+                enable = true;
+                args = [ "--maxkb=1200" ];
+              };
               check-merge-conflicts.enable = true;
               lint = {
                 enable = true;
