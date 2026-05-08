@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="224" viewBox="0 0 640 224" font-family="monospace" font-size="16">
+  <text id="t-0-0" x="0" y="14" style="fill:currentColor">┌</text>
+  <text id="t-0-1" x="8" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-2" x="16" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-3" x="24" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-4" x="32" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-5" x="40" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-6" x="48" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-7" x="56" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-8" x="64" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-9" x="72" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-10" x="80" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-11" x="88" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-12" x="96" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-13" x="104" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-14" x="112" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-15" x="120" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-16" x="128" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-17" x="136" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-18" x="144" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-19" x="152" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-20" x="160" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-21" x="168" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-22" x="176" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-23" x="184" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-24" x="192" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-25" x="200" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-26" x="208" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-27" x="216" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-28" x="224" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-29" x="232" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-30" x="240" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-31" x="248" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-32" x="256" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-33" x="264" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-34" x="272" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-35" x="280" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-36" x="288" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-37" x="296" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-38" x="304" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-39" x="312" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-40" x="320" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-41" x="328" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-42" x="336" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-43" x="344" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-44" x="352" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-45" x="360" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-46" x="368" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-47" x="376" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-48" x="384" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-49" x="392" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-50" x="400" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-51" x="408" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-52" x="416" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-53" x="424" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-54" x="432" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-55" x="440" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-56" x="448" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-57" x="456" y="14" style="fill:currentColor">┐</text>
+  <text id="t-1-0" x="0" y="30" style="fill:currentColor">│</text>
+  <text id="t-1-5" x="40" y="30" style="fill:currentColor">l</text>
+  <text id="t-1-6" x="48" y="30" style="fill:currentColor">a</text>
+  <text id="t-1-7" x="56" y="30" style="fill:currentColor">n</text>
+  <text id="t-1-8" x="64" y="30" style="fill:currentColor">e</text>
+  <text id="t-1-11" x="88" y="30" style="fill:currentColor">s</text>
+  <text id="t-1-12" x="96" y="30" style="fill:currentColor">w</text>
+  <text id="t-1-13" x="104" y="30" style="fill:currentColor">i</text>
+  <text id="t-1-14" x="112" y="30" style="fill:currentColor">m</text>
+  <text id="t-1-15" x="120" y="30" style="fill:currentColor">m</text>
+  <text id="t-1-16" x="128" y="30" style="fill:currentColor">e</text>
+  <text id="t-1-17" x="136" y="30" style="fill:currentColor">r</text>
+  <text id="t-1-34" x="272" y="30" style="fill:currentColor">c</text>
+  <text id="t-1-35" x="280" y="30" style="fill:currentColor">o</text>
+  <text id="t-1-36" x="288" y="30" style="fill:currentColor">u</text>
+  <text id="t-1-37" x="296" y="30" style="fill:currentColor">n</text>
+  <text id="t-1-38" x="304" y="30" style="fill:currentColor">t</text>
+  <text id="t-1-39" x="312" y="30" style="fill:currentColor">r</text>
+  <text id="t-1-40" x="320" y="30" style="fill:currentColor">y</text>
+  <text id="t-1-51" x="408" y="30" style="fill:currentColor">t</text>
+  <text id="t-1-52" x="416" y="30" style="fill:currentColor">i</text>
+  <text id="t-1-53" x="424" y="30" style="fill:currentColor">m</text>
+  <text id="t-1-54" x="432" y="30" style="fill:currentColor">e</text>
+  <text id="t-1-57" x="456" y="30" style="fill:currentColor">│</text>
+  <text id="t-2-0" x="0" y="46" style="fill:currentColor">│</text>
+  <text id="t-2-1" x="8" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-2" x="16" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-3" x="24" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-4" x="32" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-5" x="40" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-6" x="48" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-7" x="56" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-8" x="64" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-9" x="72" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-10" x="80" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-11" x="88" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-12" x="96" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-13" x="104" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-14" x="112" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-15" x="120" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-16" x="128" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-17" x="136" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-18" x="144" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-19" x="152" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-20" x="160" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-21" x="168" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-22" x="176" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-23" x="184" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-24" x="192" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-25" x="200" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-26" x="208" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-27" x="216" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-28" x="224" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-29" x="232" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-30" x="240" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-31" x="248" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-32" x="256" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-33" x="264" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-34" x="272" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-35" x="280" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-36" x="288" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-37" x="296" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-38" x="304" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-39" x="312" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-40" x="320" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-41" x="328" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-42" x="336" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-43" x="344" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-44" x="352" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-45" x="360" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-46" x="368" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-47" x="376" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-48" x="384" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-49" x="392" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-50" x="400" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-51" x="408" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-52" x="416" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-53" x="424" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-54" x="432" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-55" x="440" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-56" x="448" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-57" x="456" y="46" style="fill:currentColor">│</text>
+  <text id="t-3-0" x="0" y="62" style="fill:currentColor">│</text>
+  <text id="t-3-1" x="8" y="62" style="fill:currentColor">0</text>
+  <text id="t-3-5" x="40" y="62" style="fill:currentColor">5</text>
+  <text id="t-3-11" x="88" y="62" style="fill:currentColor">C</text>
+  <text id="t-3-12" x="96" y="62" style="fill:currentColor">h</text>
+  <text id="t-3-13" x="104" y="62" style="fill:currentColor">a</text>
+  <text id="t-3-14" x="112" y="62" style="fill:currentColor">d</text>
+  <text id="t-3-16" x="128" y="62" style="fill:currentColor">l</text>
+  <text id="t-3-17" x="136" y="62" style="fill:currentColor">e</text>
+  <text id="t-3-19" x="152" y="62" style="fill:currentColor">C</text>
+  <text id="t-3-20" x="160" y="62" style="fill:currentColor">l</text>
+  <text id="t-3-21" x="168" y="62" style="fill:currentColor">o</text>
+  <text id="t-3-22" x="176" y="62" style="fill:currentColor">s</text>
+  <text id="t-3-34" x="272" y="62" style="fill:currentColor">S</text>
+  <text id="t-3-35" x="280" y="62" style="fill:currentColor">o</text>
+  <text id="t-3-36" x="288" y="62" style="fill:currentColor">u</text>
+  <text id="t-3-37" x="296" y="62" style="fill:currentColor">t</text>
+  <text id="t-3-38" x="304" y="62" style="fill:currentColor">h</text>
+  <text id="t-3-40" x="320" y="62" style="fill:currentColor">A</text>
+  <text id="t-3-41" x="328" y="62" style="fill:currentColor">f</text>
+  <text id="t-3-42" x="336" y="62" style="fill:currentColor">r</text>
+  <text id="t-3-43" x="344" y="62" style="fill:currentColor">i</text>
+  <text id="t-3-44" x="352" y="62" style="fill:currentColor">c</text>
+  <text id="t-3-45" x="360" y="62" style="fill:currentColor">a</text>
+  <text id="t-3-51" x="408" y="62" style="fill:currentColor">5</text>
+  <text id="t-3-52" x="416" y="62" style="fill:currentColor">1</text>
+  <text id="t-3-53" x="424" y="62" style="fill:currentColor">.</text>
+  <text id="t-3-54" x="432" y="62" style="fill:currentColor">1</text>
+  <text id="t-3-55" x="440" y="62" style="fill:currentColor">4</text>
+  <text id="t-3-57" x="456" y="62" style="fill:currentColor">│</text>
+  <text id="t-4-0" x="0" y="78" style="fill:currentColor">│</text>
+  <text id="t-4-1" x="8" y="78" style="fill:currentColor">1</text>
+  <text id="t-4-5" x="40" y="78" style="fill:currentColor">4</text>
+  <text id="t-4-11" x="88" y="78" style="fill:currentColor">J</text>
+  <text id="t-4-12" x="96" y="78" style="fill:currentColor">o</text>
+  <text id="t-4-13" x="104" y="78" style="fill:currentColor">s</text>
+  <text id="t-4-14" x="112" y="78" style="fill:currentColor">e</text>
+  <text id="t-4-15" x="120" y="78" style="fill:currentColor">p</text>
+  <text id="t-4-16" x="128" y="78" style="fill:currentColor">h</text>
+  <text id="t-4-18" x="144" y="78" style="fill:currentColor">S</text>
+  <text id="t-4-19" x="152" y="78" style="fill:currentColor">c</text>
+  <text id="t-4-20" x="160" y="78" style="fill:currentColor">h</text>
+  <text id="t-4-21" x="168" y="78" style="fill:currentColor">o</text>
+  <text id="t-4-22" x="176" y="78" style="fill:currentColor">o</text>
+  <text id="t-4-23" x="184" y="78" style="fill:currentColor">l</text>
+  <text id="t-4-24" x="192" y="78" style="fill:currentColor">i</text>
+  <text id="t-4-25" x="200" y="78" style="fill:currentColor">n</text>
+  <text id="t-4-26" x="208" y="78" style="fill:currentColor">g</text>
+  <text id="t-4-34" x="272" y="78" style="fill:currentColor">S</text>
+  <text id="t-4-35" x="280" y="78" style="fill:currentColor">i</text>
+  <text id="t-4-36" x="288" y="78" style="fill:currentColor">n</text>
+  <text id="t-4-37" x="296" y="78" style="fill:currentColor">g</text>
+  <text id="t-4-38" x="304" y="78" style="fill:currentColor">a</text>
+  <text id="t-4-39" x="312" y="78" style="fill:currentColor">p</text>
+  <text id="t-4-40" x="320" y="78" style="fill:currentColor">o</text>
+  <text id="t-4-41" x="328" y="78" style="fill:currentColor">r</text>
+  <text id="t-4-42" x="336" y="78" style="fill:currentColor">e</text>
+  <text id="t-4-51" x="408" y="78" style="fill:currentColor">5</text>
+  <text id="t-4-52" x="416" y="78" style="fill:currentColor">0</text>
+  <text id="t-4-53" x="424" y="78" style="fill:currentColor">.</text>
+  <text id="t-4-54" x="432" y="78" style="fill:currentColor">3</text>
+  <text id="t-4-55" x="440" y="78" style="fill:currentColor">9</text>
+  <text id="t-4-57" x="456" y="78" style="fill:currentColor">│</text>
+  <text id="t-5-0" x="0" y="94" style="fill:currentColor">│</text>
+  <text id="t-5-1" x="8" y="94" style="fill:currentColor">2</text>
+  <text id="t-5-5" x="40" y="94" style="fill:currentColor">2</text>
+  <text id="t-5-11" x="88" y="94" style="fill:currentColor">M</text>
+  <text id="t-5-12" x="96" y="94" style="fill:currentColor">i</text>
+  <text id="t-5-13" x="104" y="94" style="fill:currentColor">c</text>
+  <text id="t-5-14" x="112" y="94" style="fill:currentColor">h</text>
+  <text id="t-5-15" x="120" y="94" style="fill:currentColor">a</text>
+  <text id="t-5-16" x="128" y="94" style="fill:currentColor">e</text>
+  <text id="t-5-17" x="136" y="94" style="fill:currentColor">l</text>
+  <text id="t-5-19" x="152" y="94" style="fill:currentColor">P</text>
+  <text id="t-5-20" x="160" y="94" style="fill:currentColor">h</text>
+  <text id="t-5-21" x="168" y="94" style="fill:currentColor">e</text>
+  <text id="t-5-22" x="176" y="94" style="fill:currentColor">l</text>
+  <text id="t-5-23" x="184" y="94" style="fill:currentColor">p</text>
+  <text id="t-5-24" x="192" y="94" style="fill:currentColor">s</text>
+  <text id="t-5-34" x="272" y="94" style="fill:currentColor">U</text>
+  <text id="t-5-35" x="280" y="94" style="fill:currentColor">n</text>
+  <text id="t-5-36" x="288" y="94" style="fill:currentColor">i</text>
+  <text id="t-5-37" x="296" y="94" style="fill:currentColor">t</text>
+  <text id="t-5-38" x="304" y="94" style="fill:currentColor">e</text>
+  <text id="t-5-39" x="312" y="94" style="fill:currentColor">d</text>
+  <text id="t-5-41" x="328" y="94" style="fill:currentColor">S</text>
+  <text id="t-5-42" x="336" y="94" style="fill:currentColor">t</text>
+  <text id="t-5-43" x="344" y="94" style="fill:currentColor">a</text>
+  <text id="t-5-44" x="352" y="94" style="fill:currentColor">t</text>
+  <text id="t-5-45" x="360" y="94" style="fill:currentColor">e</text>
+  <text id="t-5-46" x="368" y="94" style="fill:currentColor">s</text>
+  <text id="t-5-51" x="408" y="94" style="fill:currentColor">5</text>
+  <text id="t-5-52" x="416" y="94" style="fill:currentColor">1</text>
+  <text id="t-5-53" x="424" y="94" style="fill:currentColor">.</text>
+  <text id="t-5-54" x="432" y="94" style="fill:currentColor">1</text>
+  <text id="t-5-55" x="440" y="94" style="fill:currentColor">4</text>
+  <text id="t-5-57" x="456" y="94" style="fill:currentColor">│</text>
+  <text id="t-6-0" x="0" y="110" style="fill:currentColor">│</text>
+  <text id="t-6-1" x="8" y="110" style="fill:currentColor">3</text>
+  <text id="t-6-5" x="40" y="110" style="fill:currentColor">6</text>
+  <text id="t-6-11" x="88" y="110" style="fill:currentColor">L</text>
+  <text id="t-6-12" x="96" y="110" style="fill:currentColor">á</text>
+  <text id="t-6-13" x="104" y="110" style="fill:currentColor">s</text>
+  <text id="t-6-14" x="112" y="110" style="fill:currentColor">z</text>
+  <text id="t-6-15" x="120" y="110" style="fill:currentColor">l</text>
+  <text id="t-6-16" x="128" y="110" style="fill:currentColor">ó</text>
+  <text id="t-6-18" x="144" y="110" style="fill:currentColor">C</text>
+  <text id="t-6-19" x="152" y="110" style="fill:currentColor">s</text>
+  <text id="t-6-20" x="160" y="110" style="fill:currentColor">e</text>
+  <text id="t-6-21" x="168" y="110" style="fill:currentColor">h</text>
+  <text id="t-6-34" x="272" y="110" style="fill:currentColor">H</text>
+  <text id="t-6-35" x="280" y="110" style="fill:currentColor">u</text>
+  <text id="t-6-36" x="288" y="110" style="fill:currentColor">n</text>
+  <text id="t-6-37" x="296" y="110" style="fill:currentColor">g</text>
+  <text id="t-6-38" x="304" y="110" style="fill:currentColor">a</text>
+  <text id="t-6-39" x="312" y="110" style="fill:currentColor">r</text>
+  <text id="t-6-40" x="320" y="110" style="fill:currentColor">y</text>
+  <text id="t-6-51" x="408" y="110" style="fill:currentColor">5</text>
+  <text id="t-6-52" x="416" y="110" style="fill:currentColor">1</text>
+  <text id="t-6-53" x="424" y="110" style="fill:currentColor">.</text>
+  <text id="t-6-54" x="432" y="110" style="fill:currentColor">1</text>
+  <text id="t-6-55" x="440" y="110" style="fill:currentColor">4</text>
+  <text id="t-6-57" x="456" y="110" style="fill:currentColor">│</text>
+  <text id="t-7-0" x="0" y="126" style="fill:currentColor">│</text>
+  <text id="t-7-1" x="8" y="126" style="fill:currentColor">4</text>
+  <text id="t-7-5" x="40" y="126" style="fill:currentColor">3</text>
+  <text id="t-7-11" x="88" y="126" style="fill:currentColor">L</text>
+  <text id="t-7-12" x="96" y="126" style="fill:currentColor">i</text>
+  <text id="t-7-14" x="112" y="126" style="fill:currentColor">Z</text>
+  <text id="t-7-15" x="120" y="126" style="fill:currentColor">h</text>
+  <text id="t-7-16" x="128" y="126" style="fill:currentColor">u</text>
+  <text id="t-7-17" x="136" y="126" style="fill:currentColor">h</text>
+  <text id="t-7-18" x="144" y="126" style="fill:currentColor">a</text>
+  <text id="t-7-19" x="152" y="126" style="fill:currentColor">o</text>
+  <text id="t-7-34" x="272" y="126" style="fill:currentColor">C</text>
+  <text id="t-7-35" x="280" y="126" style="fill:currentColor">h</text>
+  <text id="t-7-36" x="288" y="126" style="fill:currentColor">i</text>
+  <text id="t-7-37" x="296" y="126" style="fill:currentColor">n</text>
+  <text id="t-7-38" x="304" y="126" style="fill:currentColor">a</text>
+  <text id="t-7-51" x="408" y="126" style="fill:currentColor">5</text>
+  <text id="t-7-52" x="416" y="126" style="fill:currentColor">1</text>
+  <text id="t-7-53" x="424" y="126" style="fill:currentColor">.</text>
+  <text id="t-7-54" x="432" y="126" style="fill:currentColor">2</text>
+  <text id="t-7-55" x="440" y="126" style="fill:currentColor">6</text>
+  <text id="t-7-57" x="456" y="126" style="fill:currentColor">│</text>
+  <text id="t-8-0" x="0" y="142" style="fill:currentColor">│</text>
+  <text id="t-8-1" x="8" y="142" style="fill:currentColor">5</text>
+  <text id="t-8-5" x="40" y="142" style="fill:currentColor">8</text>
+  <text id="t-8-11" x="88" y="142" style="fill:currentColor">M</text>
+  <text id="t-8-12" x="96" y="142" style="fill:currentColor">e</text>
+  <text id="t-8-13" x="104" y="142" style="fill:currentColor">h</text>
+  <text id="t-8-14" x="112" y="142" style="fill:currentColor">d</text>
+  <text id="t-8-15" x="120" y="142" style="fill:currentColor">y</text>
+  <text id="t-8-17" x="136" y="142" style="fill:currentColor">M</text>
+  <text id="t-8-18" x="144" y="142" style="fill:currentColor">e</text>
+  <text id="t-8-19" x="152" y="142" style="fill:currentColor">t</text>
+  <text id="t-8-20" x="160" y="142" style="fill:currentColor">e</text>
+  <text id="t-8-21" x="168" y="142" style="fill:currentColor">l</text>
+  <text id="t-8-22" x="176" y="142" style="fill:currentColor">l</text>
+  <text id="t-8-23" x="184" y="142" style="fill:currentColor">a</text>
+  <text id="t-8-34" x="272" y="142" style="fill:currentColor">F</text>
+  <text id="t-8-35" x="280" y="142" style="fill:currentColor">r</text>
+  <text id="t-8-36" x="288" y="142" style="fill:currentColor">a</text>
+  <text id="t-8-37" x="296" y="142" style="fill:currentColor">n</text>
+  <text id="t-8-38" x="304" y="142" style="fill:currentColor">c</text>
+  <text id="t-8-39" x="312" y="142" style="fill:currentColor">e</text>
+  <text id="t-8-51" x="408" y="142" style="fill:currentColor">5</text>
+  <text id="t-8-52" x="416" y="142" style="fill:currentColor">1</text>
+  <text id="t-8-53" x="424" y="142" style="fill:currentColor">.</text>
+  <text id="t-8-54" x="432" y="142" style="fill:currentColor">5</text>
+  <text id="t-8-55" x="440" y="142" style="fill:currentColor">8</text>
+  <text id="t-8-57" x="456" y="142" style="fill:currentColor">│</text>
+  <text id="t-9-0" x="0" y="158" style="fill:currentColor">│</text>
+  <text id="t-9-1" x="8" y="158" style="fill:currentColor">6</text>
+  <text id="t-9-5" x="40" y="158" style="fill:currentColor">7</text>
+  <text id="t-9-11" x="88" y="158" style="fill:currentColor">T</text>
+  <text id="t-9-12" x="96" y="158" style="fill:currentColor">o</text>
+  <text id="t-9-13" x="104" y="158" style="fill:currentColor">m</text>
+  <text id="t-9-15" x="120" y="158" style="fill:currentColor">S</text>
+  <text id="t-9-16" x="128" y="158" style="fill:currentColor">h</text>
+  <text id="t-9-17" x="136" y="158" style="fill:currentColor">i</text>
+  <text id="t-9-18" x="144" y="158" style="fill:currentColor">e</text>
+  <text id="t-9-19" x="152" y="158" style="fill:currentColor">l</text>
+  <text id="t-9-20" x="160" y="158" style="fill:currentColor">d</text>
+  <text id="t-9-21" x="168" y="158" style="fill:currentColor">s</text>
+  <text id="t-9-34" x="272" y="158" style="fill:currentColor">U</text>
+  <text id="t-9-35" x="280" y="158" style="fill:currentColor">n</text>
+  <text id="t-9-36" x="288" y="158" style="fill:currentColor">i</text>
+  <text id="t-9-37" x="296" y="158" style="fill:currentColor">t</text>
+  <text id="t-9-38" x="304" y="158" style="fill:currentColor">e</text>
+  <text id="t-9-39" x="312" y="158" style="fill:currentColor">d</text>
+  <text id="t-9-41" x="328" y="158" style="fill:currentColor">S</text>
+  <text id="t-9-42" x="336" y="158" style="fill:currentColor">t</text>
+  <text id="t-9-43" x="344" y="158" style="fill:currentColor">a</text>
+  <text id="t-9-44" x="352" y="158" style="fill:currentColor">t</text>
+  <text id="t-9-45" x="360" y="158" style="fill:currentColor">e</text>
+  <text id="t-9-46" x="368" y="158" style="fill:currentColor">s</text>
+  <text id="t-9-51" x="408" y="158" style="fill:currentColor">5</text>
+  <text id="t-9-52" x="416" y="158" style="fill:currentColor">1</text>
+  <text id="t-9-53" x="424" y="158" style="fill:currentColor">.</text>
+  <text id="t-9-54" x="432" y="158" style="fill:currentColor">7</text>
+  <text id="t-9-55" x="440" y="158" style="fill:currentColor">3</text>
+  <text id="t-9-57" x="456" y="158" style="fill:currentColor">│</text>
+  <text id="t-10-0" x="0" y="174" style="fill:currentColor">│</text>
+  <text id="t-10-1" x="8" y="174" style="fill:currentColor">7</text>
+  <text id="t-10-5" x="40" y="174" style="fill:currentColor">1</text>
+  <text id="t-10-6" x="48" y="174" style="fill:currentColor">0</text>
+  <text id="t-10-11" x="88" y="174" style="fill:currentColor">D</text>
+  <text id="t-10-12" x="96" y="174" style="fill:currentColor">a</text>
+  <text id="t-10-13" x="104" y="174" style="fill:currentColor">r</text>
+  <text id="t-10-14" x="112" y="174" style="fill:currentColor">r</text>
+  <text id="t-10-15" x="120" y="174" style="fill:currentColor">e</text>
+  <text id="t-10-16" x="128" y="174" style="fill:currentColor">n</text>
+  <text id="t-10-18" x="144" y="174" style="fill:currentColor">B</text>
+  <text id="t-10-19" x="152" y="174" style="fill:currentColor">u</text>
+  <text id="t-10-20" x="160" y="174" style="fill:currentColor">r</text>
+  <text id="t-10-21" x="168" y="174" style="fill:currentColor">n</text>
+  <text id="t-10-22" x="176" y="174" style="fill:currentColor">s</text>
+  <text id="t-10-34" x="272" y="174" style="fill:currentColor">S</text>
+  <text id="t-10-35" x="280" y="174" style="fill:currentColor">c</text>
+  <text id="t-10-36" x="288" y="174" style="fill:currentColor">o</text>
+  <text id="t-10-37" x="296" y="174" style="fill:currentColor">t</text>
+  <text id="t-10-38" x="304" y="174" style="fill:currentColor">l</text>
+  <text id="t-10-39" x="312" y="174" style="fill:currentColor">a</text>
+  <text id="t-10-40" x="320" y="174" style="fill:currentColor">n</text>
+  <text id="t-10-41" x="328" y="174" style="fill:currentColor">d</text>
+  <text id="t-10-51" x="408" y="174" style="fill:currentColor">5</text>
+  <text id="t-10-52" x="416" y="174" style="fill:currentColor">1</text>
+  <text id="t-10-53" x="424" y="174" style="fill:currentColor">.</text>
+  <text id="t-10-54" x="432" y="174" style="fill:currentColor">8</text>
+  <text id="t-10-55" x="440" y="174" style="fill:currentColor">4</text>
+  <text id="t-10-57" x="456" y="174" style="fill:currentColor">│</text>
+  <text id="t-11-0" x="0" y="190" style="fill:currentColor">│</text>
+  <text id="t-11-1" x="8" y="190" style="fill:currentColor">8</text>
+  <text id="t-11-5" x="40" y="190" style="fill:currentColor">1</text>
+  <text id="t-11-11" x="88" y="190" style="fill:currentColor">A</text>
+  <text id="t-11-12" x="96" y="190" style="fill:currentColor">l</text>
+  <text id="t-11-13" x="104" y="190" style="fill:currentColor">e</text>
+  <text id="t-11-14" x="112" y="190" style="fill:currentColor">k</text>
+  <text id="t-11-15" x="120" y="190" style="fill:currentColor">s</text>
+  <text id="t-11-16" x="128" y="190" style="fill:currentColor">a</text>
+  <text id="t-11-17" x="136" y="190" style="fill:currentColor">n</text>
+  <text id="t-11-18" x="144" y="190" style="fill:currentColor">d</text>
+  <text id="t-11-19" x="152" y="190" style="fill:currentColor">r</text>
+  <text id="t-11-21" x="168" y="190" style="fill:currentColor">S</text>
+  <text id="t-11-22" x="176" y="190" style="fill:currentColor">a</text>
+  <text id="t-11-23" x="184" y="190" style="fill:currentColor">d</text>
+  <text id="t-11-24" x="192" y="190" style="fill:currentColor">o</text>
+  <text id="t-11-25" x="200" y="190" style="fill:currentColor">v</text>
+  <text id="t-11-26" x="208" y="190" style="fill:currentColor">n</text>
+  <text id="t-11-27" x="216" y="190" style="fill:currentColor">i</text>
+  <text id="t-11-28" x="224" y="190" style="fill:currentColor">k</text>
+  <text id="t-11-29" x="232" y="190" style="fill:currentColor">o</text>
+  <text id="t-11-30" x="240" y="190" style="fill:currentColor">v</text>
+  <text id="t-11-34" x="272" y="190" style="fill:currentColor">R</text>
+  <text id="t-11-35" x="280" y="190" style="fill:currentColor">u</text>
+  <text id="t-11-36" x="288" y="190" style="fill:currentColor">s</text>
+  <text id="t-11-37" x="296" y="190" style="fill:currentColor">s</text>
+  <text id="t-11-38" x="304" y="190" style="fill:currentColor">i</text>
+  <text id="t-11-39" x="312" y="190" style="fill:currentColor">a</text>
+  <text id="t-11-51" x="408" y="190" style="fill:currentColor">5</text>
+  <text id="t-11-52" x="416" y="190" style="fill:currentColor">1</text>
+  <text id="t-11-53" x="424" y="190" style="fill:currentColor">.</text>
+  <text id="t-11-54" x="432" y="190" style="fill:currentColor">8</text>
+  <text id="t-11-55" x="440" y="190" style="fill:currentColor">4</text>
+  <text id="t-11-57" x="456" y="190" style="fill:currentColor">│</text>
+  <text id="t-12-0" x="0" y="206" style="fill:currentColor">│</text>
+  <text id="t-12-57" x="456" y="206" style="fill:currentColor">│</text>
+  <text id="t-13-0" x="0" y="222" style="fill:currentColor">└</text>
+  <text id="t-13-1" x="8" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-2" x="16" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-3" x="24" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-4" x="32" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-5" x="40" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-6" x="48" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-7" x="56" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-8" x="64" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-9" x="72" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-10" x="80" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-11" x="88" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-12" x="96" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-13" x="104" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-14" x="112" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-15" x="120" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-16" x="128" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-17" x="136" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-18" x="144" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-19" x="152" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-20" x="160" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-21" x="168" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-22" x="176" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-23" x="184" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-24" x="192" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-25" x="200" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-26" x="208" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-27" x="216" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-28" x="224" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-29" x="232" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-30" x="240" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-31" x="248" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-32" x="256" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-33" x="264" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-34" x="272" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-35" x="280" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-36" x="288" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-37" x="296" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-38" x="304" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-39" x="312" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-40" x="320" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-41" x="328" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-42" x="336" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-43" x="344" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-44" x="352" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-45" x="360" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-46" x="368" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-47" x="376" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-48" x="384" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-49" x="392" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-50" x="400" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-51" x="408" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-52" x="416" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-53" x="424" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-54" x="432" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-55" x="440" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-56" x="448" y="222" style="fill:currentColor">─</text>
+  <text id="t-13-57" x="456" y="222" style="fill:currentColor">┘</text>
+
+  <rect id="box-4" x="0" y="0" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-3" x="0" y="16" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-7" x="0" y="32" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-9" x="0" y="48" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-11" x="0" y="64" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-13" x="0" y="80" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-15" x="0" y="96" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-17" x="0" y="112" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-19" x="0" y="128" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-21" x="0" y="144" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-23" x="0" y="160" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-25" x="0" y="176" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-27" x="0" y="192" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-29" x="0" y="208" width="640" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="focus" x="0" y="0" width="640" height="224" fill="none" stroke="#ff9900" stroke-width="1"/>
+  <rect id="dirty-0-0" x="0" y="0" width="464" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-1-0" x="0" y="16" width="464" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-2-0" x="0" y="32" width="464" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-3-0" x="0" y="48" width="464" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-4-0" x="0" y="64" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-4-5" x="40" y="64" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-4-11" x="88" y="64" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-4-18" x="144" y="64" width="72" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-4-34" x="272" y="64" width="72" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-4-51" x="408" y="64" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-4-57" x="456" y="64" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-5-0" x="0" y="80" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-5-5" x="40" y="80" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-5-11" x="88" y="80" width="56" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-5-19" x="152" y="80" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-5-34" x="272" y="80" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-5-41" x="328" y="80" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-5-51" x="408" y="80" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-5-57" x="456" y="80" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-6-0" x="0" y="96" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-6-5" x="40" y="96" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-6-11" x="88" y="96" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-6-18" x="144" y="96" width="32" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-6-34" x="272" y="96" width="56" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-6-51" x="408" y="96" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-6-57" x="456" y="96" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-7-0" x="0" y="112" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-7-5" x="40" y="112" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-7-11" x="88" y="112" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-7-14" x="112" y="112" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-7-34" x="272" y="112" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-7-51" x="408" y="112" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-7-57" x="456" y="112" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-8-0" x="0" y="128" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-8-5" x="40" y="128" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-8-11" x="88" y="128" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-8-17" x="136" y="128" width="56" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-8-34" x="272" y="128" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-8-51" x="408" y="128" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-8-57" x="456" y="128" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-9-0" x="0" y="144" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-9-5" x="40" y="144" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-9-11" x="88" y="144" width="24" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-9-15" x="120" y="144" width="56" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-9-34" x="272" y="144" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-9-41" x="328" y="144" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-9-51" x="408" y="144" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-9-57" x="456" y="144" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-10-0" x="0" y="160" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-10-5" x="40" y="160" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-10-11" x="88" y="160" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-10-18" x="144" y="160" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-10-34" x="272" y="160" width="64" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-10-51" x="408" y="160" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-10-57" x="456" y="160" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-11-0" x="0" y="176" width="16" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-11-5" x="40" y="176" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-11-11" x="88" y="176" width="72" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-11-21" x="168" y="176" width="80" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-11-34" x="272" y="176" width="48" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-11-51" x="408" y="176" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-11-57" x="456" y="176" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-12-0" x="0" y="192" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-12-57" x="456" y="192" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-13-0" x="0" y="208" width="464" height="16" fill="#ff0000" fill-opacity="0.2"/>
+</svg>

@@ -1,0 +1,14 @@
+┌────────────────────────────────────────────────────────┐
+│    lane  swimmer                country          time  │
+│────────────────────────────────────────────────────────│
+│0   5     Chad le Clos           South Africa     51.14 │
+│1   4     Joseph Schooling       Singapore        50.39 │
+│2   2     Michael Phelps         United States    51.14 │
+│3   6     László Cseh            Hungary          51.14 │
+│4   3     Li Zhuhao              China            51.26 │
+│5   8     Mehdy Metella          France           51.58 │
+│6   7     Tom Shields            United States    51.73 │
+│7   10    Darren Burns           Scotland         51.84 │
+│8   1     Aleksandr Sadovnikov   Russia           51.84 │
+│                                                        │
+└────────────────────────────────────────────────────────┘
