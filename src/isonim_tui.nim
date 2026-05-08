@@ -30,9 +30,19 @@ import isonim_tui/testing/snapshot/annotated_svg as snapAnnotatedSvg
 import isonim_tui/testing/snapshot/treedump as snapTreedump
 import isonim_tui/testing/snapshot/runner as snapRunner
 
+# M3 surface — layout
+import isonim_tui/layout/terminal_layout
+import isonim_tui/layout/vertical
+import isonim_tui/layout/horizontal
+import isonim_tui/layout/grid
+import isonim_tui/layout/stream
+import isonim_tui/layout/dock
+import isonim_tui/layout/arrange
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
 export introspection, harness, pilot
 export snapPlain, snapAnsi, snapCellmap, snapSvg, snapAnnotatedSvg
 export snapTreedump, snapRunner
+export terminal_layout, vertical, horizontal, grid, stream, dock, arrange
