@@ -7,6 +7,7 @@
 
 switch("path", "$config/../src")
 switch("path", "$config/../../isonim/src")
+switch("path", "$config/../../nim-termctl/src")
 switch("path", "$config/../../nim-faststreams")
 switch("path", "$config/../../nim-stew")
 switch("path", "$config/../../nim-everywhere/src")

@@ -14,6 +14,9 @@ switch("path", "$config/src")
 # Sibling isonim — primary dependency.
 switch("path", "$config/../isonim/src")
 
+# Sibling nim-termctl — M4 byte-level input parser.
+switch("path", "$config/../nim-termctl/src")
+
 # Transitive deps that isonim re-exports.
 switch("path", "$config/../nim-faststreams")
 switch("path", "$config/../nim-stew")

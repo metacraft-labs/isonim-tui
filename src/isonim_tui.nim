@@ -39,6 +39,10 @@ import isonim_tui/layout/stream
 import isonim_tui/layout/dock
 import isonim_tui/layout/arrange
 
+# M4 surface — input parser (adapter over nim-termctl's L3 byte parser)
+import isonim_tui/input/parser as inputParser
+import isonim_tui/input/keymap as inputKeymap
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -46,3 +50,4 @@ export introspection, harness, pilot
 export snapPlain, snapAnsi, snapCellmap, snapSvg, snapAnnotatedSvg
 export snapTreedump, snapRunner
 export terminal_layout, vertical, horizontal, grid, stream, dock, arrange
+export inputParser, inputKeymap
