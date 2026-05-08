@@ -263,14 +263,12 @@ proc cellAt*(h: TerminalTestHarness; row, col: int): Cell =
 proc dirtyRegions*(h: TerminalTestHarness): seq[CellRegion] =
   h.compositor.lastDirty
 
-type StripCacheStats* = object
-  ## Trivial placeholder until M8's strip cache lands. Fields make the
-  ## query type-stable for tests written today.
-  hits*: int
-  misses*: int
-
 proc stripCacheStats*(h: TerminalTestHarness): StripCacheStats =
-  StripCacheStats(hits: 0, misses: 0)
+  ## Snapshot the compositor's strip cache hit / miss counters. With
+  ## M8 the compositor maintains a per-node cache keyed by the input
+  ## hash; this accessor surfaces the running totals so tests can
+  ## assert e.g. "≥ 95% hit rate after a one-row scroll".
+  h.compositor.stats()
 
 proc bytesEmitted*(h: TerminalTestHarness): string =
   h.driver.bytesEmitted
