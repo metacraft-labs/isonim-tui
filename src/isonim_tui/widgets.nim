@@ -36,6 +36,13 @@ import widgets/directory_tree as directoryTreeMod
 import widgets/textarea as textAreaMod
 import widgets/markdown as markdownMod
 import widgets/markdown_viewer as markdownViewerMod
+import widgets/rich_log as richLogMod
+import widgets/log as logMod
+import widgets/progress_bar as progressBarMod
+import widgets/sparkline as sparklineMod
+import widgets/header as headerMod
+import widgets/footer as footerMod
+import widgets/welcome as welcomeMod
 
 export borders
 export staticMod
@@ -66,3 +73,10 @@ export directoryTreeMod
 export textAreaMod
 export markdownMod
 export markdownViewerMod
+export richLogMod
+export logMod
+export progressBarMod
+export sparklineMod
+export headerMod
+export footerMod
+export welcomeMod
