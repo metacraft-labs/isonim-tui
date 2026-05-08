@@ -86,6 +86,10 @@ import isonim_tui/worker/worker as workerMod
 import isonim_tui/worker/manager as workerManagerMod
 import isonim_tui/worker/decorator as workerDecoratorMod
 
+# M16 surface — command palette (fuzzy matcher + Provider system).
+import isonim_tui/command/fuzzy as fuzzyMod
+import isonim_tui/command/palette as paletteMod
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -104,3 +108,4 @@ when defined(windows):
 export tier1Widgets
 export focusManagerMod
 export workerMod, workerManagerMod, workerDecoratorMod
+export fuzzyMod, paletteMod
