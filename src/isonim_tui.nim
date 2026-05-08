@@ -69,6 +69,12 @@ when not defined(windows):
 when defined(windows):
   import isonim_tui/drivers/windows_driver as windowsDriverMod
 
+# M11 surface — Tier-1a widget set (Static, Label, Container,
+# Placeholder, Rule). The widget tree is built through the same
+# renderer / compositor / cells pipeline so widgets compose cleanly
+# with the M5/M6 cascade and the M8 layered compositor.
+import isonim_tui/widgets as tier1Widgets
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -84,3 +90,4 @@ when not defined(windows):
   export posixDriverMod
 when defined(windows):
   export windowsDriverMod
+export tier1Widgets
