@@ -61,6 +61,14 @@ import isonim_tui/animation/scalar as animScalar
 when not defined(windows):
   import isonim_tui/drivers/posix_driver as posixDriverMod
 
+# M10 surface — production Windows driver. Imported behind
+# `when defined(windows)` because the implementation reaches into the
+# Win32 Console API (ReadConsoleInputW, SetConsoleCtrlHandler) and the
+# Windows half of nim-termctl. The POSIX analogue is M9's
+# `posix_driver.nim`.
+when defined(windows):
+  import isonim_tui/drivers/windows_driver as windowsDriverMod
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -74,3 +82,5 @@ export themeEngine
 export animEasing, animAnimator, animScalar
 when not defined(windows):
   export posixDriverMod
+when defined(windows):
+  export windowsDriverMod
