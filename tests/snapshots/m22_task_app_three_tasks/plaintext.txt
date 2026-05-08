@@ -1,0 +1,12 @@
+╭──────────────────────────────╮
+│New task...                   │
+╰──────────────────────────────╯
+(•) All
+( ) Active
+( ) Completed
+[ ] Buy milk
+[ ] Write specs
+[ ] Review PR
+3 of 3 remaining
+                                                
+                                                
