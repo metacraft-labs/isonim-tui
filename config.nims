@@ -17,6 +17,10 @@ switch("path", "$config/../isonim/src")
 # Sibling nim-termctl — M4 byte-level input parser.
 switch("path", "$config/../nim-termctl/src")
 
+# Sibling nim-pty — M9 driver tests open real ptys to drive the
+# PosixDriver against simulated terminal I/O.
+switch("path", "$config/../nim-pty/src")
+
 # Transitive deps that isonim re-exports.
 switch("path", "$config/../nim-faststreams")
 switch("path", "$config/../nim-stew")

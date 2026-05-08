@@ -54,6 +54,13 @@ import isonim_tui/animation/easing as animEasing
 import isonim_tui/animation/animator as animAnimator
 import isonim_tui/animation/scalar as animScalar
 
+# M9 surface — production POSIX driver. Imported behind
+# `when not defined(windows)` because the implementation consumes the
+# POSIX half of nim-termctl (raw mode, alt-screen, SIGWINCH self-pipe).
+# The Windows analogue lands as M10's `windows_driver.nim`.
+when not defined(windows):
+  import isonim_tui/drivers/posix_driver as posixDriverMod
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -65,3 +72,5 @@ export inputParser, inputKeymap
 export cssEngine
 export themeEngine
 export animEasing, animAnimator, animScalar
+when not defined(windows):
+  export posixDriverMod
