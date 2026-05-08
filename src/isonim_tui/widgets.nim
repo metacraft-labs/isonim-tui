@@ -18,6 +18,7 @@ import widgets/switch as switchMod
 import widgets/checkbox as checkboxMod
 import widgets/radio_button as radioButtonMod
 import widgets/radio_set as radioSetMod
+import widgets/input as inputMod
 
 export borders
 export staticMod
@@ -30,3 +31,4 @@ export switchMod
 export checkboxMod
 export radioButtonMod
 export radioSetMod
+export inputMod

@@ -222,6 +222,8 @@ proc styleFor(node: TerminalNode; inherited: StyleSnapshot):
     result.snap.attrs.incl(attrItalic)
   if "underline" in node.styles and node.styles["underline"] == "true":
     result.snap.attrs.incl(attrUnderline)
+  if "reverse" in node.styles and node.styles["reverse"] == "true":
+    result.snap.attrs.incl(attrReverse)
 
 # ----------------------------------------------------------------------------
 # Tree walker — flattens to LayoutEntries with layer + style.
