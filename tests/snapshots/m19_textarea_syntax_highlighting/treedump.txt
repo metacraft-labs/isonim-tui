@@ -1,0 +1,8 @@
+<div> [0,0 40x3]
+  <textarea.textarea> [0,0 40x3]
+    <div> [0,0 40x1]
+      <> [0,0 0x0] text="def foo():                    "
+    <div> [1,0 40x1]
+      <> [0,0 0x0] text="                              "
+    <div> [2,0 40x1]
+      <> [0,0 0x0] text="                              "

@@ -1,0 +1,15 @@
+<div> [0,0 40x6]
+  <textarea.textarea> [0,0 40x6]
+    <div> [0,0 40x1]
+      <span> [0,0 40x1]
+        <> [0,0 0x0] text="ab\xF0\x9F\x91\xA8\xE2\x80\x8D\xF0\x9F\x91\xA9\xE2\x80\x8D\xF0\x9F\x91\xA7c"
+    <div> [1,0 40x1]
+      <> [0,0 0x0] text="d\xF0\x9F\x91\xA8\xE2\x80\x8D\xF0\x9F\x91\xA9\xE2\x80\x8D\xF0\x9F\x91\xA7e "
+    <div> [2,0 40x1]
+      <> [0,0 0x0] text="     "
+    <div> [3,0 40x1]
+      <> [0,0 0x0] text="     "
+    <div> [4,0 40x1]
+      <> [0,0 0x0] text="     "
+    <div> [5,0 40x1]
+      <> [0,0 0x0] text="     "

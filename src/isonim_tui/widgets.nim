@@ -33,6 +33,7 @@ import widgets/image as imageMod
 import widgets/datatable as datatableMod
 import widgets/tree as treeMod
 import widgets/directory_tree as directoryTreeMod
+import widgets/textarea as textAreaMod
 
 export borders
 export staticMod
@@ -60,3 +61,4 @@ export imageMod
 export datatableMod
 export treeMod
 export directoryTreeMod
+export textAreaMod
