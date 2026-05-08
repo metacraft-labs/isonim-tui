@@ -46,6 +46,9 @@ import isonim_tui/input/keymap as inputKeymap
 # M5 surface — TCSS engine (tokenize, parse, match, cascade, cache)
 import isonim_tui/css/css as cssEngine
 
+# M6 surface — theming (Color, ColorSystem, Theme, runtime switching)
+import isonim_tui/theme as themeEngine
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -55,3 +58,4 @@ export snapTreedump, snapRunner
 export terminal_layout, vertical, horizontal, grid, stream, dock, arrange
 export inputParser, inputKeymap
 export cssEngine
+export themeEngine

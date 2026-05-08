@@ -80,11 +80,11 @@ proc clearInline*(s: Stylesheet; nodeId: int) =
 # ----------------------------------------------------------------------------
 
 type
-  CascadeMatch = object
-    rule: Rule
-    spec: Specificity
-    important: bool  ## any declaration in the rule is `!important`
-    sourceTier: int  ## 0 default, 1 user, 2 inline (highest)
+  CascadeMatch* = object
+    rule*: Rule
+    spec*: Specificity
+    important*: bool  ## any declaration in the rule is `!important`
+    sourceTier*: int  ## 0 default, 1 user, 2 inline (highest)
 
 proc tierOf(s: StylesheetSource): int =
   case s

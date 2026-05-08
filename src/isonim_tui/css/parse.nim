@@ -381,7 +381,11 @@ proc parseDeclarationBlock(p: var Parser): seq[Declaration] =
 # ----------------------------------------------------------------------------
 
 proc parseAtRule(p: var Parser; rule: var Rule) =
-  ## We've consumed `@`; the at-rule name is in `peek(p)`.
+  ## We've consumed `@`; the at-rule name is in `peek(p)`. M5 used to
+  ## eat tokens up to `{` here (the at-rule was treated as a flag with
+  ## no selector). M6 needs the selector intact so `@dark Button { ... }`
+  ## still applies to a `Button`. We just consume the at-rule keyword
+  ## itself; the selector parser handles whatever follows.
   let nameTok = peek(p)
   if nameTok.kind != tkAtRule:
     return
@@ -393,12 +397,14 @@ proc parseAtRule(p: var Parser; rule: var Rule) =
     rule.atRule = arLight
   of "media":
     rule.atRule = arMedia
+    rule.atRuleArg = nameTok.value
+    # `@media (...)` is parsed in M11; for now consume up to `{` so
+    # the selector parser doesn't choke on the parenthesised expr.
+    while p.pos < p.tokens.len and peek(p).kind != tkDeclarationSetStart and
+          peek(p).kind != tkEof:
+      advance(p)
   else:
     rule.atRule = arNone
-  # Skip the rest of the selector chain until '{'
-  while p.pos < p.tokens.len and peek(p).kind != tkDeclarationSetStart and
-        peek(p).kind != tkEof:
-    advance(p)
 
 proc parseRule(p: var Parser): tuple[ok: bool, rule: Rule] =
   var rule = Rule(sourceOrder: p.sourceOrder, sourceName: p.sourceName)
