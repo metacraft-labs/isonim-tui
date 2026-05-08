@@ -1,0 +1,12 @@
+ID    Name      Role       Score
+001   Alice     Admin      98
+002   Bob       Engineer   85
+003   Carol     Designer   92
+004   Dave      Engineer   78
+005   Eve       Manager    88
+006   Frank     Engineer   73
+007   Grace     Engineer   95
+008   Heidi     Designer   82
+                                                            
+                                                            
+                                                            

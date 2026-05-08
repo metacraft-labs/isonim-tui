@@ -1,0 +1,12 @@
+ID   Name         Score
+2    Bob          60
+3    Charlie      70
+4    Diana        80
+1    Alice        90
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            

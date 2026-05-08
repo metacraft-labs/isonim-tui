@@ -30,6 +30,7 @@ import widgets/toast as toastMod
 import widgets/loading_indicator as loadingIndicatorMod
 import widgets/select as selectMod
 import widgets/image as imageMod
+import widgets/datatable as datatableMod
 
 export borders
 export staticMod
@@ -54,3 +55,4 @@ export toastMod
 export loadingIndicatorMod
 export selectMod
 export imageMod
+export datatableMod

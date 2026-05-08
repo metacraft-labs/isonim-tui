@@ -1,0 +1,16 @@
+<div> [0,0 60x7]
+  <div.data-table> [0,0 60x7]
+    <div> [0,0 60x1]
+      <> [0,0 0x0] text="ID   Name         Score "
+    <div> [1,0 60x1]
+      <> [0,0 0x0] text="2    Bob          60    "
+    <div> [2,0 60x1]
+      <> [0,0 0x0] text="3    Charlie      70    "
+    <div> [3,0 60x1]
+      <> [0,0 0x0] text="4    Diana        80    "
+    <div> [4,0 60x1]
+      <> [0,0 0x0] text="1    Alice        90    "
+    <div> [5,0 60x1]
+      <> [0,0 0x0] text="                        "
+    <div> [6,0 60x1]
+      <> [0,0 0x0] text="                        "

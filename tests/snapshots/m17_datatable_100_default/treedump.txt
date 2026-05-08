@@ -1,0 +1,20 @@
+<div> [0,0 60x9]
+  <div.data-table> [0,0 60x9]
+    <div> [0,0 60x1]
+      <> [0,0 0x0] text="ID    Name      Role       Score  "
+    <div> [1,0 60x1]
+      <> [0,0 0x0] text="001   Alice     Admin      98     "
+    <div> [2,0 60x1]
+      <> [0,0 0x0] text="002   Bob       Engineer   85     "
+    <div> [3,0 60x1]
+      <> [0,0 0x0] text="003   Carol     Designer   92     "
+    <div> [4,0 60x1]
+      <> [0,0 0x0] text="004   Dave      Engineer   78     "
+    <div> [5,0 60x1]
+      <> [0,0 0x0] text="005   Eve       Manager    88     "
+    <div> [6,0 60x1]
+      <> [0,0 0x0] text="006   Frank     Engineer   73     "
+    <div> [7,0 60x1]
+      <> [0,0 0x0] text="007   Grace     Engineer   95     "
+    <div> [8,0 60x1]
+      <> [0,0 0x0] text="008   Heidi     Designer   82     "

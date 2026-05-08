@@ -1,0 +1,12 @@
+ID    Name      Role       Score ▲
+007   Grace     Engineer   95
+055   Chris     Designer   95
+100   Vesna     Designer   95
+030   Diana     Manager    96
+068   Pia       Manager    96
+026   Zelda     Designer   97
+088   Jules     Manager    97
+001   Alice     Admin      98
+                                                            
+                                                            
+                                                            

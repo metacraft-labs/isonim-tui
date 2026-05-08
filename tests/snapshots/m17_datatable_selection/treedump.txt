@@ -1,0 +1,14 @@
+<div> [0,0 50x6]
+  <div.data-table> [0,0 50x6]
+    <div> [0,0 50x1]
+      <> [0,0 0x0] text="ID   Name        "
+    <div> [1,0 50x1]
+      <> [0,0 0x0] text="1    Alice       "
+    <div> [2,0 50x1]
+      <> [0,0 0x0] text="2    Bob         "
+    <div> [3,0 50x1]
+      <> [0,0 0x0] text="3    Carol       "
+    <div> [4,0 50x1]
+      <> [0,0 0x0] text="4    Dave        "
+    <div> [5,0 50x1]
+      <> [0,0 0x0] text="                 "

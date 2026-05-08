@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="192" viewBox="0 0 480 192" font-family="monospace" font-size="16">
+  <text id="t-0-0" x="0" y="14" style="fill:currentColor;font-weight:bold">I</text>
+  <text id="t-0-1" x="8" y="14" style="fill:currentColor;font-weight:bold">D</text>
+  <text id="t-0-5" x="40" y="14" style="fill:currentColor;font-weight:bold">N</text>
+  <text id="t-0-6" x="48" y="14" style="fill:currentColor;font-weight:bold">a</text>
+  <text id="t-0-7" x="56" y="14" style="fill:currentColor;font-weight:bold">m</text>
+  <text id="t-0-8" x="64" y="14" style="fill:currentColor;font-weight:bold">e</text>
+  <text id="t-0-18" x="144" y="14" style="fill:currentColor;font-weight:bold">S</text>
+  <text id="t-0-19" x="152" y="14" style="fill:currentColor;font-weight:bold">c</text>
+  <text id="t-0-20" x="160" y="14" style="fill:currentColor;font-weight:bold">o</text>
+  <text id="t-0-21" x="168" y="14" style="fill:currentColor;font-weight:bold">r</text>
+  <text id="t-0-22" x="176" y="14" style="fill:currentColor;font-weight:bold">e</text>
+  <text id="t-1-0" x="0" y="30" style="fill:currentColor">2</text>
+  <text id="t-1-5" x="40" y="30" style="fill:currentColor">B</text>
+  <text id="t-1-6" x="48" y="30" style="fill:currentColor">o</text>
+  <text id="t-1-7" x="56" y="30" style="fill:currentColor">b</text>
+  <text id="t-1-18" x="144" y="30" style="fill:currentColor">6</text>
+  <text id="t-1-19" x="152" y="30" style="fill:currentColor">0</text>
+  <text id="t-2-0" x="0" y="46" style="fill:currentColor">3</text>
+  <text id="t-2-5" x="40" y="46" style="fill:currentColor">C</text>
+  <text id="t-2-6" x="48" y="46" style="fill:currentColor">h</text>
+  <text id="t-2-7" x="56" y="46" style="fill:currentColor">a</text>
+  <text id="t-2-8" x="64" y="46" style="fill:currentColor">r</text>
+  <text id="t-2-9" x="72" y="46" style="fill:currentColor">l</text>
+  <text id="t-2-10" x="80" y="46" style="fill:currentColor">i</text>
+  <text id="t-2-11" x="88" y="46" style="fill:currentColor">e</text>
+  <text id="t-2-18" x="144" y="46" style="fill:currentColor">7</text>
+  <text id="t-2-19" x="152" y="46" style="fill:currentColor">0</text>
+  <text id="t-3-0" x="0" y="62" style="fill:currentColor">4</text>
+  <text id="t-3-5" x="40" y="62" style="fill:currentColor">D</text>
+  <text id="t-3-6" x="48" y="62" style="fill:currentColor">i</text>
+  <text id="t-3-7" x="56" y="62" style="fill:currentColor">a</text>
+  <text id="t-3-8" x="64" y="62" style="fill:currentColor">n</text>
+  <text id="t-3-9" x="72" y="62" style="fill:currentColor">a</text>
+  <text id="t-3-18" x="144" y="62" style="fill:currentColor">8</text>
+  <text id="t-3-19" x="152" y="62" style="fill:currentColor">0</text>
+  <text id="t-4-0" x="0" y="78" style="fill:currentColor">1</text>
+  <text id="t-4-5" x="40" y="78" style="fill:currentColor">A</text>
+  <text id="t-4-6" x="48" y="78" style="fill:currentColor">l</text>
+  <text id="t-4-7" x="56" y="78" style="fill:currentColor">i</text>
+  <text id="t-4-8" x="64" y="78" style="fill:currentColor">c</text>
+  <text id="t-4-9" x="72" y="78" style="fill:currentColor">e</text>
+  <text id="t-4-18" x="144" y="78" style="fill:currentColor">9</text>
+  <text id="t-4-19" x="152" y="78" style="fill:currentColor">0</text>
+
+  <rect id="box-3" x="0" y="0" width="480" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-11" x="0" y="16" width="480" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-5" x="0" y="32" width="480" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-9" x="0" y="48" width="480" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-7" x="0" y="64" width="480" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-67" x="0" y="80" width="480" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-69" x="0" y="96" width="480" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="focus" x="0" y="0" width="480" height="112" fill="none" stroke="#ff9900" stroke-width="1"/>
+  <rect id="dirty-0-10" x="80" y="0" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-1-0" x="0" y="16" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-1-5" x="40" y="16" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-1-18" x="144" y="16" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-3-0" x="0" y="48" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-3-5" x="40" y="48" width="40" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-3-18" x="144" y="48" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+</svg>

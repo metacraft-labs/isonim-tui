@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="128" viewBox="0 0 400 128" font-family="monospace" font-size="16">
+  <text id="t-0-0" x="0" y="14" style="fill:currentColor">I</text>
+  <text id="t-0-1" x="8" y="14" style="fill:currentColor">D</text>
+  <text id="t-0-5" x="40" y="14" style="fill:currentColor">N</text>
+  <text id="t-0-6" x="48" y="14" style="fill:currentColor">a</text>
+  <text id="t-0-7" x="56" y="14" style="fill:currentColor">m</text>
+  <text id="t-0-8" x="64" y="14" style="fill:currentColor">e</text>
+
+  <rect id="box-3" x="0" y="0" width="400" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-5" x="0" y="16" width="400" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-7" x="0" y="32" width="400" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-9" x="0" y="48" width="400" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-11" x="0" y="64" width="400" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-13" x="0" y="80" width="400" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="dirty-0-0" x="0" y="0" width="136" height="16" fill="#ff0000" fill-opacity="0.2"/>
+</svg>
