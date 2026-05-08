@@ -1,0 +1,12 @@
+▼ root
+  ▶ project/
+  ▶ scripts/
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        

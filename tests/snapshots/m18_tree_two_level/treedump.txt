@@ -1,0 +1,22 @@
+<div> [0,0 40x10]
+  <div.tree> [0,0 40x10]
+    <div> [0,0 40x1]
+      <> [0,0 0x0] text="\xE2\x96\xBC root                        "
+    <div> [1,0 40x1]
+      <> [0,0 0x0] text="  \xE2\x96\xBC project/                  "
+    <div> [2,0 40x1]
+      <> [0,0 0x0] text="    \xE2\x96\xB6 src/                    "
+    <div> [3,0 40x1]
+      <> [0,0 0x0] text="      README.md               "
+    <div> [4,0 40x1]
+      <> [0,0 0x0] text="  \xE2\x96\xB6 scripts/                  "
+    <div> [5,0 40x1]
+      <> [0,0 0x0] text="                              "
+    <div> [6,0 40x1]
+      <> [0,0 0x0] text="                              "
+    <div> [7,0 40x1]
+      <> [0,0 0x0] text="                              "
+    <div> [8,0 40x1]
+      <> [0,0 0x0] text="                              "
+    <div> [9,0 40x1]
+      <> [0,0 0x0] text="                              "

@@ -31,6 +31,8 @@ import widgets/loading_indicator as loadingIndicatorMod
 import widgets/select as selectMod
 import widgets/image as imageMod
 import widgets/datatable as datatableMod
+import widgets/tree as treeMod
+import widgets/directory_tree as directoryTreeMod
 
 export borders
 export staticMod
@@ -56,3 +58,5 @@ export loadingIndicatorMod
 export selectMod
 export imageMod
 export datatableMod
+export treeMod
+export directoryTreeMod

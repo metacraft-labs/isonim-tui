@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="192" viewBox="0 0 320 192" font-family="monospace" font-size="16">
+  <text id="t-0-0" x="0" y="14" style="fill:currentColor">▼</text>
+  <text id="t-0-2" x="16" y="14" style="fill:currentColor">r</text>
+  <text id="t-0-3" x="24" y="14" style="fill:currentColor">o</text>
+  <text id="t-0-4" x="32" y="14" style="fill:currentColor">o</text>
+  <text id="t-0-5" x="40" y="14" style="fill:currentColor">t</text>
+  <text id="t-1-2" x="16" y="30" style="fill:currentColor">▶</text>
+  <text id="t-1-4" x="32" y="30" style="fill:currentColor">p</text>
+  <text id="t-1-5" x="40" y="30" style="fill:currentColor">r</text>
+  <text id="t-1-6" x="48" y="30" style="fill:currentColor">o</text>
+  <text id="t-1-7" x="56" y="30" style="fill:currentColor">j</text>
+  <text id="t-1-8" x="64" y="30" style="fill:currentColor">e</text>
+  <text id="t-1-9" x="72" y="30" style="fill:currentColor">c</text>
+  <text id="t-1-10" x="80" y="30" style="fill:currentColor">t</text>
+  <text id="t-1-11" x="88" y="30" style="fill:currentColor">/</text>
+  <text id="t-2-2" x="16" y="46" style="fill:currentColor">▶</text>
+  <text id="t-2-4" x="32" y="46" style="fill:currentColor">s</text>
+  <text id="t-2-5" x="40" y="46" style="fill:currentColor">c</text>
+  <text id="t-2-6" x="48" y="46" style="fill:currentColor">r</text>
+  <text id="t-2-7" x="56" y="46" style="fill:currentColor">i</text>
+  <text id="t-2-8" x="64" y="46" style="fill:currentColor">p</text>
+  <text id="t-2-9" x="72" y="46" style="fill:currentColor">t</text>
+  <text id="t-2-10" x="80" y="46" style="fill:currentColor">s</text>
+  <text id="t-2-11" x="88" y="46" style="fill:currentColor">/</text>
+
+  <rect id="box-23" x="0" y="0" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-25" x="0" y="16" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-27" x="0" y="32" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-29" x="0" y="48" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-31" x="0" y="64" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-33" x="0" y="80" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-35" x="0" y="96" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-37" x="0" y="112" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-39" x="0" y="128" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-41" x="0" y="144" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="dirty-0-0" x="0" y="0" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-1-2" x="16" y="16" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-1-4" x="32" y="16" width="64" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-2-2" x="16" y="32" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-2-4" x="32" y="32" width="64" height="16" fill="#ff0000" fill-opacity="0.2"/>
+</svg>

@@ -1,0 +1,12 @@
+▼ root
+  ▼ project/
+    ▼ src/
+      ▼ core/
+          engine.nim
+          types.nim
+        main.nim
+      README.md
+  ▼ scripts/
+      build.sh
+                                        
+                                        

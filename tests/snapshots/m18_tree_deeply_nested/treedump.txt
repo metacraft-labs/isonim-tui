@@ -1,0 +1,22 @@
+<div> [0,0 40x10]
+  <div.tree> [0,0 40x10]
+    <div> [0,0 40x1]
+      <> [0,0 0x0] text="\xE2\x96\xBC root                        "
+    <div> [1,0 40x1]
+      <> [0,0 0x0] text="  \xE2\x96\xBC project/                  "
+    <div> [2,0 40x1]
+      <> [0,0 0x0] text="    \xE2\x96\xBC src/                    "
+    <div> [3,0 40x1]
+      <> [0,0 0x0] text="      \xE2\x96\xBC core/                 "
+    <div> [4,0 40x1]
+      <> [0,0 0x0] text="          engine.nim          "
+    <div> [5,0 40x1]
+      <> [0,0 0x0] text="          types.nim           "
+    <div> [6,0 40x1]
+      <> [0,0 0x0] text="        main.nim              "
+    <div> [7,0 40x1]
+      <> [0,0 0x0] text="      README.md               "
+    <div> [8,0 40x1]
+      <> [0,0 0x0] text="  \xE2\x96\xBC scripts/                  "
+    <div> [9,0 40x1]
+      <> [0,0 0x0] text="      build.sh                "
