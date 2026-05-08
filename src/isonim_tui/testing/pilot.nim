@@ -267,12 +267,21 @@ proc waitFor*(p: Pilot; predicate: proc(): bool;
   return false
 
 proc waitForAnimation*(p: Pilot) =
-  ## No-op until M7 (animations). Documented as deferred so tests can
-  ## be written today.
-  discard
+  ## Drive the virtual clock forward, in 1-frame increments, until the
+  ## animator reports no active animations. Each tick processes one
+  ## frame's worth of clock-scheduled callbacks and advances any
+  ## active animation. Real wall-clock time does not pass.
+  if p.h.animator == nil: return
+  discard p.h.animator.waitForIdle(advanceClock = true)
+  p.h.flush()
 
 proc waitForScheduledAnimations*(p: Pilot) =
-  discard
+  ## Same as `waitForAnimation` for the M7 surface — Textual splits
+  ## "scheduled but not yet running" from "running" via timers; under
+  ## the unified clock model both share the same active set.
+  if p.h.animator == nil: return
+  discard p.h.animator.waitForIdle(advanceClock = true)
+  p.h.flush()
 
 proc exit*(p: Pilot; resultValue: int = 0): PilotResult =
   PilotResult(exited: true, value: resultValue)

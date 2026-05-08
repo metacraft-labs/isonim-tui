@@ -20,11 +20,19 @@ import ../cells
 import ../renderer
 import ../compositor
 import ../drivers/headless_driver
+import ../animation/animator as animatorMod
 import ./introspection
 import ./snapshot/runner as snapRunner
 
 # Use isonim's clock for virtual-time plumbing.
 import isonim/core/clock
+
+export animatorMod.Animator, animatorMod.AnimationKey, animatorMod.activeCount,
+       animatorMod.activeKeys, animatorMod.isAnimating, animatorMod.cancel,
+       animatorMod.cancelAll, animatorMod.tick, animatorMod.waitForIdle,
+       animatorMod.animateFloat, animatorMod.currentTime,
+       animatorMod.registerAnimation, animatorMod.Animation,
+       animatorMod.AnimationStepProc, animatorMod.AnimationCompleteProc
 
 type
   TerminalTestHarness* = ref object
@@ -46,6 +54,7 @@ type
     hoveredId*: int
     eventSeq*: int
     eventLogStorage*: seq[EventLogEntry]
+    animator*: Animator          ## M7 — owns the active animation set.
     disposed*: bool
 
 # ----------------------------------------------------------------------------
@@ -73,6 +82,7 @@ proc newTerminalTestHarness*(width, height: int): TerminalTestHarness =
     hoveredId: 0,
     eventSeq: 0,
     eventLogStorage: @[],
+    animator: newAnimator(testClock, framesPerSecond = 60),
     disposed: false)
   h.driver.start()
   resetSnapshotAccumulator()
@@ -132,6 +142,12 @@ proc advance*(h: TerminalTestHarness; ms: int) =
   ## the end so any state mutations they triggered are reflected on
   ## screen.
   h.clock.advance(ms.float64)
+  h.flush()
+
+proc advanceMs*(h: TerminalTestHarness; ms: float64) =
+  ## Float variant of `advance`. Useful for the M7 animator's
+  ## sub-millisecond frame ticks (e.g. 16.6667 ms at 60 Hz).
+  h.clock.advance(ms)
   h.flush()
 
 # ----------------------------------------------------------------------------

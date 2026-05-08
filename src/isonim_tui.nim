@@ -49,6 +49,11 @@ import isonim_tui/css/css as cssEngine
 # M6 surface — theming (Color, ColorSystem, Theme, runtime switching)
 import isonim_tui/theme as themeEngine
 
+# M7 surface — animation engine (easing curves, animator, scalar/colour blends)
+import isonim_tui/animation/easing as animEasing
+import isonim_tui/animation/animator as animAnimator
+import isonim_tui/animation/scalar as animScalar
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -59,3 +64,4 @@ export terminal_layout, vertical, horizontal, grid, stream, dock, arrange
 export inputParser, inputKeymap
 export cssEngine
 export themeEngine
+export animEasing, animAnimator, animScalar
