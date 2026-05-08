@@ -24,7 +24,7 @@ nim-flags := "--styleCheck:usages --styleCheck:error"
 
 # The ordered list of test files. Adding a new test_*.nim here gates it
 # on CI.
-tests := "tests/test_renderer_concept_conformance.nim tests/test_threadvar_id_isolation.nim tests/test_strip_diff.nim tests/test_screenbuffer_diff_empty.nim tests/test_repo_requirements_envrc.nim tests/test_repo_requirements_agents_md_symlinks.nim tests/test_repo_requirements_justfile_recipes.nim tests/test_repo_requirements_ci_yaml.nim tests/test_repo_requirements_flake.nim tests/test_grapheme_cluster_corpus.nim tests/test_grapheme_width_emoji_zwj.nim tests/test_sgr_minimal_transition.nim tests/test_sgr_truecolor.nim tests/test_content_word_wrap_grapheme_aware.nim tests/test_ambiguous_width_default_narrow.nim tests/test_content_basics.nim"
+tests := "tests/test_renderer_concept_conformance.nim tests/test_threadvar_id_isolation.nim tests/test_strip_diff.nim tests/test_screenbuffer_diff_empty.nim tests/test_repo_requirements_envrc.nim tests/test_repo_requirements_agents_md_symlinks.nim tests/test_repo_requirements_justfile_recipes.nim tests/test_repo_requirements_ci_yaml.nim tests/test_repo_requirements_flake.nim tests/test_grapheme_cluster_corpus.nim tests/test_grapheme_width_emoji_zwj.nim tests/test_sgr_minimal_transition.nim tests/test_sgr_truecolor.nim tests/test_content_word_wrap_grapheme_aware.nim tests/test_ambiguous_width_default_narrow.nim tests/test_content_basics.nim tests/test_headless_capture_static_real_stack.nim tests/test_harness_isolation_parallel.nim tests/test_pilot_press_full_chain.nim tests/test_pilot_type_emits_per_character_events.nim tests/test_pilot_waitfor_uses_virtual_clock.nim tests/test_findbyid_and_dumptree.nim tests/test_eventlog_records_in_order.nim tests/test_snapshot_six_formats_recorded.nim tests/test_snapshot_html_report_on_failure.nim tests/test_snapshot_record_mode.nim tests/test_snapshot_stable_across_runs.nim"
 
 # --- Default targets (per repo-requirements.md) ---
 
@@ -44,11 +44,17 @@ test: test-orc
 test-unit: test-orc
 
 test-integration:
-    @echo "isonim-tui has no separate integration suite yet — every test is real-stack."
-    @echo "Driver-level integration arrives with M2 (TerminalTestHarness)."
+    @echo "isonim-tui has no separate integration suite — every test is real-stack."
+    @echo "M2 added the TerminalTestHarness suite (driver/pilot/snapshot tests)."
 
 test-snapshots:
-    @echo "Snapshot tests arrive with M2 (TerminalTestHarness, six snapshot formats)."
+    @mkdir -p test-logs
+    @for t in tests/test_snapshot_six_formats_recorded.nim tests/test_snapshot_html_report_on_failure.nim tests/test_snapshot_record_mode.nim tests/test_snapshot_stable_across_runs.nim; do \
+      echo "[snap] $t"; \
+      nim c {{nim-flags}} {{src-paths}} \
+        --mm:orc -d:release --threads:on \
+        -r $t 2>&1 | tee -a test-logs/snapshots.log; \
+    done
 
 # Lint: nim check + nixfmt --check + markdownlint.
 lint: lint-nim lint-nix lint-markdown
