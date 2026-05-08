@@ -134,8 +134,24 @@ proc press*(p: Pilot; keys: varargs[string]) =
   ## Emit a key event for each name in `keys`. Each press fires on the
   ## focused node (or the root, when nothing is focused) and triggers
   ## a flush. Parity with `Pilot.press`.
+  ##
+  ## `tab` / `shift+tab` are routed through the harness's focus manager
+  ## first — so `Tab` advances focus through the chain even when
+  ## individual widgets don't install their own keydown handlers for
+  ## navigation.
   for k in keys:
     let parsed = parseKeyName(k)
+    # Focus-manager hijack for Tab navigation.
+    let lower = parsed.name.toLowerAscii
+    if lower == "tab":
+      if modShift in parsed.mods:
+        discard p.h.focusPrev()
+      else:
+        discard p.h.focusNext()
+      continue
+    if lower == "shift+tab":
+      discard p.h.focusPrev()
+      continue
     let target = (if p.h.focusedId != 0: p.h.focusedId
                   else: (if p.h.root != nil: p.h.root.id else: 0))
     p.fireKeyEvent(target, "keydown", parsed.name, parsed.rune,
@@ -218,7 +234,12 @@ proc scroll*(p: Pilot; target: TerminalNode = nil;
 
 proc focus*(p: Pilot; target: TerminalNode = nil) =
   let id = if target != nil: target.id else: 0
+  # Keep harness + focus manager in lockstep. The harness path also
+  # fires blur on the previously-focused node (M12 contract).
+  let prevId = p.h.focusedId
   p.h.focusedId = id
+  if p.h.focusManager != nil:
+    p.h.focusManager.focusedId = id
   if target != nil:
     var ev = TerminalEvent(kind: ekFocus, `type`: "focus", targetId: id,
                            currentTargetId: id)
@@ -226,6 +247,20 @@ proc focus*(p: Pilot; target: TerminalNode = nil) =
     discard p.h.driver.readEvents()
     fireEventWith(target, "focus", ev)
     p.h.recordEvent(id, "focus")
+  if prevId != 0 and prevId != id and p.h.root != nil:
+    proc walk(n: TerminalNode): TerminalNode =
+      if n == nil: return nil
+      if n.id == prevId: return n
+      for c in n.children:
+        let m = walk(c)
+        if m != nil: return m
+      return nil
+    let oldNode = walk(p.h.root)
+    if oldNode != nil:
+      var bev = TerminalEvent(kind: ekBlur, `type`: "blur",
+                              targetId: prevId, currentTargetId: prevId)
+      fireEventWith(oldNode, "blur", bev)
+      p.h.recordEvent(prevId, "blur")
   p.h.flush()
 
 proc paste*(p: Pilot; text: string; target: TerminalNode = nil) =

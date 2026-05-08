@@ -1,0 +1,11 @@
+<div> [0,0 20x3]
+  <div.radio-set> [0,0 20x3]
+    <div.radio-button> [0,0 20x1]
+      <div> [0,0 20x1]
+        <> [0,0 0x0] text="( ) A"
+    <div.radio-button> [1,0 20x1]
+      <div> [1,0 20x1]
+        <> [0,0 0x0] text="(\xE2\x80\xA2) B"
+    <div.radio-button> [2,0 20x1]
+      <div> [2,0 20x1]
+        <> [0,0 0x0] text="( ) C"

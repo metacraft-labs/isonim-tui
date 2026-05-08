@@ -73,7 +73,12 @@ when defined(windows):
 # Placeholder, Rule). The widget tree is built through the same
 # renderer / compositor / cells pipeline so widgets compose cleanly
 # with the M5/M6 cascade and the M8 layered compositor.
+#
+# M12 extends the same module with the Tier-1b interactive widgets
+# (Button, Switch, Checkbox, RadioButton, RadioSet) plus the focus
+# manager at `isonim_tui/focus/manager`.
 import isonim_tui/widgets as tier1Widgets
+import isonim_tui/focus/manager as focusManagerMod
 
 export cells, events, renderer
 export width, ansi, content
@@ -91,3 +96,4 @@ when not defined(windows):
 when defined(windows):
   export windowsDriverMod
 export tier1Widgets
+export focusManagerMod

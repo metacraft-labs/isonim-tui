@@ -13,6 +13,11 @@ import widgets/label as labelMod
 import widgets/container as containerMod
 import widgets/placeholder as placeholderMod
 import widgets/rule as ruleMod
+import widgets/button as buttonMod
+import widgets/switch as switchMod
+import widgets/checkbox as checkboxMod
+import widgets/radio_button as radioButtonMod
+import widgets/radio_set as radioSetMod
 
 export borders
 export staticMod
@@ -20,3 +25,8 @@ export labelMod
 export containerMod
 export placeholderMod
 export ruleMod
+export buttonMod
+export switchMod
+export checkboxMod
+export radioButtonMod
+export radioSetMod

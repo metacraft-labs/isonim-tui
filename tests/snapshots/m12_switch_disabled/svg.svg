@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="32" viewBox="0 0 80 32" font-family="monospace" font-size="16">
+  <text id="t-0-0" x="0" y="14" style="fill:currentColor">[</text>
+  <text id="t-0-1" x="8" y="14" style="fill:currentColor">●</text>
+  <text id="t-0-2" x="16" y="14" style="fill:currentColor">·</text>
+  <text id="t-0-3" x="24" y="14" style="fill:currentColor">]</text>
+</svg>

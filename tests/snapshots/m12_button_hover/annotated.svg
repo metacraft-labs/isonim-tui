@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="64" viewBox="0 0 160 64" font-family="monospace" font-size="16">
+  <text id="t-0-0" x="0" y="14" style="fill:currentColor">╭</text>
+  <text id="t-0-1" x="8" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-2" x="16" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-3" x="24" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-4" x="32" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-5" x="40" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-6" x="48" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-7" x="56" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-8" x="64" y="14" style="fill:currentColor">─</text>
+  <text id="t-0-9" x="72" y="14" style="fill:currentColor">╮</text>
+  <text id="t-1-0" x="0" y="30" style="fill:currentColor">│</text>
+  <text id="t-1-4" x="32" y="30" style="fill:currentColor">O</text>
+  <text id="t-1-5" x="40" y="30" style="fill:currentColor">K</text>
+  <text id="t-1-9" x="72" y="30" style="fill:currentColor">│</text>
+  <text id="t-2-0" x="0" y="46" style="fill:currentColor">╰</text>
+  <text id="t-2-1" x="8" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-2" x="16" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-3" x="24" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-4" x="32" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-5" x="40" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-6" x="48" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-7" x="56" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-8" x="64" y="46" style="fill:currentColor">─</text>
+  <text id="t-2-9" x="72" y="46" style="fill:currentColor">╯</text>
+
+  <rect id="box-3" x="0" y="0" width="160" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-5" x="0" y="16" width="160" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-7" x="0" y="32" width="160" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+</svg>

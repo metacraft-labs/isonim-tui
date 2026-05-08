@@ -1,0 +1,8 @@
+{
+  "cols": 10,
+  "rows": 2,
+  "cells": [
+    [{"rune":"[","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":"·","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":"●","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":"]","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0}],
+    [{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0},{"rune":" ","fg":"default","bg":"default","attrs":[],"width":1,"nodeId":0}]
+  ]
+}

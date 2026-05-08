@@ -536,12 +536,25 @@ proc paint*(c: Compositor; root: TerminalNode; driver: HeadlessDriver) =
 # Layout-region introspection
 # ----------------------------------------------------------------------------
 
+proc collectDescendantIds(n: TerminalNode; acc: var seq[int]) =
+  if n == nil: return
+  acc.add n.id
+  for c in n.children:
+    collectDescendantIds(c, acc)
+
 proc layoutRegionFor*(c: Compositor; root: TerminalNode; nodeId: int):
                     tuple[row, col, width, height: int] =
   ## Look up the rectangle a node occupied in the most recent walk.
   ## Returns a zero-rect when the node didn't render. The lookup is
   ## fresh per call (no caching) so tree mutations between paints
   ## reflect immediately.
+  ##
+  ## When the requested node itself doesn't appear in the layout
+  ## entries (e.g. a container `div` whose children are mixed boxes
+  ## that recurse instead of collapsing into a single row), the
+  ## bounding rectangle of all descendant entries is returned. This
+  ## gives every widget a meaningful layout region even when its
+  ## outer node doesn't emit a layout entry directly.
   result = (row: 0, col: 0, width: 0, height: 0)
   if root == nil: return
   let entries = walkLayoutClean(root, c.cols)
@@ -550,6 +563,36 @@ proc layoutRegionFor*(c: Compositor; root: TerminalNode; nodeId: int):
       result = (row: entry.row, col: entry.col,
                 width: entry.width, height: 1)
       return
+  # Fallback: bounding rect over descendants.
+  proc findNode(n: TerminalNode; id: int): TerminalNode =
+    if n == nil: return nil
+    if n.id == id: return n
+    for c in n.children:
+      let m = findNode(c, id)
+      if m != nil: return m
+    return nil
+  let target = findNode(root, nodeId)
+  if target == nil: return
+  var ids: seq[int] = @[]
+  collectDescendantIds(target, ids)
+  if ids.len == 0: return
+  var minRow = high(int)
+  var maxRow = low(int)
+  var minCol = high(int)
+  var maxRight = low(int)
+  var found = false
+  for entry in entries:
+    if entry.nodeId in ids:
+      found = true
+      if entry.row < minRow: minRow = entry.row
+      if entry.row > maxRow: maxRow = entry.row
+      if entry.col < minCol: minCol = entry.col
+      let right = entry.col + entry.width
+      if right > maxRight: maxRight = right
+  if not found: return
+  result = (row: minRow, col: minCol,
+            width: maxRight - minCol,
+            height: maxRow - minRow + 1)
 
 proc nodesInRenderOrder*(root: TerminalNode): seq[int] =
   ## Walk the tree in the same order `render` will composite and

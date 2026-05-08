@@ -21,6 +21,7 @@ import ../renderer
 import ../compositor
 import ../drivers/headless_driver
 import ../animation/animator as animatorMod
+import ../focus/manager as focusMgrMod
 import ./introspection
 import ./snapshot/runner as snapRunner
 
@@ -33,6 +34,13 @@ export animatorMod.Animator, animatorMod.AnimationKey, animatorMod.activeCount,
        animatorMod.animateFloat, animatorMod.currentTime,
        animatorMod.registerAnimation, animatorMod.Animation,
        animatorMod.AnimationStepProc, animatorMod.AnimationCompleteProc
+
+export focusMgrMod.FocusManager, focusMgrMod.FocusChange,
+       focusMgrMod.newFocusManager, focusMgrMod.isFocusable,
+       focusMgrMod.focusChain, focusMgrMod.setFocus, focusMgrMod.clearFocus,
+       focusMgrMod.setFocusByNode, focusMgrMod.focusNext, focusMgrMod.focusPrev,
+       focusMgrMod.pushTrap, focusMgrMod.popTrap, focusMgrMod.currentTrap,
+       focusMgrMod.handleKey
 
 type
   TerminalTestHarness* = ref object
@@ -55,6 +63,7 @@ type
     eventSeq*: int
     eventLogStorage*: seq[EventLogEntry]
     animator*: Animator          ## M7 — owns the active animation set.
+    focusManager*: FocusManager  ## M12 — owns focus chain + traps.
     disposed*: bool
 
 # ----------------------------------------------------------------------------
@@ -83,6 +92,7 @@ proc newTerminalTestHarness*(width, height: int): TerminalTestHarness =
     eventSeq: 0,
     eventLogStorage: @[],
     animator: newAnimator(testClock, framesPerSecond = 60),
+    focusManager: newFocusManager(),
     disposed: false)
   h.driver.start()
   resetSnapshotAccumulator()
@@ -236,6 +246,44 @@ proc focusedNode*(h: TerminalTestHarness): TerminalNode =
       if m != nil: return m
     return nil
   walk(h.root)
+
+# ----------------------------------------------------------------------------
+# Focus navigation (M12)
+# ----------------------------------------------------------------------------
+
+proc focusNext*(h: TerminalTestHarness): FocusChange =
+  ## Move focus to the next focusable node in tree order. Wraps from
+  ## last → first. Updates `h.focusedId` to match the focus manager.
+  result = h.focusManager.focusNext(h.root)
+  h.focusedId = h.focusManager.focusedId
+  if result.oldId != result.newId:
+    if result.oldId != 0: h.recordEvent(result.oldId, "blur")
+    if result.newId != 0: h.recordEvent(result.newId, "focus")
+  h.flush()
+
+proc focusPrev*(h: TerminalTestHarness): FocusChange =
+  result = h.focusManager.focusPrev(h.root)
+  h.focusedId = h.focusManager.focusedId
+  if result.oldId != result.newId:
+    if result.oldId != 0: h.recordEvent(result.oldId, "blur")
+    if result.newId != 0: h.recordEvent(result.newId, "focus")
+  h.flush()
+
+proc focusChain*(h: TerminalTestHarness): seq[int] =
+  ## Snapshot of the current focus chain (focusable node ids in DFS
+  ## tree order under the active trap).
+  h.focusManager.focusChain(h.root)
+
+proc setFocus*(h: TerminalTestHarness; node: TerminalNode): FocusChange =
+  ## Programmatic focus mutation that goes through the focus manager
+  ## (so listeners + traps are honoured). Mirrors `pilot.focus(node)`
+  ## but without firing a synthetic input-driver event.
+  result = h.focusManager.setFocusByNode(h.root, node)
+  h.focusedId = h.focusManager.focusedId
+  if result.oldId != result.newId:
+    if result.oldId != 0: h.recordEvent(result.oldId, "blur")
+    if result.newId != 0: h.recordEvent(result.newId, "focus")
+  h.flush()
 
 proc isFocused*(h: TerminalTestHarness; node: TerminalNode): bool =
   node != nil and node.id == h.focusedId

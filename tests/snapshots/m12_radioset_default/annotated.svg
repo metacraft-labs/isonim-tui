@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="80" viewBox="0 0 160 80" font-family="monospace" font-size="16">
+  <text id="t-0-0" x="0" y="14" style="fill:currentColor">(</text>
+  <text id="t-0-2" x="16" y="14" style="fill:currentColor">)</text>
+  <text id="t-0-4" x="32" y="14" style="fill:currentColor">A</text>
+  <text id="t-1-0" x="0" y="30" style="fill:currentColor">(</text>
+  <text id="t-1-1" x="8" y="30" style="fill:currentColor">•</text>
+  <text id="t-1-2" x="16" y="30" style="fill:currentColor">)</text>
+  <text id="t-1-4" x="32" y="30" style="fill:currentColor">B</text>
+  <text id="t-2-0" x="0" y="46" style="fill:currentColor">(</text>
+  <text id="t-2-2" x="16" y="46" style="fill:currentColor">)</text>
+  <text id="t-2-4" x="32" y="46" style="fill:currentColor">C</text>
+
+  <rect id="box-4" x="0" y="0" width="160" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-7" x="0" y="16" width="160" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-10" x="0" y="32" width="160" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="dirty-0-0" x="0" y="0" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-0-2" x="16" y="0" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-0-4" x="32" y="0" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-1-0" x="0" y="16" width="24" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-1-4" x="32" y="16" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-2-0" x="0" y="32" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-2-2" x="16" y="32" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+  <rect id="dirty-2-4" x="32" y="32" width="8" height="16" fill="#ff0000" fill-opacity="0.2"/>
+</svg>
