@@ -1,0 +1,168 @@
+# CI Benchmark Tracking for isonim-tui (M24).
+#
+# Runs the benchmark suite on every PR and every push to main, then
+# publishes results to gh-pages for historical trend tracking via
+# github-action-benchmark.
+#
+# - On push to main: updates the baseline on gh-pages
+# - On pull_request: compares against baseline, posts PR comment, does
+#   NOT update baseline
+#
+# Local equivalent:
+#   just bench --quick
+
+name: "Benchmark"
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: benchmark-execution-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  benchmark-baseline-store:
+    runs-on: ubuntu-latest
+    name: prepare benchmark baseline store
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Ensure gh-pages baseline branch exists
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "PR benchmark run uses the existing gh-pages baseline branch"
+            exit 0
+          fi
+
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
+            echo "gh-pages baseline branch already exists"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git switch --orphan gh-pages
+          if git ls-files --error-unmatch . >/dev/null 2>&1; then
+            git rm -rf -- .
+          else
+            echo "No tracked files to remove from orphan gh-pages branch"
+          fi
+
+          cat > README.md <<'EOF'
+          # Benchmark Baselines
+
+          This branch stores github-action-benchmark history for isonim-tui (M24).
+          EOF
+          touch .nojekyll
+
+          git add README.md .nojekyll
+          git commit -m "Initialize benchmark baseline store"
+
+          if ! git push origin gh-pages; then
+            if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
+              echo "gh-pages baseline branch was created by another workflow"
+            else
+              echo "failed to create gh-pages baseline branch" >&2
+              exit 1
+            fi
+          fi
+
+  benchmark-linux:
+    needs: benchmark-baseline-store
+    runs-on: [self-hosted, benchmark]
+    name: benchmark (isonim-tui, Linux)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Run benchmark suite
+        run: |
+          nix develop --command just bench --quick
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-report
+          path: bench-results/
+          retention-days: 30
+
+      - name: Compare benchmarks (PR)
+        if: github.event_name == 'pull_request'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: "isonim-tui Performance (Linux)"
+          tool: customSmallerIsBetter
+          output-file-path: bench-results/benchmark_results.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: perf/bench
+          alert-threshold: "120%"
+          comment-always: true
+          comment-on-alert: true
+          save-data-file: false
+          auto-push: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update baseline (main)
+        if: github.ref == 'refs/heads/main'
+        uses: benchmark-action/github-action-benchmark@v1
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: commit.gpgsign
+          GIT_CONFIG_VALUE_0: "false"
+        with:
+          name: "isonim-tui Performance (Linux)"
+          tool: customSmallerIsBetter
+          output-file-path: bench-results/benchmark_results.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: perf/bench
+          alert-threshold: "120%"
+          comment-on-alert: true
+          fail-on-alert: false
+          auto-push: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Hard-failure gate: stricter than the 120% warning band.
+      # See `metacraft-specs/policies/continuous-benchmarking.md` and
+      # the M24 spec § "Hard-failure thresholds" for the table.
+      - name: Hard-threshold gate
+        if: always()
+        run: |
+          set -euo pipefail
+          nix develop --command bash scripts/check-hard-thresholds.sh \
+            bench-results/benchmark_results.json
+
+      - name: Profile on regression
+        if: failure()
+        run: |
+          nix develop --command bash scripts/profile-on-regression.sh latency || true
+          nix develop --command bash scripts/profile-on-regression.sh cold_start || true
+
+      - name: Upload flamegraphs on regression
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-flamegraphs
+          path: bench-results/flamegraph-*.svg
+          retention-days: 30
+
+      - name: Cleanup binaries
+        if: always()
+        run: |
+          rm -rf bench-results/_bin
