@@ -80,6 +80,12 @@ when defined(windows):
 import isonim_tui/widgets as tier1Widgets
 import isonim_tui/focus/manager as focusManagerMod
 
+# M15 surface — workers (background tasks, cooperative cancellation,
+# per-harness manager, `{.work.}` decorator).
+import isonim_tui/worker/worker as workerMod
+import isonim_tui/worker/manager as workerManagerMod
+import isonim_tui/worker/decorator as workerDecoratorMod
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -97,3 +103,4 @@ when defined(windows):
   export windowsDriverMod
 export tier1Widgets
 export focusManagerMod
+export workerMod, workerManagerMod, workerDecoratorMod

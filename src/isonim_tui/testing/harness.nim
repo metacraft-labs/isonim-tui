@@ -22,6 +22,8 @@ import ../compositor
 import ../drivers/headless_driver
 import ../animation/animator as animatorMod
 import ../focus/manager as focusMgrMod
+import ../worker/manager as workerMgrMod
+import ../worker/worker as workerMod
 import ./introspection
 import ./snapshot/runner as snapRunner
 
@@ -41,6 +43,19 @@ export focusMgrMod.FocusManager, focusMgrMod.FocusChange,
        focusMgrMod.setFocusByNode, focusMgrMod.focusNext, focusMgrMod.focusPrev,
        focusMgrMod.pushTrap, focusMgrMod.popTrap, focusMgrMod.currentTrap,
        focusMgrMod.handleKey
+
+export workerMgrMod.WorkerManager, workerMgrMod.WorkerHandle,
+       workerMgrMod.newWorkerManager, workerMgrMod.spawn, workerMgrMod.add,
+       workerMgrMod.cancelAll, workerMgrMod.cancelGroup, workerMgrMod.cancelNode,
+       workerMgrMod.shutdown, workerMgrMod.reap, workerMgrMod.count,
+       workerMgrMod.allWorkers, workerMgrMod.anyRunning, workerMgrMod.anyPending
+export workerMod.WorkerState, workerMod.Worker, workerMod.WorkerBase,
+       workerMod.WorkerStateChangeProc, workerMod.newWorker, workerMod.start,
+       workerMod.complete, workerMod.fail, workerMod.cancel, workerMod.checkCancelled,
+       workerMod.scheduleStep, workerMod.advance, workerMod.updateTotal,
+       workerMod.progress, workerMod.isFinished, workerMod.isRunning,
+       workerMod.isCancelled, workerMod.bindToDeferredResource,
+       workerMod.toDeferredResource
 
 type
   TerminalTestHarness* = ref object
@@ -64,6 +79,7 @@ type
     eventLogStorage*: seq[EventLogEntry]
     animator*: Animator          ## M7 — owns the active animation set.
     focusManager*: FocusManager  ## M12 — owns focus chain + traps.
+    workerManager*: WorkerManager ## M15 — owns the per-harness worker set.
     disposed*: bool
 
 # ----------------------------------------------------------------------------
@@ -93,6 +109,7 @@ proc newTerminalTestHarness*(width, height: int): TerminalTestHarness =
     eventLogStorage: @[],
     animator: newAnimator(testClock, framesPerSecond = 60),
     focusManager: newFocusManager(),
+    workerManager: newWorkerManager(testClock),
     disposed: false)
   h.driver.start()
   resetSnapshotAccumulator()
@@ -107,6 +124,8 @@ proc dispose*(h: TerminalTestHarness) =
   ## safe so test fixtures can defer-call it without bookkeeping.
   if h.disposed: return
   h.disposed = true
+  if h.workerManager != nil:
+    h.workerManager.shutdown()
   h.driver.stop()
   h.eventLogStorage.setLen(0)
   h.root = nil
