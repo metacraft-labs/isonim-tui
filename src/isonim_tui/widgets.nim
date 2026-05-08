@@ -19,6 +19,17 @@ import widgets/checkbox as checkboxMod
 import widgets/radio_button as radioButtonMod
 import widgets/radio_set as radioSetMod
 import widgets/input as inputMod
+import widgets/tabs as tabsMod
+import widgets/content_switcher as contentSwitcherMod
+import widgets/tabbed_content as tabbedContentMod
+import widgets/listview as listViewMod
+import widgets/option_list as optionListMod
+import widgets/modal as modalMod
+import widgets/collapsible as collapsibleMod
+import widgets/toast as toastMod
+import widgets/loading_indicator as loadingIndicatorMod
+import widgets/select as selectMod
+import widgets/image as imageMod
 
 export borders
 export staticMod
@@ -32,3 +43,14 @@ export checkboxMod
 export radioButtonMod
 export radioSetMod
 export inputMod
+export tabsMod
+export contentSwitcherMod
+export tabbedContentMod
+export listViewMod
+export optionListMod
+export modalMod
+export collapsibleMod
+export toastMod
+export loadingIndicatorMod
+export selectMod
+export imageMod

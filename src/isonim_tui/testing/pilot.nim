@@ -57,7 +57,12 @@ proc fireKeyEvent(p: Pilot; targetId: int; eventName, keyName: string;
       if n.id == targetId:
         fireEventWith(n, eventName, ev)
         return
-      for c in n.children: walk(c)
+      # Snapshot children before iterating: event listeners may mutate
+      # the tree (mount modals, swap content panes, etc.) and we don't
+      # want the iterator to fault when the seq grows mid-walk.
+      var snapshot = newSeq[TerminalNode](n.children.len)
+      for i in 0 ..< n.children.len: snapshot[i] = n.children[i]
+      for c in snapshot: walk(c)
     walk(p.h.root)
   p.h.recordEvent(targetId, eventName)
   p.h.flush()
@@ -79,7 +84,12 @@ proc fireMouseEvent(p: Pilot; eventName: string; mouse: MouseEvent;
       if n.id == targetId:
         fireEventWith(n, eventName, ev)
         return
-      for c in n.children: walk(c)
+      # Snapshot children before iterating: event listeners may mutate
+      # the tree (mount modals, swap content panes, etc.) and we don't
+      # want the iterator to fault when the seq grows mid-walk.
+      var snapshot = newSeq[TerminalNode](n.children.len)
+      for i in 0 ..< n.children.len: snapshot[i] = n.children[i]
+      for c in snapshot: walk(c)
     walk(p.h.root)
   p.h.recordEvent(targetId, eventName)
   p.h.flush()
