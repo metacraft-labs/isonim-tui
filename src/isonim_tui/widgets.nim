@@ -34,6 +34,8 @@ import widgets/datatable as datatableMod
 import widgets/tree as treeMod
 import widgets/directory_tree as directoryTreeMod
 import widgets/textarea as textAreaMod
+import widgets/markdown as markdownMod
+import widgets/markdown_viewer as markdownViewerMod
 
 export borders
 export staticMod
@@ -62,3 +64,5 @@ export datatableMod
 export treeMod
 export directoryTreeMod
 export textAreaMod
+export markdownMod
+export markdownViewerMod

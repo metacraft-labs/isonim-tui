@@ -1,0 +1,2360 @@
+<div> [0,0 120x1123]
+  <div.markdown> [0,0 120x1123]
+    <div> [0,0 120x17]
+      <span> [0,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [1,0 120x1]
+        <> [0,0 0x0] text="Discord"
+      <span> [2,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [3,0 120x1]
+        <> [0,0 0x0] text="Supported"
+      <span> [4,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [5,0 120x1]
+        <> [0,0 0x0] text="Python"
+      <span> [6,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [7,0 120x1]
+        <> [0,0 0x0] text="Versions"
+      <span> [8,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [9,0 120x1]
+        <> [0,0 0x0] text="PyPI"
+      <span> [10,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [11,0 120x1]
+        <> [0,0 0x0] text="version"
+      <span> [12,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [13,0 120x1]
+        <> [0,0 0x0] text="OS"
+      <span> [14,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [15,0 120x1]
+        <> [0,0 0x0] text="support"
+      <span> [16,0 120x1]
+        <> [0,0 0x0] text="                                          "
+    <div> [17,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [18,0 120x3]
+      <span> [18,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [19,0 120x1]
+        <> [0,0 0x0] text="textual-splash"
+      <span> [20,0 120x1]
+        <> [0,0 0x0] text="                                                                                     "
+    <div> [21,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [22,0 120x4]
+      <span> [22,0 120x1]
+        <> [0,0 0x0] text="#"
+      <span> [23,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [24,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [25,0 120x1]
+        <> [0,0 0x0] text="                                                                                           "
+    <div> [26,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [27,0 120x9]
+      <span> [27,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [28,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [29,0 120x1]
+        <> [0,0 0x0] text="align=\"right\""
+      <span> [30,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [31,0 120x1]
+        <> [0,0 0x0] text="width=\"250\""
+      <span> [32,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [33,0 120x1]
+        <> [0,0 0x0] text="alt=\"clock\""
+      <span> [34,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [35,0 120x1]
+        <> [0,0 0x0] text="                                                         "
+    <div> [36,0 120x4]
+      <span> [36,0 120x1]
+        <> [0,0 0x0] text="src=\"https://github.com/user-attachments/assets/63e839c3-5b8e-478d-b78e-cf7647eb85e8\""
+      <span> [37,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [38,0 120x1]
+        <> [0,0 0x0] text="/>"
+      <span> [39,0 120x1]
+        <> [0,0 0x0] text="            "
+    <div> [40,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [41,0 120x35]
+      <span> [41,0 120x1]
+        <> [0,0 0x0] text="Build"
+      <span> [42,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [43,0 120x1]
+        <> [0,0 0x0] text="cross-platform"
+      <span> [44,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [45,0 120x1]
+        <> [0,0 0x0] text="user"
+      <span> [46,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [47,0 120x1]
+        <> [0,0 0x0] text="interfaces"
+      <span> [48,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [49,0 120x1]
+        <> [0,0 0x0] text="with"
+      <span> [50,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [51,0 120x1]
+        <> [0,0 0x0] text="a"
+      <span> [52,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [53,0 120x1]
+        <> [0,0 0x0] text="simple"
+      <span> [54,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [55,0 120x1]
+        <> [0,0 0x0] text="Python"
+      <span> [56,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [57,0 120x1]
+        <> [0,0 0x0] text="API."
+      <span> [58,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [59,0 120x1]
+        <> [0,0 0x0] text="Run"
+      <span> [60,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [61,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [62,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [63,0 120x1]
+        <> [0,0 0x0] text="apps"
+      <span> [64,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [65,0 120x1]
+        <> [0,0 0x0] text="in"
+      <span> [66,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [67,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [68,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [69,0 120x1]
+        <> [0,0 0x0] text="terminal"
+      <span> [70,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [71,0 120x1]
+        <> [0,0 0x0] text="or"
+      <span> [72,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [73,0 120x1]
+        <> [0,0 0x0] text="a"
+      <span> [74,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [75,0 120x1]
+        <> [0,0 0x0] text="  "
+    <div> [76,0 120x4]
+      <span> [76,0 120x1]
+        <> [0,0 0x0] text="web"
+      <span> [77,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [78,0 120x1]
+        <> [0,0 0x0] text="browser."
+      <span> [79,0 120x1]
+        <> [0,0 0x0] text="                                                                                        "
+    <div> [80,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [81,0 120x35]
+      <span> [81,0 120x1]
+        <> [0,0 0x0] text="Textual\'s"
+      <span> [82,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [83,0 120x1]
+        <> [0,0 0x0] text="API"
+      <span> [84,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [85,0 120x1]
+        <> [0,0 0x0] text="combines"
+      <span> [86,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [87,0 120x1]
+        <> [0,0 0x0] text="modern"
+      <span> [88,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [89,0 120x1]
+        <> [0,0 0x0] text="Python"
+      <span> [90,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [91,0 120x1]
+        <> [0,0 0x0] text="with"
+      <span> [92,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [93,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [94,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [95,0 120x1]
+        <> [0,0 0x0] text="best"
+      <span> [96,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [97,0 120x1]
+        <> [0,0 0x0] text="of"
+      <span> [98,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [99,0 120x1]
+        <> [0,0 0x0] text="developments"
+      <span> [100,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [101,0 120x1]
+        <> [0,0 0x0] text="from"
+      <span> [102,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [103,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [104,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [105,0 120x1]
+        <> [0,0 0x0] text="web"
+      <span> [106,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [107,0 120x1]
+        <> [0,0 0x0] text="world,"
+      <span> [108,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [109,0 120x1]
+        <> [0,0 0x0] text="for"
+      <span> [110,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [111,0 120x1]
+        <> [0,0 0x0] text="a"
+      <span> [112,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [113,0 120x1]
+        <> [0,0 0x0] text="lean"
+      <span> [114,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [115,0 120x1]
+        <> [0,0 0x0] text="  "
+    <div> [116,0 120x27]
+      <span> [116,0 120x1]
+        <> [0,0 0x0] text="app"
+      <span> [117,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [118,0 120x1]
+        <> [0,0 0x0] text="development"
+      <span> [119,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [120,0 120x1]
+        <> [0,0 0x0] text="experience."
+      <span> [121,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [122,0 120x1]
+        <> [0,0 0x0] text="De-coupled"
+      <span> [123,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [124,0 120x1]
+        <> [0,0 0x0] text="components"
+      <span> [125,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [126,0 120x1]
+        <> [0,0 0x0] text="and"
+      <span> [127,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [128,0 120x1]
+        <> [0,0 0x0] text="an"
+      <span> [129,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [130,0 120x1]
+        <> [0,0 0x0] text="advanced"
+      <span> [131,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [132,0 120x1]
+        <> [0,0 0x0] text="testing"
+      <span> [133,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [134,0 120x1]
+        <> [0,0 0x0] text="framework"
+      <span> [135,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [136,0 120x1]
+        <> [0,0 0x0] text="ensure"
+      <span> [137,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [138,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [139,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [140,0 120x1]
+        <> [0,0 0x0] text="can"
+      <span> [141,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [142,0 120x1]
+        <> [0,0 0x0] text=" "
+    <div> [143,0 120x12]
+      <span> [143,0 120x1]
+        <> [0,0 0x0] text="maintain"
+      <span> [144,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [145,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [146,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [147,0 120x1]
+        <> [0,0 0x0] text="app"
+      <span> [148,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [149,0 120x1]
+        <> [0,0 0x0] text="for"
+      <span> [150,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [151,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [152,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [153,0 120x1]
+        <> [0,0 0x0] text="long-term."
+      <span> [154,0 120x1]
+        <> [0,0 0x0] text="                                                                "
+    <div> [155,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [156,0 120x16]
+      <span> [156,0 120x1]
+        <> [0,0 0x0] text="Want"
+      <span> [157,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [158,0 120x1]
+        <> [0,0 0x0] text="some"
+      <span> [159,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [160,0 120x1]
+        <> [0,0 0x0] text="more"
+      <span> [161,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [162,0 120x1]
+        <> [0,0 0x0] text="examples?"
+      <span> [163,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [164,0 120x1]
+        <> [0,0 0x0] text="See"
+      <span> [165,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [166,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [167,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [168,0 120x1]
+        <> [0,0 0x0] text="examples"
+      <span> [169,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [170,0 120x1]
+        <> [0,0 0x0] text="directory."
+      <span> [171,0 120x1]
+        <> [0,0 0x0] text="                                                "
+    <div> [172,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [173,0 120x2]
+      <span> [173,0 120x1]
+        <> [0,0 0x0] text="\"\"\""
+      <span> [174,0 120x1]
+        <> [0,0 0x0] text="                                                                                                 "
+    <div> [175,0 120x2]
+      <span> [175,0 120x1]
+        <> [0,0 0x0] text="An App to show the current time."
+      <span> [176,0 120x1]
+        <> [0,0 0x0] text="                                                                    "
+    <div> [177,0 120x2]
+      <span> [177,0 120x1]
+        <> [0,0 0x0] text="\"\"\""
+      <span> [178,0 120x1]
+        <> [0,0 0x0] text="                                                                                                 "
+    <div> [179,0 120x1]
+      <span> [179,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [180,0 120x5]
+      <span> [180,0 120x1]
+        <> [0,0 0x0] text="from"
+      <span> [181,0 120x1]
+        <> [0,0 0x0] text=" datetime "
+      <span> [182,0 120x1]
+        <> [0,0 0x0] text="import"
+      <span> [183,0 120x1]
+        <> [0,0 0x0] text=" datetime"
+      <span> [184,0 120x1]
+        <> [0,0 0x0] text="                                                                       "
+    <div> [185,0 120x1]
+      <span> [185,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [186,0 120x5]
+      <span> [186,0 120x1]
+        <> [0,0 0x0] text="from"
+      <span> [187,0 120x1]
+        <> [0,0 0x0] text=" textual.app "
+      <span> [188,0 120x1]
+        <> [0,0 0x0] text="import"
+      <span> [189,0 120x1]
+        <> [0,0 0x0] text=" App, ComposeResult"
+      <span> [190,0 120x1]
+        <> [0,0 0x0] text="                                                          "
+    <div> [191,0 120x5]
+      <span> [191,0 120x1]
+        <> [0,0 0x0] text="from"
+      <span> [192,0 120x1]
+        <> [0,0 0x0] text=" textual.widgets "
+      <span> [193,0 120x1]
+        <> [0,0 0x0] text="import"
+      <span> [194,0 120x1]
+        <> [0,0 0x0] text=" Digits"
+      <span> [195,0 120x1]
+        <> [0,0 0x0] text="                                                                  "
+    <div> [196,0 120x1]
+      <span> [196,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [197,0 120x1]
+      <span> [197,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [198,0 120x3]
+      <span> [198,0 120x1]
+        <> [0,0 0x0] text="class"
+      <span> [199,0 120x1]
+        <> [0,0 0x0] text=" ClockApp(App):"
+      <span> [200,0 120x1]
+        <> [0,0 0x0] text="                                                                                "
+    <div> [201,0 120x2]
+      <span> [201,0 120x1]
+        <> [0,0 0x0] text="    CSS = \"\"\""
+      <span> [202,0 120x1]
+        <> [0,0 0x0] text="                                                                                       "
+    <div> [203,0 120x2]
+      <span> [203,0 120x1]
+        <> [0,0 0x0] text="    Screen { align: center middle; }"
+      <span> [204,0 120x1]
+        <> [0,0 0x0] text="                                                                "
+    <div> [205,0 120x2]
+      <span> [205,0 120x1]
+        <> [0,0 0x0] text="    Digits { width: auto; }"
+      <span> [206,0 120x1]
+        <> [0,0 0x0] text="                                                                         "
+    <div> [207,0 120x2]
+      <span> [207,0 120x1]
+        <> [0,0 0x0] text="    \"\"\""
+      <span> [208,0 120x1]
+        <> [0,0 0x0] text="                                                                                             "
+    <div> [209,0 120x1]
+      <span> [209,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [210,0 120x4]
+      <span> [210,0 120x1]
+        <> [0,0 0x0] text="    "
+      <span> [211,0 120x1]
+        <> [0,0 0x0] text="def"
+      <span> [212,0 120x1]
+        <> [0,0 0x0] text=" compose(self) -> ComposeResult:"
+      <span> [213,0 120x1]
+        <> [0,0 0x0] text="                                                             "
+    <div> [214,0 120x4]
+      <span> [214,0 120x1]
+        <> [0,0 0x0] text="        "
+      <span> [215,0 120x1]
+        <> [0,0 0x0] text="yield"
+      <span> [216,0 120x1]
+        <> [0,0 0x0] text=" Digits(\"\")"
+      <span> [217,0 120x1]
+        <> [0,0 0x0] text="                                                                            "
+    <div> [218,0 120x1]
+      <span> [218,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [219,0 120x6]
+      <span> [219,0 120x1]
+        <> [0,0 0x0] text="    "
+      <span> [220,0 120x1]
+        <> [0,0 0x0] text="def"
+      <span> [221,0 120x1]
+        <> [0,0 0x0] text=" on_ready(self) -> "
+      <span> [222,0 120x1]
+        <> [0,0 0x0] text="None"
+      <span> [223,0 120x1]
+        <> [0,0 0x0] text=":"
+      <span> [224,0 120x1]
+        <> [0,0 0x0] text="                                                                     "
+    <div> [225,0 120x2]
+      <span> [225,0 120x1]
+        <> [0,0 0x0] text="        self.update_clock()"
+      <span> [226,0 120x1]
+        <> [0,0 0x0] text="                                                                         "
+    <div> [227,0 120x2]
+      <span> [227,0 120x1]
+        <> [0,0 0x0] text="        self.set_interval(1, self.update_clock)"
+      <span> [228,0 120x1]
+        <> [0,0 0x0] text="                                                     "
+    <div> [229,0 120x1]
+      <span> [229,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [230,0 120x6]
+      <span> [230,0 120x1]
+        <> [0,0 0x0] text="    "
+      <span> [231,0 120x1]
+        <> [0,0 0x0] text="def"
+      <span> [232,0 120x1]
+        <> [0,0 0x0] text=" update_clock(self) -> "
+      <span> [233,0 120x1]
+        <> [0,0 0x0] text="None"
+      <span> [234,0 120x1]
+        <> [0,0 0x0] text=":"
+      <span> [235,0 120x1]
+        <> [0,0 0x0] text="                                                                 "
+    <div> [236,0 120x2]
+      <span> [236,0 120x1]
+        <> [0,0 0x0] text="        clock = datetime.now().time()"
+      <span> [237,0 120x1]
+        <> [0,0 0x0] text="                                                               "
+    <div> [238,0 120x2]
+      <span> [238,0 120x1]
+        <> [0,0 0x0] text="        self.query_one(Digits).update(f\"{clock:%T}\")"
+      <span> [239,0 120x1]
+        <> [0,0 0x0] text="                                                "
+    <div> [240,0 120x1]
+      <span> [240,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [241,0 120x1]
+      <span> [241,0 120x1]
+        <> [0,0 0x0] text="                                                                                                    "
+    <div> [242,0 120x3]
+      <span> [242,0 120x1]
+        <> [0,0 0x0] text="if"
+      <span> [243,0 120x1]
+        <> [0,0 0x0] text=" __name__ == \"__main__\":"
+      <span> [244,0 120x1]
+        <> [0,0 0x0] text="                                                                          "
+    <div> [245,0 120x2]
+      <span> [245,0 120x1]
+        <> [0,0 0x0] text="    app = ClockApp()"
+      <span> [246,0 120x1]
+        <> [0,0 0x0] text="                                                                                "
+    <div> [247,0 120x2]
+      <span> [247,0 120x1]
+        <> [0,0 0x0] text="    app.run()"
+      <span> [248,0 120x1]
+        <> [0,0 0x0] text="                                                                                       "
+    <div> [249,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [250,0 120x33]
+      <span> [250,0 120x1]
+        <> [0,0 0x0] text="> "
+      <span> [251,0 120x1]
+        <> [0,0 0x0] text="["
+      <span> [252,0 120x1]
+        <> [0,0 0x0] text="!TIP]"
+      <span> [253,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [254,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [255,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [256,0 120x1]
+        <> [0,0 0x0] text="is"
+      <span> [257,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [258,0 120x1]
+        <> [0,0 0x0] text="an"
+      <span> [259,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [260,0 120x1]
+        <> [0,0 0x0] text="asynchronous"
+      <span> [261,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [262,0 120x1]
+        <> [0,0 0x0] text="framework"
+      <span> [263,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [264,0 120x1]
+        <> [0,0 0x0] text="under"
+      <span> [265,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [266,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [267,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [268,0 120x1]
+        <> [0,0 0x0] text="hood."
+      <span> [269,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [270,0 120x1]
+        <> [0,0 0x0] text="Which"
+      <span> [271,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [272,0 120x1]
+        <> [0,0 0x0] text="means"
+      <span> [273,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [274,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [275,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [276,0 120x1]
+        <> [0,0 0x0] text="can"
+      <span> [277,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [278,0 120x1]
+        <> [0,0 0x0] text="integrate"
+      <span> [279,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [280,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [281,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [282,0 120x1]
+        <> [0,0 0x0] text="   "
+    <div> [283,0 120x39]
+      <span> [283,0 120x1]
+        <> [0,0 0x0] text="> "
+      <span> [284,0 120x1]
+        <> [0,0 0x0] text="apps"
+      <span> [285,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [286,0 120x1]
+        <> [0,0 0x0] text="with"
+      <span> [287,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [288,0 120x1]
+        <> [0,0 0x0] text="async"
+      <span> [289,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [290,0 120x1]
+        <> [0,0 0x0] text="libraries"
+      <span> [291,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [292,0 120x1]
+        <> [0,0 0x0] text="&mdash;"
+      <span> [293,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [294,0 120x1]
+        <> [0,0 0x0] text="if"
+      <span> [295,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [296,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [297,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [298,0 120x1]
+        <> [0,0 0x0] text="want"
+      <span> [299,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [300,0 120x1]
+        <> [0,0 0x0] text="to."
+      <span> [301,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [302,0 120x1]
+        <> [0,0 0x0] text="If"
+      <span> [303,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [304,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [305,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [306,0 120x1]
+        <> [0,0 0x0] text="don\'t"
+      <span> [307,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [308,0 120x1]
+        <> [0,0 0x0] text="want"
+      <span> [309,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [310,0 120x1]
+        <> [0,0 0x0] text="or"
+      <span> [311,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [312,0 120x1]
+        <> [0,0 0x0] text="need"
+      <span> [313,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [314,0 120x1]
+        <> [0,0 0x0] text="to"
+      <span> [315,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [316,0 120x1]
+        <> [0,0 0x0] text="use"
+      <span> [317,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [318,0 120x1]
+        <> [0,0 0x0] text="async,"
+      <span> [319,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [320,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [321,0 120x1]
+        <> [0,0 0x0] text=" "
+    <div> [322,0 120x12]
+      <span> [322,0 120x1]
+        <> [0,0 0x0] text="> "
+      <span> [323,0 120x1]
+        <> [0,0 0x0] text="won\'t"
+      <span> [324,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [325,0 120x1]
+        <> [0,0 0x0] text="force"
+      <span> [326,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [327,0 120x1]
+        <> [0,0 0x0] text="it"
+      <span> [328,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [329,0 120x1]
+        <> [0,0 0x0] text="on"
+      <span> [330,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [331,0 120x1]
+        <> [0,0 0x0] text="you."
+      <span> [332,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [333,0 120x1]
+        <> [0,0 0x0] text="                                                                           "
+    <div> [334,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [335,0 120x8]
+      <span> [335,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [336,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [337,0 120x1]
+        <> [0,0 0x0] text="src=\"https://img.spacergif.org/spacer.gif\""
+      <span> [338,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [339,0 120x1]
+        <> [0,0 0x0] text="width=\"1\""
+      <span> [340,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [341,0 120x1]
+        <> [0,0 0x0] text="height=\"64\"/>"
+      <span> [342,0 120x1]
+        <> [0,0 0x0] text="                             "
+    <div> [343,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [344,0 120x4]
+      <span> [344,0 120x1]
+        <> [0,0 0x0] text="##"
+      <span> [345,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [346,0 120x1]
+        <> [0,0 0x0] text="Widgets"
+      <span> [347,0 120x1]
+        <> [0,0 0x0] text="                                                                                          "
+    <div> [348,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [349,0 120x27]
+      <span> [349,0 120x1]
+        <> [0,0 0x0] text="Textual\'s"
+      <span> [350,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [351,0 120x1]
+        <> [0,0 0x0] text="library"
+      <span> [352,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [353,0 120x1]
+        <> [0,0 0x0] text="of"
+      <span> [354,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [355,0 120x1]
+        <> [0,0 0x0] text="widgets"
+      <span> [356,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [357,0 120x1]
+        <> [0,0 0x0] text="covers"
+      <span> [358,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [359,0 120x1]
+        <> [0,0 0x0] text="everything"
+      <span> [360,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [361,0 120x1]
+        <> [0,0 0x0] text="from"
+      <span> [362,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [363,0 120x1]
+        <> [0,0 0x0] text="buttons,"
+      <span> [364,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [365,0 120x1]
+        <> [0,0 0x0] text="tree"
+      <span> [366,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [367,0 120x1]
+        <> [0,0 0x0] text="controls,"
+      <span> [368,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [369,0 120x1]
+        <> [0,0 0x0] text="data"
+      <span> [370,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [371,0 120x1]
+        <> [0,0 0x0] text="tables,"
+      <span> [372,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [373,0 120x1]
+        <> [0,0 0x0] text="inputs,"
+      <span> [374,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [375,0 120x1]
+        <> [0,0 0x0] text="   "
+    <div> [376,0 120x33]
+      <span> [376,0 120x1]
+        <> [0,0 0x0] text="text"
+      <span> [377,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [378,0 120x1]
+        <> [0,0 0x0] text="areas,"
+      <span> [379,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [380,0 120x1]
+        <> [0,0 0x0] text="and"
+      <span> [381,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [382,0 120x1]
+        <> [0,0 0x0] text="more\xE2\x80\xA6"
+      <span> [383,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [384,0 120x1]
+        <> [0,0 0x0] text="Combined"
+      <span> [385,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [386,0 120x1]
+        <> [0,0 0x0] text="with"
+      <span> [387,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [388,0 120x1]
+        <> [0,0 0x0] text="a"
+      <span> [389,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [390,0 120x1]
+        <> [0,0 0x0] text="flexible"
+      <span> [391,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [392,0 120x1]
+        <> [0,0 0x0] text="layout"
+      <span> [393,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [394,0 120x1]
+        <> [0,0 0x0] text="system,"
+      <span> [395,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [396,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [397,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [398,0 120x1]
+        <> [0,0 0x0] text="can"
+      <span> [399,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [400,0 120x1]
+        <> [0,0 0x0] text="realize"
+      <span> [401,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [402,0 120x1]
+        <> [0,0 0x0] text="any"
+      <span> [403,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [404,0 120x1]
+        <> [0,0 0x0] text="User"
+      <span> [405,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [406,0 120x1]
+        <> [0,0 0x0] text="Interface"
+      <span> [407,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [408,0 120x1]
+        <> [0,0 0x0] text="you"
+    <div> [409,0 120x2]
+      <span> [409,0 120x1]
+        <> [0,0 0x0] text="need."
+      <span> [410,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [411,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [412,0 120x25]
+      <span> [412,0 120x1]
+        <> [0,0 0x0] text="Predefined"
+      <span> [413,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [414,0 120x1]
+        <> [0,0 0x0] text="themes"
+      <span> [415,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [416,0 120x1]
+        <> [0,0 0x0] text="ensure"
+      <span> [417,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [418,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [419,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [420,0 120x1]
+        <> [0,0 0x0] text="apps"
+      <span> [421,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [422,0 120x1]
+        <> [0,0 0x0] text="will"
+      <span> [423,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [424,0 120x1]
+        <> [0,0 0x0] text="look"
+      <span> [425,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [426,0 120x1]
+        <> [0,0 0x0] text="good"
+      <span> [427,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [428,0 120x1]
+        <> [0,0 0x0] text="out"
+      <span> [429,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [430,0 120x1]
+        <> [0,0 0x0] text="of"
+      <span> [431,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [432,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [433,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [434,0 120x1]
+        <> [0,0 0x0] text="box."
+      <span> [435,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [436,0 120x1]
+        <> [0,0 0x0] text="                                  "
+    <div> [437,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [438,0 120x2]
+      <span> [438,0 120x1]
+        <> [0,0 0x0] text="<table>"
+      <span> [439,0 120x1]
+        <> [0,0 0x0] text="                                                                                             "
+    <div> [440,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [441,0 120x2]
+      <span> [441,0 120x1]
+        <> [0,0 0x0] text="<tr>"
+      <span> [442,0 120x1]
+        <> [0,0 0x0] text="                                                                                                "
+    <div> [443,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [444,0 120x2]
+      <span> [444,0 120x1]
+        <> [0,0 0x0] text="<td>"
+      <span> [445,0 120x1]
+        <> [0,0 0x0] text="                                                                                                "
+    <div> [446,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [447,0 120x3]
+      <span> [447,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [448,0 120x1]
+        <> [0,0 0x0] text="buttons"
+      <span> [449,0 120x1]
+        <> [0,0 0x0] text="                                                                                            "
+    <div> [450,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [451,0 120x2]
+      <span> [451,0 120x1]
+        <> [0,0 0x0] text="</td>"
+      <span> [452,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [453,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [454,0 120x2]
+      <span> [454,0 120x1]
+        <> [0,0 0x0] text="<td>"
+      <span> [455,0 120x1]
+        <> [0,0 0x0] text="                                                                                                "
+    <div> [456,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [457,0 120x3]
+      <span> [457,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [458,0 120x1]
+        <> [0,0 0x0] text="tree"
+      <span> [459,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [460,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [461,0 120x2]
+      <span> [461,0 120x1]
+        <> [0,0 0x0] text="</td>"
+      <span> [462,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [463,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [464,0 120x2]
+      <span> [464,0 120x1]
+        <> [0,0 0x0] text="</tr>"
+      <span> [465,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [466,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [467,0 120x2]
+      <span> [467,0 120x1]
+        <> [0,0 0x0] text="<tr>"
+      <span> [468,0 120x1]
+        <> [0,0 0x0] text="                                                                                                "
+    <div> [469,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [470,0 120x2]
+      <span> [470,0 120x1]
+        <> [0,0 0x0] text="<td>"
+      <span> [471,0 120x1]
+        <> [0,0 0x0] text="                                                                                                "
+    <div> [472,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [473,0 120x3]
+      <span> [473,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [474,0 120x1]
+        <> [0,0 0x0] text="datatables"
+      <span> [475,0 120x1]
+        <> [0,0 0x0] text="                                                                                         "
+    <div> [476,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [477,0 120x2]
+      <span> [477,0 120x1]
+        <> [0,0 0x0] text="</td>"
+      <span> [478,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [479,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [480,0 120x2]
+      <span> [480,0 120x1]
+        <> [0,0 0x0] text="<td>"
+      <span> [481,0 120x1]
+        <> [0,0 0x0] text="                                                                                                "
+    <div> [482,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [483,0 120x3]
+      <span> [483,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [484,0 120x1]
+        <> [0,0 0x0] text="inputs"
+      <span> [485,0 120x1]
+        <> [0,0 0x0] text="                                                                                             "
+    <div> [486,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [487,0 120x2]
+      <span> [487,0 120x1]
+        <> [0,0 0x0] text="</td>"
+      <span> [488,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [489,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [490,0 120x4]
+      <span> [490,0 120x1]
+        <> [0,0 0x0] text="</tr>"
+      <span> [491,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [492,0 120x1]
+        <> [0,0 0x0] text="<tr>"
+      <span> [493,0 120x1]
+        <> [0,0 0x0] text="                                                                                          "
+    <div> [494,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [495,0 120x2]
+      <span> [495,0 120x1]
+        <> [0,0 0x0] text="<td>"
+      <span> [496,0 120x1]
+        <> [0,0 0x0] text="                                                                                                "
+    <div> [497,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [498,0 120x3]
+      <span> [498,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [499,0 120x1]
+        <> [0,0 0x0] text="listview"
+      <span> [500,0 120x1]
+        <> [0,0 0x0] text="                                                                                           "
+    <div> [501,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [502,0 120x2]
+      <span> [502,0 120x1]
+        <> [0,0 0x0] text="</td>"
+      <span> [503,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [504,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [505,0 120x2]
+      <span> [505,0 120x1]
+        <> [0,0 0x0] text="<td>"
+      <span> [506,0 120x1]
+        <> [0,0 0x0] text="                                                                                                "
+    <div> [507,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [508,0 120x3]
+      <span> [508,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [509,0 120x1]
+        <> [0,0 0x0] text="textarea"
+      <span> [510,0 120x1]
+        <> [0,0 0x0] text="                                                                                           "
+    <div> [511,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [512,0 120x2]
+      <span> [512,0 120x1]
+        <> [0,0 0x0] text="</td>"
+      <span> [513,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [514,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [515,0 120x2]
+      <span> [515,0 120x1]
+        <> [0,0 0x0] text="</tr>"
+      <span> [516,0 120x1]
+        <> [0,0 0x0] text="                                                                                               "
+    <div> [517,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [518,0 120x2]
+      <span> [518,0 120x1]
+        <> [0,0 0x0] text="</table>"
+      <span> [519,0 120x1]
+        <> [0,0 0x0] text="                                                                                            "
+    <div> [520,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [521,0 120x8]
+      <span> [521,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [522,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [523,0 120x1]
+        <> [0,0 0x0] text="src=\"https://img.spacergif.org/spacer.gif\""
+      <span> [524,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [525,0 120x1]
+        <> [0,0 0x0] text="width=\"1\""
+      <span> [526,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [527,0 120x1]
+        <> [0,0 0x0] text="height=\"32\"/>"
+      <span> [528,0 120x1]
+        <> [0,0 0x0] text="                             "
+    <div> [529,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [530,0 120x4]
+      <span> [530,0 120x1]
+        <> [0,0 0x0] text="##"
+      <span> [531,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [532,0 120x1]
+        <> [0,0 0x0] text="Installing"
+      <span> [533,0 120x1]
+        <> [0,0 0x0] text="                                                                                       "
+    <div> [534,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [535,0 120x8]
+      <span> [535,0 120x1]
+        <> [0,0 0x0] text="Install"
+      <span> [536,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [537,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [538,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [539,0 120x1]
+        <> [0,0 0x0] text="via"
+      <span> [540,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [541,0 120x1]
+        <> [0,0 0x0] text="pip:"
+      <span> [542,0 120x1]
+        <> [0,0 0x0] text="                                                                            "
+    <div> [543,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [544,0 120x1]
+      <> [0,0 0x0] text="pip install textual textual-dev                                                                     "
+    <div> [545,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [546,0 120x10]
+      <span> [546,0 120x1]
+        <> [0,0 0x0] text="See"
+      <span> [547,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [548,0 120x1]
+        <> [0,0 0x0] text="getting"
+      <span> [549,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [550,0 120x1]
+        <> [0,0 0x0] text="started"
+      <span> [551,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [552,0 120x1]
+        <> [0,0 0x0] text="for"
+      <span> [553,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [554,0 120x1]
+        <> [0,0 0x0] text="details."
+      <span> [555,0 120x1]
+        <> [0,0 0x0] text="                                                                    "
+    <div> [556,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [557,0 120x8]
+      <span> [557,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [558,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [559,0 120x1]
+        <> [0,0 0x0] text="src=\"https://img.spacergif.org/spacer.gif\""
+      <span> [560,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [561,0 120x1]
+        <> [0,0 0x0] text="width=\"1\""
+      <span> [562,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [563,0 120x1]
+        <> [0,0 0x0] text="height=\"32\"/>"
+      <span> [564,0 120x1]
+        <> [0,0 0x0] text="                             "
+    <div> [565,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [566,0 120x4]
+      <span> [566,0 120x1]
+        <> [0,0 0x0] text="##"
+      <span> [567,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [568,0 120x1]
+        <> [0,0 0x0] text="Demo"
+      <span> [569,0 120x1]
+        <> [0,0 0x0] text="                                                                                             "
+    <div> [570,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [571,0 120x26]
+      <span> [571,0 120x1]
+        <> [0,0 0x0] text="Run"
+      <span> [572,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [573,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [574,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [575,0 120x1]
+        <> [0,0 0x0] text="following"
+      <span> [576,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [577,0 120x1]
+        <> [0,0 0x0] text="command"
+      <span> [578,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [579,0 120x1]
+        <> [0,0 0x0] text="to"
+      <span> [580,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [581,0 120x1]
+        <> [0,0 0x0] text="see"
+      <span> [582,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [583,0 120x1]
+        <> [0,0 0x0] text="a"
+      <span> [584,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [585,0 120x1]
+        <> [0,0 0x0] text="little"
+      <span> [586,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [587,0 120x1]
+        <> [0,0 0x0] text="of"
+      <span> [588,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [589,0 120x1]
+        <> [0,0 0x0] text="what"
+      <span> [590,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [591,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [592,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [593,0 120x1]
+        <> [0,0 0x0] text="can"
+      <span> [594,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [595,0 120x1]
+        <> [0,0 0x0] text="do:"
+      <span> [596,0 120x1]
+        <> [0,0 0x0] text="                                   "
+    <div> [597,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [598,0 120x1]
+      <> [0,0 0x0] text="python -m textual                                                                                   "
+    <div> [599,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [600,0 120x19]
+      <span> [600,0 120x1]
+        <> [0,0 0x0] text="Or"
+      <span> [601,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [602,0 120x1]
+        <> [0,0 0x0] text="try"
+      <span> [603,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [604,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [605,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [606,0 120x1]
+        <> [0,0 0x0] text="textual"
+      <span> [607,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [608,0 120x1]
+        <> [0,0 0x0] text="demo"
+      <span> [609,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [610,0 120x1]
+        <> [0,0 0x0] text="without"
+      <span> [611,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [612,0 120x1]
+        <> [0,0 0x0] text="installing"
+      <span> [613,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [614,0 120x1]
+        <> [0,0 0x0] text="(requires"
+      <span> [615,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [616,0 120x1]
+        <> [0,0 0x0] text="uv"
+      <span> [617,0 120x1]
+        <> [0,0 0x0] text="):"
+      <span> [618,0 120x1]
+        <> [0,0 0x0] text="                                           "
+    <div> [619,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [620,0 120x1]
+      <> [0,0 0x0] text="uvx --python 3.12 textual-demo                                                                      "
+    <div> [621,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [622,0 120x8]
+      <span> [622,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [623,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [624,0 120x1]
+        <> [0,0 0x0] text="src=\"https://img.spacergif.org/spacer.gif\""
+      <span> [625,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [626,0 120x1]
+        <> [0,0 0x0] text="width=\"1\""
+      <span> [627,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [628,0 120x1]
+        <> [0,0 0x0] text="height=\"32\"/>"
+      <span> [629,0 120x1]
+        <> [0,0 0x0] text="                             "
+    <div> [630,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [631,0 120x6]
+      <span> [631,0 120x1]
+        <> [0,0 0x0] text="##"
+      <span> [632,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [633,0 120x1]
+        <> [0,0 0x0] text="Dev"
+      <span> [634,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [635,0 120x1]
+        <> [0,0 0x0] text="Console"
+      <span> [636,0 120x1]
+        <> [0,0 0x0] text="                                                                                      "
+    <div> [637,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [638,0 120x9]
+      <span> [638,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [639,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [640,0 120x1]
+        <> [0,0 0x0] text="align=\"right\""
+      <span> [641,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [642,0 120x1]
+        <> [0,0 0x0] text="width=\"40%\""
+      <span> [643,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [644,0 120x1]
+        <> [0,0 0x0] text="alt=\"devtools\""
+      <span> [645,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [646,0 120x1]
+        <> [0,0 0x0] text="                                                      "
+    <div> [647,0 120x4]
+      <span> [647,0 120x1]
+        <> [0,0 0x0] text="src=\"https://github.com/user-attachments/assets/12c60d65-e342-4b2f-9372-bae0459a7552\""
+      <span> [648,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [649,0 120x1]
+        <> [0,0 0x0] text="/>"
+      <span> [650,0 120x1]
+        <> [0,0 0x0] text="            "
+    <div> [651,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [652,0 120x32]
+      <span> [652,0 120x1]
+        <> [0,0 0x0] text="How"
+      <span> [653,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [654,0 120x1]
+        <> [0,0 0x0] text="do"
+      <span> [655,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [656,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [657,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [658,0 120x1]
+        <> [0,0 0x0] text="debug"
+      <span> [659,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [660,0 120x1]
+        <> [0,0 0x0] text="an"
+      <span> [661,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [662,0 120x1]
+        <> [0,0 0x0] text="app"
+      <span> [663,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [664,0 120x1]
+        <> [0,0 0x0] text="in"
+      <span> [665,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [666,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [667,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [668,0 120x1]
+        <> [0,0 0x0] text="terminal"
+      <span> [669,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [670,0 120x1]
+        <> [0,0 0x0] text="that"
+      <span> [671,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [672,0 120x1]
+        <> [0,0 0x0] text="is"
+      <span> [673,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [674,0 120x1]
+        <> [0,0 0x0] text="also"
+      <span> [675,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [676,0 120x1]
+        <> [0,0 0x0] text="running"
+      <span> [677,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [678,0 120x1]
+        <> [0,0 0x0] text="in"
+      <span> [679,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [680,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [681,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [682,0 120x1]
+        <> [0,0 0x0] text="terminal?"
+      <span> [683,0 120x1]
+        <> [0,0 0x0] text="                       "
+    <div> [684,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [685,0 120x29]
+      <span> [685,0 120x1]
+        <> [0,0 0x0] text="The"
+      <span> [686,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [687,0 120x1]
+        <> [0,0 0x0] text="textual-dev"
+      <span> [688,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [689,0 120x1]
+        <> [0,0 0x0] text="package"
+      <span> [690,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [691,0 120x1]
+        <> [0,0 0x0] text="supplies"
+      <span> [692,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [693,0 120x1]
+        <> [0,0 0x0] text="a"
+      <span> [694,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [695,0 120x1]
+        <> [0,0 0x0] text="dev"
+      <span> [696,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [697,0 120x1]
+        <> [0,0 0x0] text="console"
+      <span> [698,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [699,0 120x1]
+        <> [0,0 0x0] text="that"
+      <span> [700,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [701,0 120x1]
+        <> [0,0 0x0] text="connects"
+      <span> [702,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [703,0 120x1]
+        <> [0,0 0x0] text="to"
+      <span> [704,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [705,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [706,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [707,0 120x1]
+        <> [0,0 0x0] text="application"
+      <span> [708,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [709,0 120x1]
+        <> [0,0 0x0] text="from"
+      <span> [710,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [711,0 120x1]
+        <> [0,0 0x0] text="another"
+      <span> [712,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [713,0 120x1]
+        <> [0,0 0x0] text="      "
+    <div> [714,0 120x30]
+      <span> [714,0 120x1]
+        <> [0,0 0x0] text="terminal."
+      <span> [715,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [716,0 120x1]
+        <> [0,0 0x0] text="In"
+      <span> [717,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [718,0 120x1]
+        <> [0,0 0x0] text="addition"
+      <span> [719,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [720,0 120x1]
+        <> [0,0 0x0] text="to"
+      <span> [721,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [722,0 120x1]
+        <> [0,0 0x0] text="system"
+      <span> [723,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [724,0 120x1]
+        <> [0,0 0x0] text="messages"
+      <span> [725,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [726,0 120x1]
+        <> [0,0 0x0] text="and"
+      <span> [727,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [728,0 120x1]
+        <> [0,0 0x0] text="events,"
+      <span> [729,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [730,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [731,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [732,0 120x1]
+        <> [0,0 0x0] text="logged"
+      <span> [733,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [734,0 120x1]
+        <> [0,0 0x0] text="messages"
+      <span> [735,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [736,0 120x1]
+        <> [0,0 0x0] text="and"
+      <span> [737,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [738,0 120x1]
+        <> [0,0 0x0] text="print"
+      <span> [739,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [740,0 120x1]
+        <> [0,0 0x0] text="statements"
+      <span> [741,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [742,0 120x1]
+        <> [0,0 0x0] text="will"
+      <span> [743,0 120x1]
+        <> [0,0 0x0] text=" "
+    <div> [744,0 120x10]
+      <span> [744,0 120x1]
+        <> [0,0 0x0] text="appear"
+      <span> [745,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [746,0 120x1]
+        <> [0,0 0x0] text="in"
+      <span> [747,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [748,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [749,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [750,0 120x1]
+        <> [0,0 0x0] text="dev"
+      <span> [751,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [752,0 120x1]
+        <> [0,0 0x0] text="console."
+      <span> [753,0 120x1]
+        <> [0,0 0x0] text="                                                                          "
+    <div> [754,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [755,0 120x24]
+      <span> [755,0 120x1]
+        <> [0,0 0x0] text="See"
+      <span> [756,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [757,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [758,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [759,0 120x1]
+        <> [0,0 0x0] text="guide"
+      <span> [760,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [761,0 120x1]
+        <> [0,0 0x0] text="for"
+      <span> [762,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [763,0 120x1]
+        <> [0,0 0x0] text="other"
+      <span> [764,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [765,0 120x1]
+        <> [0,0 0x0] text="helpful"
+      <span> [766,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [767,0 120x1]
+        <> [0,0 0x0] text="tools"
+      <span> [768,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [769,0 120x1]
+        <> [0,0 0x0] text="provided"
+      <span> [770,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [771,0 120x1]
+        <> [0,0 0x0] text="by"
+      <span> [772,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [773,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [774,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [775,0 120x1]
+        <> [0,0 0x0] text="textual-dev"
+      <span> [776,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [777,0 120x1]
+        <> [0,0 0x0] text="package."
+      <span> [778,0 120x1]
+        <> [0,0 0x0] text="                          "
+    <div> [779,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [780,0 120x8]
+      <span> [780,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [781,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [782,0 120x1]
+        <> [0,0 0x0] text="src=\"https://img.spacergif.org/spacer.gif\""
+      <span> [783,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [784,0 120x1]
+        <> [0,0 0x0] text="width=\"1\""
+      <span> [785,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [786,0 120x1]
+        <> [0,0 0x0] text="height=\"32\"/>"
+      <span> [787,0 120x1]
+        <> [0,0 0x0] text="                             "
+    <div> [788,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [789,0 120x6]
+      <span> [789,0 120x1]
+        <> [0,0 0x0] text="##"
+      <span> [790,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [791,0 120x1]
+        <> [0,0 0x0] text="Command"
+      <span> [792,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [793,0 120x1]
+        <> [0,0 0x0] text="Palette"
+      <span> [794,0 120x1]
+        <> [0,0 0x0] text="                                                                                  "
+    <div> [795,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [796,0 120x30]
+      <span> [796,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [797,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [798,0 120x1]
+        <> [0,0 0x0] text="apps"
+      <span> [799,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [800,0 120x1]
+        <> [0,0 0x0] text="have"
+      <span> [801,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [802,0 120x1]
+        <> [0,0 0x0] text="a"
+      <span> [803,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [804,0 120x1]
+        <> [0,0 0x0] text="fuzzy"
+      <span> [805,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [806,0 120x1]
+        <> [0,0 0x0] text="search"
+      <span> [807,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [808,0 120x1]
+        <> [0,0 0x0] text="command"
+      <span> [809,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [810,0 120x1]
+        <> [0,0 0x0] text="palette."
+      <span> [811,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [812,0 120x1]
+        <> [0,0 0x0] text="Hit"
+      <span> [813,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [814,0 120x1]
+        <> [0,0 0x0] text="ctrl+p"
+      <span> [815,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [816,0 120x1]
+        <> [0,0 0x0] text="to"
+      <span> [817,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [818,0 120x1]
+        <> [0,0 0x0] text="open"
+      <span> [819,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [820,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [821,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [822,0 120x1]
+        <> [0,0 0x0] text="command"
+      <span> [823,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [824,0 120x1]
+        <> [0,0 0x0] text="palette."
+      <span> [825,0 120x1]
+        <> [0,0 0x0] text="           "
+    <div> [826,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [827,0 120x28]
+      <span> [827,0 120x1]
+        <> [0,0 0x0] text="It"
+      <span> [828,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [829,0 120x1]
+        <> [0,0 0x0] text="is"
+      <span> [830,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [831,0 120x1]
+        <> [0,0 0x0] text="easy"
+      <span> [832,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [833,0 120x1]
+        <> [0,0 0x0] text="to"
+      <span> [834,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [835,0 120x1]
+        <> [0,0 0x0] text="extend"
+      <span> [836,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [837,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [838,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [839,0 120x1]
+        <> [0,0 0x0] text="command"
+      <span> [840,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [841,0 120x1]
+        <> [0,0 0x0] text="palette"
+      <span> [842,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [843,0 120x1]
+        <> [0,0 0x0] text="with"
+      <span> [844,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [845,0 120x1]
+        <> [0,0 0x0] text="custom"
+      <span> [846,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [847,0 120x1]
+        <> [0,0 0x0] text="commands"
+      <span> [848,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [849,0 120x1]
+        <> [0,0 0x0] text="for"
+      <span> [850,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [851,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [852,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [853,0 120x1]
+        <> [0,0 0x0] text="application."
+      <span> [854,0 120x1]
+        <> [0,0 0x0] text="                 "
+    <div> [855,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [856,0 120x5]
+      <span> [856,0 120x1]
+        <> [0,0 0x0] text="!"
+      <span> [857,0 120x1]
+        <> [0,0 0x0] text="Command"
+      <span> [858,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [859,0 120x1]
+        <> [0,0 0x0] text="Palette"
+      <span> [860,0 120x1]
+        <> [0,0 0x0] text="                                                                                    "
+    <div> [861,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [862,0 120x8]
+      <span> [862,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [863,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [864,0 120x1]
+        <> [0,0 0x0] text="src=\"https://img.spacergif.org/spacer.gif\""
+      <span> [865,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [866,0 120x1]
+        <> [0,0 0x0] text="width=\"1\""
+      <span> [867,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [868,0 120x1]
+        <> [0,0 0x0] text="height=\"32\"/>"
+      <span> [869,0 120x1]
+        <> [0,0 0x0] text="                             "
+    <div> [870,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [871,0 120x8]
+      <span> [871,0 120x1]
+        <> [0,0 0x0] text="#"
+      <span> [872,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [873,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [874,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [875,0 120x1]
+        <> [0,0 0x0] text="\xE2\x9D\xA4\xEF\xB8\x8F"
+      <span> [876,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [877,0 120x1]
+        <> [0,0 0x0] text="Web"
+      <span> [878,0 120x1]
+        <> [0,0 0x0] text="                                                                                    "
+    <div> [879,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [880,0 120x9]
+      <span> [880,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [881,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [882,0 120x1]
+        <> [0,0 0x0] text="align=\"right\""
+      <span> [883,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [884,0 120x1]
+        <> [0,0 0x0] text="width=\"40%\""
+      <span> [885,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [886,0 120x1]
+        <> [0,0 0x0] text="alt=\"textual-serve\""
+      <span> [887,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [888,0 120x1]
+        <> [0,0 0x0] text="                                                 "
+    <div> [889,0 120x2]
+      <span> [889,0 120x1]
+        <> [0,0 0x0] text="src=\"https://github.com/user-attachments/assets/a25820fb-87ae-433a-858b-ac3940169242\">"
+      <span> [890,0 120x1]
+        <> [0,0 0x0] text="              "
+    <div> [891,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [892,0 120x39]
+      <span> [892,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [893,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [894,0 120x1]
+        <> [0,0 0x0] text="apps"
+      <span> [895,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [896,0 120x1]
+        <> [0,0 0x0] text="are"
+      <span> [897,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [898,0 120x1]
+        <> [0,0 0x0] text="equally"
+      <span> [899,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [900,0 120x1]
+        <> [0,0 0x0] text="at"
+      <span> [901,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [902,0 120x1]
+        <> [0,0 0x0] text="home"
+      <span> [903,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [904,0 120x1]
+        <> [0,0 0x0] text="in"
+      <span> [905,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [906,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [907,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [908,0 120x1]
+        <> [0,0 0x0] text="browser"
+      <span> [909,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [910,0 120x1]
+        <> [0,0 0x0] text="as"
+      <span> [911,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [912,0 120x1]
+        <> [0,0 0x0] text="they"
+      <span> [913,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [914,0 120x1]
+        <> [0,0 0x0] text="are"
+      <span> [915,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [916,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [917,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [918,0 120x1]
+        <> [0,0 0x0] text="terminal."
+      <span> [919,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [920,0 120x1]
+        <> [0,0 0x0] text="Any"
+      <span> [921,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [922,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [923,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [924,0 120x1]
+        <> [0,0 0x0] text="app"
+      <span> [925,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [926,0 120x1]
+        <> [0,0 0x0] text="may"
+      <span> [927,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [928,0 120x1]
+        <> [0,0 0x0] text="be"
+      <span> [929,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [930,0 120x1]
+        <> [0,0 0x0] text="   "
+    <div> [931,0 120x37]
+      <span> [931,0 120x1]
+        <> [0,0 0x0] text="served"
+      <span> [932,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [933,0 120x1]
+        <> [0,0 0x0] text="with"
+      <span> [934,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [935,0 120x1]
+        <> [0,0 0x0] text="textual"
+      <span> [936,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [937,0 120x1]
+        <> [0,0 0x0] text="serve"
+      <span> [938,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [939,0 120x1]
+        <> [0,0 0x0] text="&mdash;"
+      <span> [940,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [941,0 120x1]
+        <> [0,0 0x0] text="so"
+      <span> [942,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [943,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [944,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [945,0 120x1]
+        <> [0,0 0x0] text="can"
+      <span> [946,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [947,0 120x1]
+        <> [0,0 0x0] text="share"
+      <span> [948,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [949,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [950,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [951,0 120x1]
+        <> [0,0 0x0] text="creations"
+      <span> [952,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [953,0 120x1]
+        <> [0,0 0x0] text="on"
+      <span> [954,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [955,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [956,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [957,0 120x1]
+        <> [0,0 0x0] text="web."
+      <span> [958,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [959,0 120x1]
+        <> [0,0 0x0] text="Here\'s"
+      <span> [960,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [961,0 120x1]
+        <> [0,0 0x0] text="how"
+      <span> [962,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [963,0 120x1]
+        <> [0,0 0x0] text="to"
+      <span> [964,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [965,0 120x1]
+        <> [0,0 0x0] text="serve"
+      <span> [966,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [967,0 120x1]
+        <> [0,0 0x0] text="  "
+    <div> [968,0 120x6]
+      <span> [968,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [969,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [970,0 120x1]
+        <> [0,0 0x0] text="demo"
+      <span> [971,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [972,0 120x1]
+        <> [0,0 0x0] text="app:"
+      <span> [973,0 120x1]
+        <> [0,0 0x0] text="                                                                                       "
+    <div> [974,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [975,0 120x1]
+      <> [0,0 0x0] text="textual serve \"python -m textual\"                                                                   "
+    <div> [976,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [977,0 120x29]
+      <span> [977,0 120x1]
+        <> [0,0 0x0] text="In"
+      <span> [978,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [979,0 120x1]
+        <> [0,0 0x0] text="addition"
+      <span> [980,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [981,0 120x1]
+        <> [0,0 0x0] text="to"
+      <span> [982,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [983,0 120x1]
+        <> [0,0 0x0] text="serving"
+      <span> [984,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [985,0 120x1]
+        <> [0,0 0x0] text="your"
+      <span> [986,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [987,0 120x1]
+        <> [0,0 0x0] text="apps"
+      <span> [988,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [989,0 120x1]
+        <> [0,0 0x0] text="locally,"
+      <span> [990,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [991,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [992,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [993,0 120x1]
+        <> [0,0 0x0] text="can"
+      <span> [994,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [995,0 120x1]
+        <> [0,0 0x0] text="serve"
+      <span> [996,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [997,0 120x1]
+        <> [0,0 0x0] text="apps"
+      <span> [998,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [999,0 120x1]
+        <> [0,0 0x0] text="with"
+      <span> [1000,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1001,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [1002,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1003,0 120x1]
+        <> [0,0 0x0] text="Web"
+      <span> [1004,0 120x1]
+        <> [0,0 0x0] text="."
+      <span> [1005,0 120x1]
+        <> [0,0 0x0] text="                      "
+    <div> [1006,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [1007,0 120x22]
+      <span> [1007,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [1008,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1009,0 120x1]
+        <> [0,0 0x0] text="Web\'s"
+      <span> [1010,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1011,0 120x1]
+        <> [0,0 0x0] text="firewall-busting"
+      <span> [1012,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1013,0 120x1]
+        <> [0,0 0x0] text="technology"
+      <span> [1014,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1015,0 120x1]
+        <> [0,0 0x0] text="can"
+      <span> [1016,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1017,0 120x1]
+        <> [0,0 0x0] text="serve"
+      <span> [1018,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1019,0 120x1]
+        <> [0,0 0x0] text="an"
+      <span> [1020,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1021,0 120x1]
+        <> [0,0 0x0] text="unlimited"
+      <span> [1022,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1023,0 120x1]
+        <> [0,0 0x0] text="number"
+      <span> [1024,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1025,0 120x1]
+        <> [0,0 0x0] text="of"
+      <span> [1026,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1027,0 120x1]
+        <> [0,0 0x0] text="applications."
+      <span> [1028,0 120x1]
+        <> [0,0 0x0] text="            "
+    <div> [1029,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [1030,0 120x31]
+      <span> [1030,0 120x1]
+        <> [0,0 0x0] text="Since"
+      <span> [1031,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1032,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [1033,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1034,0 120x1]
+        <> [0,0 0x0] text="apps"
+      <span> [1035,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1036,0 120x1]
+        <> [0,0 0x0] text="have"
+      <span> [1037,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1038,0 120x1]
+        <> [0,0 0x0] text="low"
+      <span> [1039,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1040,0 120x1]
+        <> [0,0 0x0] text="system"
+      <span> [1041,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1042,0 120x1]
+        <> [0,0 0x0] text="requirements,"
+      <span> [1043,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1044,0 120x1]
+        <> [0,0 0x0] text="you"
+      <span> [1045,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1046,0 120x1]
+        <> [0,0 0x0] text="can"
+      <span> [1047,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1048,0 120x1]
+        <> [0,0 0x0] text="install"
+      <span> [1049,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1050,0 120x1]
+        <> [0,0 0x0] text="them"
+      <span> [1051,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1052,0 120x1]
+        <> [0,0 0x0] text="anywhere"
+      <span> [1053,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1054,0 120x1]
+        <> [0,0 0x0] text="Python"
+      <span> [1055,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1056,0 120x1]
+        <> [0,0 0x0] text="also"
+      <span> [1057,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1058,0 120x1]
+        <> [0,0 0x0] text="runs."
+      <span> [1059,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1060,0 120x1]
+        <> [0,0 0x0] text="   "
+    <div> [1061,0 120x20]
+      <span> [1061,0 120x1]
+        <> [0,0 0x0] text="Turning"
+      <span> [1062,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1063,0 120x1]
+        <> [0,0 0x0] text="any"
+      <span> [1064,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1065,0 120x1]
+        <> [0,0 0x0] text="device"
+      <span> [1066,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1067,0 120x1]
+        <> [0,0 0x0] text="into"
+      <span> [1068,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1069,0 120x1]
+        <> [0,0 0x0] text="a"
+      <span> [1070,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1071,0 120x1]
+        <> [0,0 0x0] text="connected"
+      <span> [1072,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1073,0 120x1]
+        <> [0,0 0x0] text="device."
+      <span> [1074,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1075,0 120x1]
+        <> [0,0 0x0] text="No"
+      <span> [1076,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1077,0 120x1]
+        <> [0,0 0x0] text="desktop"
+      <span> [1078,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1079,0 120x1]
+        <> [0,0 0x0] text="required!"
+      <span> [1080,0 120x1]
+        <> [0,0 0x0] text="                                    "
+    <div> [1081,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [1082,0 120x8]
+      <span> [1082,0 120x1]
+        <> [0,0 0x0] text="<img"
+      <span> [1083,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1084,0 120x1]
+        <> [0,0 0x0] text="src=\"https://img.spacergif.org/spacer.gif\""
+      <span> [1085,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1086,0 120x1]
+        <> [0,0 0x0] text="width=\"1\""
+      <span> [1087,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1088,0 120x1]
+        <> [0,0 0x0] text="height=\"32\"/>"
+      <span> [1089,0 120x1]
+        <> [0,0 0x0] text="                             "
+    <div> [1090,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [1091,0 120x10]
+      <span> [1091,0 120x1]
+        <> [0,0 0x0] text="##"
+      <span> [1092,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1093,0 120x1]
+        <> [0,0 0x0] text="Join"
+      <span> [1094,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1095,0 120x1]
+        <> [0,0 0x0] text="us"
+      <span> [1096,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1097,0 120x1]
+        <> [0,0 0x0] text="on"
+      <span> [1098,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1099,0 120x1]
+        <> [0,0 0x0] text="Discord"
+      <span> [1100,0 120x1]
+        <> [0,0 0x0] text="                                                                               "
+    <div> [1101,0 120x1]
+      <> [0,0 0x0] text="                                                                                                    "
+    <div> [1102,0 120x21]
+      <span> [1102,0 120x1]
+        <> [0,0 0x0] text="Join"
+      <span> [1103,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1104,0 120x1]
+        <> [0,0 0x0] text="the"
+      <span> [1105,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1106,0 120x1]
+        <> [0,0 0x0] text="Textual"
+      <span> [1107,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1108,0 120x1]
+        <> [0,0 0x0] text="developers"
+      <span> [1109,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1110,0 120x1]
+        <> [0,0 0x0] text="and"
+      <span> [1111,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1112,0 120x1]
+        <> [0,0 0x0] text="community"
+      <span> [1113,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1114,0 120x1]
+        <> [0,0 0x0] text="on"
+      <span> [1115,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1116,0 120x1]
+        <> [0,0 0x0] text="our"
+      <span> [1117,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1118,0 120x1]
+        <> [0,0 0x0] text="Discord"
+      <span> [1119,0 120x1]
+        <> [0,0 0x0] text=" "
+      <span> [1120,0 120x1]
+        <> [0,0 0x0] text="Server"
+      <span> [1121,0 120x1]
+        <> [0,0 0x0] text="."
+      <span> [1122,0 120x1]
+        <> [0,0 0x0] text="                                    "
