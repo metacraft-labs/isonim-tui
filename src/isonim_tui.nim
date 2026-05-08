@@ -43,6 +43,9 @@ import isonim_tui/layout/arrange
 import isonim_tui/input/parser as inputParser
 import isonim_tui/input/keymap as inputKeymap
 
+# M5 surface — TCSS engine (tokenize, parse, match, cascade, cache)
+import isonim_tui/css/css as cssEngine
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -51,3 +54,4 @@ export snapPlain, snapAnsi, snapCellmap, snapSvg, snapAnnotatedSvg
 export snapTreedump, snapRunner
 export terminal_layout, vertical, horizontal, grid, stream, dock, arrange
 export inputParser, inputKeymap
+export cssEngine

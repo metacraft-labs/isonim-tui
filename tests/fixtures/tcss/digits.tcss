@@ -1,0 +1,4 @@
+Digits {
+    width: 1fr;
+    height: 1;
+}

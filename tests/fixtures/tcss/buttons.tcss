@@ -1,0 +1,31 @@
+Button {
+    width: 100%;
+    height: 1;
+    background: blue;
+    color: white;
+    border: solid;
+    text-style: bold;
+}
+
+Button:hover {
+    background: cyan;
+}
+
+Button:focus {
+    border: heavy;
+    background: green;
+}
+
+Button:disabled {
+    color: gray;
+}
+
+Button.primary {
+    background: red;
+}
+
+#submit {
+    width: 50%;
+    margin: 1 2;
+    padding: 0 1;
+}

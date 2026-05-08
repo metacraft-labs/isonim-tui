@@ -1,0 +1,24 @@
+Screen {
+    layout: vertical;
+    background: black;
+}
+
+Container {
+    layout: horizontal;
+    padding: 1;
+    margin: 0;
+}
+
+Container > Button {
+    width: 50%;
+}
+
+#dialog .ok-button {
+    background: green;
+    color: white;
+}
+
+#dialog .cancel-button {
+    background: red;
+    color: white;
+}
