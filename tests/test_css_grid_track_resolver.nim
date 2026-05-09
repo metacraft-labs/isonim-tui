@@ -77,9 +77,114 @@ suite "M5 grid: track resolver corpus":
     check rects[1].width == 40
     check rects[2].width == 20
 
-  test "test_auto_track_falls_back_to_one_cell":
-    # M5 grid scope: `auto` resolves to 1 cell minimum (full intrinsic
-    # measurement is deferred — see M5 deferred list).
+  test "test_auto_track_sizes_to_widest_child":
+    # M5 closure: `auto` tracks measure their children. The widest child
+    # placed entirely in an auto track grows that track to its natural
+    # width; the surrounding `fr` track absorbs the remainder.
+    let p = GridProps(
+      size: GridSize(cols: 3, rows: 1),
+      columns: @[gauto(), fr(1.0), gauto()],
+      rows: @[fr(1.0)],
+      gutter: GridGutter(horizontal: 0, vertical: 0))
+    let placements = placeChildren(p, @[
+      GridChildProps(colSpan: 1, rowSpan: 1),
+      GridChildProps(colSpan: 1, rowSpan: 1),
+      GridChildProps(colSpan: 1, rowSpan: 1)])
+    let naturals = @[
+      NaturalSize(width: 7, height: 1),   # auto col 0 → 7 cells
+      NaturalSize(width: 3, height: 1),   # fr col — natural ignored
+      NaturalSize(width: 4, height: 1)]   # auto col 2 → 4 cells
+    let rects = resolveCssGrid(p, placements, 50, 5, naturals)
+    check rects[0].width == 7
+    check rects[2].width == 4
+    # 1fr eats the remainder = 50 - 7 - 4 = 39.
+    check rects[1].width == 39
+    check rects[0].col == 0
+    check rects[1].col == 7
+    check rects[2].col == 46
+
+  test "test_auto_track_with_smaller_children":
+    # Auto tracks size to the actual child width, not the container
+    # width. With two `auto auto` columns and a 100-cell parent, two
+    # short children stay short; we don't stretch them to fill.
+    let p = GridProps(
+      size: GridSize(cols: 2, rows: 1),
+      columns: @[gauto(), gauto()],
+      rows: @[fr(1.0)],
+      gutter: GridGutter(horizontal: 0, vertical: 0))
+    let placements = placeChildren(p, @[
+      GridChildProps(colSpan: 1, rowSpan: 1),
+      GridChildProps(colSpan: 1, rowSpan: 1)])
+    let naturals = @[
+      NaturalSize(width: 5, height: 1),
+      NaturalSize(width: 8, height: 1)]
+    let rects = resolveCssGrid(p, placements, 100, 5, naturals)
+    check rects[0].width == 5
+    check rects[1].width == 8
+    check rects[0].col == 0
+    check rects[1].col == 5
+
+  test "test_auto_track_with_spanning_child":
+    # A child spanning two `auto` tracks grows both: the per-track
+    # first-pass size (max of single-track children) plus the
+    # span-deficit distribution.
+    let p = GridProps(
+      size: GridSize(cols: 2, rows: 2),
+      columns: @[gauto(), gauto()],
+      rows: @[fr(1.0), fr(1.0)],
+      gutter: GridGutter(horizontal: 0, vertical: 0))
+    # Row 0: child 0 spans columns 0..1.
+    # Row 1: child 1 in col 0 (width 3); child 2 in col 1 (width 4).
+    let placements = @[
+      GridPlacement(col: 0, row: 0, colSpan: 2, rowSpan: 1),
+      GridPlacement(col: 0, row: 1, colSpan: 1, rowSpan: 1),
+      GridPlacement(col: 1, row: 1, colSpan: 1, rowSpan: 1)]
+    let naturals = @[
+      NaturalSize(width: 11, height: 1),  # spanning child
+      NaturalSize(width: 3,  height: 1),
+      NaturalSize(width: 4,  height: 1)]
+    let rects = resolveCssGrid(p, placements, 50, 4, naturals)
+    # Column 0 starts at 3 (single-pass), column 1 at 4. Spanning child
+    # demands 11; existing = 7, deficit = 4 → 2 to col 0, 2 to col 1.
+    # Final: col 0 = 5, col 1 = 6, spanning child width = 11.
+    check rects[0].width == 11
+    check rects[0].col == 0
+    check rects[1].col == 0
+    check rects[1].width == 5
+    check rects[2].col == 5
+    check rects[2].width == 6
+
+  test "test_auto_mixed_with_fr":
+    # `auto fr fr` — fixed-width child in column 0, flexible content in
+    # 1 and 2. Auto column shrinks to its natural width, fr columns
+    # share the remainder.
+    let p = GridProps(
+      size: GridSize(cols: 3, rows: 1),
+      columns: @[gauto(), fr(1.0), fr(1.0)],
+      rows: @[fr(1.0)],
+      gutter: GridGutter(horizontal: 0, vertical: 0))
+    let placements = placeChildren(p, @[
+      GridChildProps(colSpan: 1, rowSpan: 1),
+      GridChildProps(colSpan: 1, rowSpan: 1),
+      GridChildProps(colSpan: 1, rowSpan: 1)])
+    let naturals = @[
+      NaturalSize(width: 6, height: 1),   # auto col 0
+      NaturalSize(width: 2, height: 1),   # fr col — natural ignored
+      NaturalSize(width: 2, height: 1)]   # fr col — natural ignored
+    let rects = resolveCssGrid(p, placements, 26, 4, naturals)
+    check rects[0].width == 6
+    # Remainder = 26 - 6 = 20 → split evenly across 2 fr tracks.
+    check rects[1].width == 10
+    check rects[2].width == 10
+    check rects[0].col == 0
+    check rects[1].col == 6
+    check rects[2].col == 16
+
+  test "test_auto_track_falls_back_to_one_cell_without_naturals":
+    # Backward-compat: the no-`natural` overload still produces the
+    # historical 1-cell fallback for `auto` tracks. Pre-M5-closure
+    # callers (the resolver isn't always wired to a widget tree) keep
+    # working.
     let p = GridProps(
       size: GridSize(cols: 3, rows: 1),
       columns: @[gauto(), fr(1.0), gauto()],
@@ -92,7 +197,6 @@ suite "M5 grid: track resolver corpus":
     let rects = resolveCssGrid(p, placements, 50, 5)
     check rects[0].width == 1
     check rects[2].width == 1
-    # 1fr eats the remainder = 50 - 1 - 1 = 48.
     check rects[1].width == 48
 
   test "test_gutter_consumes_cells":

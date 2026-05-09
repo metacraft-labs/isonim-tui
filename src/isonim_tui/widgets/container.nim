@@ -301,18 +301,53 @@ proc renderHorizontal(c: ContainerWidget) =
   if useBorder:
     emitTextRow(r, c.node, bottomBorderRow(glyphs, c.width), c.borderColor)
 
+proc naturalSizeOfChild(child: TerminalNode): NaturalSize =
+  ## Measure a grid child's intrinsic content size. The width is the
+  ## widest row of its content (mirroring the natural-width rule the
+  ## horizontal layout already uses) and the height is the row count.
+  ## Honours an explicit `data-cell-width` / `data-cell-height`
+  ## annotation when present — widgets like `Static` and `Label` set
+  ## those to expose their declared metrics, so the grid sizer respects
+  ## a child's authored width even when its rendered text is shorter.
+  if child == nil: return NaturalSize(width: 0, height: 0)
+  var w = 0
+  var h = 0
+  if child.attributes.hasKey("data-cell-width"):
+    try: w = max(0, parseInt(child.attributes["data-cell-width"]))
+    except ValueError: w = 0
+  if child.attributes.hasKey("data-cell-height"):
+    try: h = max(0, parseInt(child.attributes["data-cell-height"]))
+    except ValueError: h = 0
+  if w > 0 and h > 0:
+    return NaturalSize(width: w, height: h)
+  let rows = childRows(child)
+  if h <= 0:
+    h = max(1, rows.len)
+  if w <= 0:
+    var widest = 0
+    for r in rows:
+      let cw = cellWidth(r)
+      if cw > widest: widest = cw
+    w = widest
+  NaturalSize(width: w, height: h)
+
 proc computeGridLayout*(c: ContainerWidget) =
   ## Re-run the grid resolver for the current children + grid props.
   ## Stores the placement and resolved cell rects on the widget so
   ## downstream consumers (renderer, layout queries) see consistent
-  ## metrics.
+  ## metrics. Auto tracks size to the natural extent of their children
+  ## (the M5 closure of the grid `auto`-track intrinsic-measurement
+  ## deferral).
   c.childSpans.setLen(c.childWidgets.len)
   for i in 0 ..< c.childWidgets.len:
     if c.childSpans[i].colSpan == 0: c.childSpans[i].colSpan = 1
     if c.childSpans[i].rowSpan == 0: c.childSpans[i].rowSpan = 1
   c.gridPlacements = placeChildren(c.gridProps, c.childSpans)
+  var naturals = newSeq[NaturalSize](c.childWidgets.len)
+  for i, child in c.childWidgets:
+    naturals[i] = naturalSizeOfChild(child)
   c.gridRects = resolveCssGrid(c.gridProps, c.gridPlacements,
-                               c.width, c.viewportHeight)
+                               c.width, c.viewportHeight, naturals)
 
 proc renderGrid(c: ContainerWidget) =
   ## Render a `clGrid` container. Uses `computeGridLayout` to position

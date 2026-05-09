@@ -115,17 +115,20 @@ proc place*(grid: var GridLayout; handle: int64; col, row: int;
 # Track resolution
 # ----------------------------------------------------------------------------
 
-proc resolveTracks*(tmpl: GridTemplate; available: int): seq[int] =
-  ## Resolve every track in `tmpl` to an integer cell count summing to
-  ## `available - gap*(N-1)`. Implements the "fixed → percent → auto →
-  ## fr" priority and the "last fr absorbs slack" rule.
+proc resolveTracksEx*(tmpl: GridTemplate; available: int;
+                      autoSizes: openArray[int]): seq[int] =
+  ## Like `resolveTracks`, but lets the caller supply a per-track
+  ## intrinsic content size for `auto` tracks. `autoSizes[i]` is used
+  ## verbatim for any track `i` whose kind is `tkAuto`; non-auto entries
+  ## are ignored. Pass an empty array (or all zeros) to fall back to the
+  ## historical "auto = 1 cell" rule.
   result = newSeq[int](tmpl.tracks.len)
   if tmpl.tracks.len == 0:
     return
   let totalGap = tmpl.gap * max(0, tmpl.tracks.len - 1)
   var remaining = max(0, available - totalGap)
 
-  # Pass 1 — fixed and percent tracks consume their share.
+  # Pass 1 — fixed, percent, and auto tracks consume their share.
   for i, t in tmpl.tracks:
     case t.kind
     of tkFixed:
@@ -136,8 +139,14 @@ proc resolveTracks*(tmpl: GridTemplate; available: int): seq[int] =
       result[i] = max(0, cells)
       remaining -= result[i]
     of tkAuto:
-      result[i] = 1   # Provisional; grid policy elevates auto = 1 cell
-      remaining -= 1
+      let measured =
+        if i < autoSizes.len: max(0, autoSizes[i])
+        else: 0
+      # Provisional fallback: auto-tracks get at least 1 cell so the
+      # historical "auto = 1 cell" contract still holds when no
+      # measurement is available.
+      result[i] = max(1, measured)
+      remaining -= result[i]
     of tkFr:
       result[i] = 0   # Filled in pass 2
   remaining = max(0, remaining)
@@ -192,6 +201,15 @@ proc resolveTracks*(tmpl: GridTemplate; available: int): seq[int] =
     inc k
   for i, idx in frIndices:
     result[idx] = floors[i]
+
+proc resolveTracks*(tmpl: GridTemplate; available: int): seq[int] {.inline.} =
+  ## Resolve every track in `tmpl` to an integer cell count summing to
+  ## `available - gap*(N-1)`. Implements the "fixed → percent → auto →
+  ## fr" priority and the "last fr absorbs slack" rule. `auto` tracks
+  ## fall back to the provisional 1-cell rule because no per-track
+  ## intrinsic size is available — callers that have measured natural
+  ## sizes should use `resolveTracksEx`.
+  resolveTracksEx(tmpl, available, [])
 
 # ----------------------------------------------------------------------------
 # Layout pass — produce a CellRect per child
@@ -286,6 +304,13 @@ type
     row*: int
     colSpan*: int
     rowSpan*: int
+
+  NaturalSize* = object
+    ## The intrinsic content size of one grid child, in cells. `width`
+    ## is the longest line; `height` is the row count. Used by the
+    ## auto-track sizer to grow `auto` columns/rows to fit content.
+    width*: int
+    height*: int
 
 proc trackFromCss(t: GridTrack): Track {.inline.} =
   case t.kind
@@ -403,10 +428,143 @@ proc rowsConsumed*(placements: openArray[GridPlacement]): int =
     let bottom = p.row + p.rowSpan
     if bottom > result: result = bottom
 
+proc autoTrackSizes*(tracks: openArray[Track];
+                     placements: openArray[GridPlacement];
+                     naturalAxis: openArray[int];
+                     axis: char): seq[int] =
+  ## Compute the intrinsic content size each `auto` track must reach to
+  ## fit the children placed in it. `tracks` is the resolved track list
+  ## (columns or rows); `placements[i].col/row + span` selects which
+  ## tracks child `i` covers. `naturalAxis[i]` is that child's natural
+  ## extent on the given axis (width for `axis == 'c'`, height for
+  ## `axis == 'r'`). The returned seq has one entry per track; non-auto
+  ## entries are 0.
+  ##
+  ## Algorithm (a simplified subset of CSS Grid's "track sizing"):
+  ##   1. First pass — for each child placed entirely within a single
+  ##      `auto` track, raise that track's size to the child's natural
+  ##      size.
+  ##   2. Second pass — for each spanning child whose span includes one
+  ##      or more `auto` tracks, if the sum of the auto tracks in the
+  ##      span is less than the child's remaining demand (natural size
+  ##      minus the fixed/percent tracks already in the span), distribute
+  ##      the deficit evenly across the auto tracks in the span.
+  ##
+  ## This is honest about scope: full CSS Grid track sizing also clamps
+  ## by minmax(), distributes deficits proportional to the existing
+  ## auto sizes (not evenly), and folds in `fr` track minimum content
+  ## sizes. We ship the simple version because it covers Textual's
+  ## actual usage; the complex cases live in the M5 deferred list.
+  result = newSeq[int](tracks.len)
+  if tracks.len == 0 or placements.len == 0: return
+
+  # Pass 1 — children that fit entirely within a single auto track grow
+  # that track to the child's natural size.
+  for i, pl in placements:
+    if i >= naturalAxis.len: continue
+    let nat = max(0, naturalAxis[i])
+    let start =
+      if axis == 'c': pl.col else: pl.row
+    let span =
+      if axis == 'c': pl.colSpan else: pl.rowSpan
+    if span == 1 and start >= 0 and start < tracks.len and
+       tracks[start].kind == tkAuto:
+      if nat > result[start]:
+        result[start] = nat
+
+  # Pass 2 — spanning children. For each span, compute how much extent
+  # is already accounted for by non-auto tracks (using the first-pass
+  # auto sizes for already-grown auto tracks), and grow the remaining
+  # auto tracks in the span to cover any deficit.
+  for i, pl in placements:
+    if i >= naturalAxis.len: continue
+    let nat = max(0, naturalAxis[i])
+    let start =
+      if axis == 'c': pl.col else: pl.row
+    let span =
+      if axis == 'c': pl.colSpan else: pl.rowSpan
+    if span <= 1: continue
+
+    var existing = 0
+    var autoIndices: seq[int] = @[]
+    for k in 0 ..< span:
+      let idx = start + k
+      if idx < 0 or idx >= tracks.len: continue
+      let t = tracks[idx]
+      case t.kind
+      of tkFixed:
+        existing += max(0, int(t.value))
+      of tkPercent:
+        # Percent tracks need an `available` reference; without it we
+        # treat them as zero-min for the deficit calc. The resolver
+        # later subtracts the percent share against the parent so the
+        # final widths still account for it; this only governs how
+        # much we *grow* auto tracks, not the percent tracks.
+        discard
+      of tkFr:
+        # `fr` tracks absorb slack — they don't contribute to the
+        # spanning child's demand, so leave them out.
+        discard
+      of tkAuto:
+        existing += result[idx]
+        autoIndices.add idx
+
+    if autoIndices.len == 0: continue
+    let deficit = max(0, nat - existing)
+    if deficit == 0: continue
+
+    # Distribute the deficit evenly across the auto tracks in the span,
+    # giving any rounding remainder to the *last* auto track (mirrors
+    # the resolver's "last fr absorbs slack" rule).
+    let base = deficit div autoIndices.len
+    let extra = deficit mod autoIndices.len
+    for k, idx in autoIndices:
+      var add = base
+      if k >= autoIndices.len - extra: add += 1
+      result[idx] += add
+
+proc resolveCssGrid*(p: GridProps; placements: openArray[GridPlacement];
+                     parentWidth, parentHeight: int;
+                     natural: openArray[NaturalSize]): seq[CellRect] =
+  ## Compute one `CellRect` per placement using the CSS-driven track
+  ## specs, sizing `auto` tracks against the supplied per-child natural
+  ## sizes. Coordinates are *relative to the grid container's origin*.
+  ## The `natural` seq must have one entry per placement; pass an empty
+  ## seq (or use the no-`natural` overload) to keep the legacy
+  ## `auto = 1 cell` fallback.
+  let colTracks = effectiveColumns(p)
+  let rowTracks = effectiveRows(p, rowsConsumed(placements))
+
+  # Extract per-child natural widths/heights as parallel arrays.
+  var natW = newSeq[int](placements.len)
+  var natH = newSeq[int](placements.len)
+  for i in 0 ..< placements.len:
+    if i < natural.len:
+      natW[i] = max(0, natural[i].width)
+      natH[i] = max(0, natural[i].height)
+
+  let colAuto = autoTrackSizes(colTracks, placements, natW, 'c')
+  let rowAuto = autoTrackSizes(rowTracks, placements, natH, 'r')
+
+  let colTmpl = trackTemplate(colTracks, gap = p.gutter.horizontal)
+  let rowTmpl = trackTemplate(rowTracks, gap = p.gutter.vertical)
+  let colSizes = resolveTracksEx(colTmpl, parentWidth, colAuto)
+  let rowSizes = resolveTracksEx(rowTmpl, parentHeight, rowAuto)
+  result = newSeq[CellRect](placements.len)
+  for i, pl in placements:
+    let col = trackOffset(colSizes, p.gutter.horizontal, pl.col)
+    let row = trackOffset(rowSizes, p.gutter.vertical, pl.row)
+    let w = trackExtent(colSizes, p.gutter.horizontal, pl.col, pl.colSpan)
+    let h = trackExtent(rowSizes, p.gutter.vertical, pl.row, pl.rowSpan)
+    result[i] = CellRect(col: col, row: row, width: w, height: h)
+
 proc resolveCssGrid*(p: GridProps; placements: openArray[GridPlacement];
                      parentWidth, parentHeight: int): seq[CellRect] =
   ## Compute one `CellRect` per placement using the CSS-driven track
   ## specs. Coordinates are *relative to the grid container's origin*.
+  ## `auto` tracks fall back to the provisional 1-cell rule — the
+  ## widget-driven path that has measured natural sizes uses the
+  ## `natural`-aware overload.
   let colTracks = effectiveColumns(p)
   let rowTracks = effectiveRows(p, rowsConsumed(placements))
   let colTmpl = trackTemplate(colTracks, gap = p.gutter.horizontal)
