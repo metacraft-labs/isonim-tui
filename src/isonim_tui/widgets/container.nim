@@ -90,6 +90,28 @@ proc childText(child: TerminalNode): string =
   ## annotation.
   textContent(child)
 
+proc childRows(child: TerminalNode): seq[string] =
+  ## Extract the per-row text of `child`. Tier-1 widgets in this repo
+  ## emit one row of cells per direct child (a wrapper `<div>` whose
+  ## subtree contains a single text node). When that's the case we
+  ## return one entry per row, preserving the visual stack. Otherwise
+  ## we fall back to a single-row payload via `textContent`.
+  result = @[]
+  if child == nil: return
+  if child.children.len > 0:
+    var rows: seq[string] = @[]
+    for sub in child.children:
+      if sub.kind == tnkText:
+        # A leaf text node directly under the widget root — one row.
+        rows.add sub.text
+      else:
+        # A wrapper box / button — its subtree concatenates to one row.
+        rows.add textContent(sub)
+    if rows.len > 0:
+      return rows
+  # Fall back: single row from the concatenated content.
+  return @[textContent(child)]
+
 proc renderVertical(c: ContainerWidget) =
   let r = c.renderer
   let glyphs = bordersGlyphs(c.border)
@@ -119,22 +141,33 @@ proc renderHorizontal(c: ContainerWidget) =
   ## Real horizontal stack — children are placed left-to-right within
   ## the inner width. Each child gets its own segment, sized either to
   ## its declared cell-width (via `data-cell-width` attribute) or, if
-  ## absent, an equal share of the available cells. The viewport rows
-  ## are then concatenations of each child's text in its slot, padded
-  ## to fill the inner width.
+  ## absent, the natural display width of the *first* row of its text
+  ## payload (so multi-row widgets like `Button` and `Static` with a
+  ## border don't bleed past their own slot). Any remaining cells go
+  ## to children that didn't declare a width.
   ##
-  ## This fixes the long-standing M11/M23 gap where `clHorizontal` was
-  ## "declarative-only" and silently fell through to the vertical
-  ## render path.
+  ## Per-viewport-row painting walks each child's row sequence (one
+  ## entry per direct sub-node, mirroring how widgets emit one
+  ## wrapper per visual row) and projects row N of each child into
+  ## row N of the container — padded with spaces past the child's
+  ## intrinsic height. This fixes the long-standing M11/M23 gap where
+  ## `clHorizontal` silently fell through to the vertical render path.
   let r = c.renderer
   let glyphs = bordersGlyphs(c.border)
   let useBorder = c.border != bsNone
   let n = c.childWidgets.len
 
+  # Pre-extract each child's per-row text. We use the row count to
+  # paint, and the maximum row 0 / row N width as the natural width.
+  var rowsOf = newSeq[seq[string]](n)
+  for i, child in c.childWidgets:
+    rowsOf[i] = childRows(child)
+
   # Distribute width across children. If a child carries a
   # `data-cell-width` attribute (set by widgets like Static / Label),
-  # honour it; otherwise hand it the equal share. A zero declared
-  # width means "use the natural text width".
+  # honour it; otherwise pick the maximum cell-width across the
+  # child's rows. That keeps multi-row widgets (e.g. bordered
+  # buttons) from over-committing the slot width to a tall stack.
   var widths = newSeq[int](n)
   if n > 0:
     var declared = newSeq[int](n)
@@ -154,16 +187,18 @@ proc renderHorizontal(c: ContainerWidget) =
             continue
         except ValueError:
           discard
-      # Fall back: try the natural display width of the child's text.
-      let nat = cellWidth(childText(child))
+      # Fall back: max cell-width across rows.
+      var nat = 0
+      for r2 in rowsOf[i]:
+        let cw = cellWidth(r2)
+        if cw > nat: nat = cw
       if nat > 0:
         declared[i] = nat
         declaredTotal += nat
       else:
-        # Mark for elastic distribution.
         declared[i] = 0
         inc elastic
-    var slack = max(0, c.width - declaredTotal)
+    let slack = max(0, c.width - declaredTotal)
     if elastic > 0:
       let share = max(1, slack div elastic)
       for i in 0 ..< n:
@@ -174,31 +209,38 @@ proc renderHorizontal(c: ContainerWidget) =
     else:
       for i in 0 ..< n:
         widths[i] = declared[i]
-      # Hand any leftover to the last child so the row sums to width.
-      if n > 0:
-        let used = block:
-          var s = 0
-          for w in widths: s += w
-          s
-        if used < c.width:
-          widths[^1] += (c.width - used)
+    # If the per-child sum exceeds the inner width, scale each slot
+    # down proportionally (preserving order) so the row never spills
+    # past the container border. Otherwise hand any leftover slack to
+    # the last child so the row sums exactly.
+    var used = 0
+    for w in widths: used += w
+    if used > c.width and used > 0:
+      var scaled = newSeq[int](n)
+      var sum2 = 0
+      for i in 0 ..< n:
+        scaled[i] = (widths[i] * c.width) div used
+        sum2 += scaled[i]
+      if n > 0 and sum2 < c.width:
+        scaled[^1] += (c.width - sum2)
+      widths = scaled
+    elif used < c.width and n > 0 and elastic == 0:
+      widths[^1] += (c.width - used)
 
-  # Build the per-row content. We render `viewportHeight` rows; for
-  # each row we ask each child for its text payload and pad/truncate
-  # to its slot width.
   if useBorder:
     emitTextRow(r, c.node, topBorderRow(glyphs, c.width), c.borderColor)
   for row in 0 ..< c.viewportHeight:
     var body = ""
-    for i, child in c.childWidgets:
-      # Each child is treated as a single-row payload at row 0; for
-      # other rows we pad with spaces. This matches Textual's
-      # row-stretch behaviour for height-1 widgets in a Horizontal.
-      let raw = if row == 0: childText(child) else: ""
+    for i in 0 ..< n:
+      let raw =
+        if row < rowsOf[i].len: rowsOf[i][row]
+        else: ""
       body.add(padOrTruncate(raw, widths[i]))
-    # Pad to inner width if rounding left a gap.
+    # Final safety pad / truncate to the inner width.
     if cellWidth(body) < c.width:
       body.add(spaces(c.width - cellWidth(body)))
+    elif cellWidth(body) > c.width:
+      body = padOrTruncate(body, c.width)
     if useBorder:
       emitTextRow(r, c.node,
                   glyphs.left & body & glyphs.right, c.borderColor)
@@ -283,25 +325,14 @@ proc renderTree*(c: ContainerWidget) =
   of clVertical:
     renderVertical(c)
   of clHorizontal:
-    # M23 TODO: the M5-grid pass landed `renderHorizontal` (real
-    # left-to-right stacking), but every M23 compat-suite golden
-    # baked the old "vertical fall-through" output. Switching the
-    # default render path here would invalidate those goldens with
-    # no mechanical re-record story. We keep the active default at
-    # vertical until the M23 goldens are regenerated against the
-    # new layout. Callers that explicitly want the new behaviour
-    # can call `renderHorizontal` directly (it stays exported via
-    # `renderTreeHorizontal`).
-    renderVertical(c)
+    # M23 Batch-3: `clHorizontal` now dispatches to the real
+    # left-to-right stacking path landed by the M5-grid pass. The
+    # earlier vertical fall-through has been retired; the M23 batch-1
+    # / batch-2 goldens that exercised horizontal containers were
+    # re-recorded against the new layout in the same change-set.
+    renderHorizontal(c)
   of clGrid:
     renderGrid(c)
-
-proc renderTreeHorizontal*(c: ContainerWidget) =
-  ## Force the real horizontal-stack render path. Exposed so M23 port
-  ## tests + experimental callers can opt into the new layout while
-  ## the suite-wide goldens are still on the legacy path.
-  clearTreeChildren(c.renderer, c.node)
-  renderHorizontal(c)
 
 # ----------------------------------------------------------------------------
 # Construction

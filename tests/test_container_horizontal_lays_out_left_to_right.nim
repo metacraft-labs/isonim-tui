@@ -1,16 +1,13 @@
 ## test_container_horizontal_lays_out_left_to_right
 ##
-## M23 found-gaps fix (opt-in path): `Container` exposes a real
-## left-to-right horizontal-stack render via `renderTreeHorizontal`.
-## The default `clHorizontal` is still wired to the legacy vertical
-## render path because the M23 compat-suite goldens were baked
-## against that behaviour; switching the default would invalidate
-## them without a golden regeneration step. Callers (or future M23
-## ports after the snapshot regeneration) can pull in the new layout
-## by calling `renderTreeHorizontal` directly.
+## M23 Batch-3: `Container` with `clHorizontal` now dispatches to
+## the real left-to-right horizontal-stack render path by default
+## (the legacy vertical fall-through was retired and the affected
+## M23 goldens were re-recorded against the new layout in the same
+## change-set).
 ##
-## We mount a Container with `clHorizontal`, force the new render
-## path, and assert each child's text occupies its expected slot.
+## We mount a Container with `clHorizontal` and assert each child's
+## text occupies its expected slot.
 
 import unittest
 import std/unicode
@@ -34,7 +31,6 @@ suite "M23 horizontal: container lays out left-to-right":
         r.setAttribute(s.node, "data-cell-width", $cellWidth(label))
         container.append(s.node)
       r.appendChild(root, container.node)
-      container.renderTreeHorizontal()
       root)
 
     # Each label is 3 cells: AAA (0..2), BBB (3..5), CCC (6..8). Then
@@ -65,7 +61,6 @@ suite "M23 horizontal: container lays out left-to-right":
         let s = newStatic(r, label, width = cellWidth(label), height = 1)
         container.append(s.node)
       r.appendChild(root, container.node)
-      container.renderTreeHorizontal()
       root)
 
     # Natural widths: X(1), YY(2), ZZZ(3). Total = 6, slack = 14, all

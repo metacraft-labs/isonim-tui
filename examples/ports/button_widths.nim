@@ -30,9 +30,10 @@ proc buildButtonWidthsApp*(h: TerminalTestHarness): TerminalNode =
 
   let label = "This is a very wide button"
   let btnInner = label.len + 4   # Button auto-size: label + 4 padding.
+  let btnOuter = btnInner + 2    # Button outer width: inner + 2 borders.
 
   # First horizontal — one button.
-  let row1Width = btnInner + 2   # +2 for the container's border.
+  let row1Width = btnOuter + 2   # +2 for the container's border.
   let h1 = newContainer(r, width = row1Width, viewportHeight = 3,
                         border = bsSolid, borderColor = "red",
                         layout = clHorizontal)
@@ -41,7 +42,7 @@ proc buildButtonWidthsApp*(h: TerminalTestHarness): TerminalNode =
   r.appendChild(root, h1.node)
 
   # Second horizontal — two buttons side by side.
-  let row2Width = btnInner * 2 + 2
+  let row2Width = btnOuter * 2 + 2
   let h2 = newContainer(r, width = row2Width, viewportHeight = 3,
                         border = bsSolid, borderColor = "red",
                         layout = clHorizontal)

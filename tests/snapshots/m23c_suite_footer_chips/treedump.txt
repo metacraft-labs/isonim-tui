@@ -1,0 +1,4 @@
+<div> [0,0 60x1]
+  <div.footer> [0,0 60x1]
+    <div> [0,0 60x1]
+      <> [0,0 0x0] text="[q] Quit  [s] Save  [o] Open  [?] Help                      "

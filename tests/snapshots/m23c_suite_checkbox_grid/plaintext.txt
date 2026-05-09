@@ -1,0 +1,8 @@
+┌──────────────────────────────────────┐
+│[x] Enable feature A                  │
+│[ ] Enable feature B                  │
+│[x] Enable feature C                  │
+│[ ] Enable feature D                  │
+│                                      │
+│                                      │
+└──────────────────────────────────────┘

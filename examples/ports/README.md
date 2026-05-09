@@ -3,17 +3,19 @@
 This directory contains Nim ports of Textual's `tests/snapshot_tests/snapshot_apps/`
 applications, used to anchor the Textual Compatibility Suite (M23).
 
-## Status (20 / 30+ ports landed across two batches)
+## Status (32 / 30+ ports landed across three batches)
 
-The full M23 vision is 30+ ports cross-checked against a live Textual
-subprocess. The runtime Textual subprocess parity step has been deferred
-since the M6 / M19 milestones already documented (`Textual not in the
-dev-shell as of M6; runtime parity test will land with M23`). Pragmatic
-scoping per the milestone notes: this milestone ships a **representative
-cross-section** of 20 ports (Batch 1: 8 in `test_textual_compat.nim`;
-Batch 2: 12 in `test_textual_compat_batch2.nim`) plus the tagged-failure
-/ golden-tolerance infrastructure. The remaining ports are tracked as
-Appendix C follow-ups in the milestones doc.
+The M23 vision of 30+ ports has now been hit. The runtime Textual
+subprocess parity step remains deferred (Textual is still not in the
+dev-shell as of M6 / M19). Three batches:
+
+- Batch 1: 8 ports in `test_textual_compat.nim`.
+- Batch 2: 12 ports in `test_textual_compat_batch2.nim`.
+- Batch 3: 12 ports in `test_textual_compat_batch3.nim` — landed
+  alongside the `Container.clHorizontal` default-render switch
+  (legacy vertical fall-through retired; M23 horizontal goldens
+  re-recorded against the real left-to-right path in the same
+  change-set).
 
 ## What "parity" means here
 
@@ -33,7 +35,7 @@ the M2 stable-snapshot test). This matches the M23 milestone wording
 ("cell-content identical; SGR ordering may differ but visual result
 identical").
 
-## Apps ported (20 / 30+)
+## Apps ported (32 / 30+)
 
 Source files live one per app under this directory; the corresponding
 Textual originals are noted below.
@@ -67,6 +69,23 @@ Textual originals are noted below.
 | `multi_keys.nim`              | `snapshot_apps/multi_keys.py`                           | Footer (M21) — bindings                    |
 | `toggle_style_order.nim`      | `snapshot_apps/toggle_style_order.py`                   | Checkbox (M12), Label (M11)                |
 | `horizontal_auto_width.nim`   | `snapshot_apps/horizontal_auto_width.py`                | Container (M11) horizontal, Static (M11)   |
+
+### Batch 3 (12 ports — `tests/test_textual_compat_batch3.nim`)
+
+| Port                              | Inspired by Textual app                          | Widgets exercised                                 |
+| --------------------------------- | ------------------------------------------------ | ------------------------------------------------- |
+| `static_padding.nim`              | `static_padding.py` family                       | Static (M11) — pad widths                         |
+| `multiple_borders.nim`            | `border-styles` snapshot apps                    | Static (M11) — six BorderStyle variants           |
+| `nested_containers.nim`           | composition snapshot apps                        | Container (M11) — vertical-stack composition      |
+| `tabs_basic.nim`                  | `tabs_basic.py`                                  | Tabs (M11), Static (M11)                          |
+| `progress_bar_states.nim`         | progress-bar snapshot apps                       | ProgressBar (M21) — five percentage points        |
+| `loading_indicator_demo.nim`      | `loading_indicator.py`                           | LoadingIndicator (M11) — three labels             |
+| `header_with_title.nim`           | `header_screen.py`                               | Header (M21) — title + subtitle                   |
+| `footer_chips.nim`                | footer-chip snapshot apps                        | Footer (M21) — 4 keyboard bindings                |
+| `horizontal_static_row.nim`       | new — exercises `clHorizontal` default          | Container (M11) horizontal, Static (M11)          |
+| `listview_basic.nim`              | small-list snapshot apps                         | ListView (M14) — 5 entries                        |
+| `checkbox_grid.nim`               | checkbox-set apps                                | Checkbox (M12), Container (M11)                   |
+| `buttons_horizontal_row.nim`      | button-row snapshot apps                         | Button (M12), Container (M11) horizontal          |
 
 ## Per-port fidelity notes
 
@@ -104,10 +123,23 @@ them up.
   plain `string` and don't yet consume a rich-text `Content` value.
   Bracket sequences render literally. Affects `button_markup`,
   `toggle_style_order`.
-- **Container horizontal layout** — `clHorizontal` is declarative
-  metadata at M11; child widgets still stack vertically inside the
-  container body. Affects `horizontal_auto_width`. The setter exists so
-  callers can declare intent ahead of the layout-cascade integration.
+- **Container horizontal layout** — *RESOLVED* (Batch 3). The
+  `clHorizontal` default render path now dispatches to
+  `renderHorizontal` which lays children out left-to-right and
+  walks each child's row sequence so multi-row widgets (Buttons,
+  bordered Statics) survive the slot. The M23 batch-1 / batch-2
+  horizontal goldens (`button_widths`, `rules`,
+  `horizontal_auto_width`) were re-recorded against the new layout
+  in the same change-set.
+- **Container vertical layout — multi-row children** — M11's
+  `renderVertical` only consumes the first text-row of each direct
+  child (a wrapper `<div>` whose subtree concatenates to one row).
+  Bordered Statics nested inside a vertical Container therefore lose
+  their top/bottom border rows; Batch-3 ports that need a stack of
+  bordered widgets mount them directly under the root instead. The
+  parallel `renderHorizontal` fix landed in the same change-set
+  shows the shape of the eventual vertical fix; tracked as a
+  follow-up.
 - **Welcome body content** — the M21 `Welcome` widget ships its own
   `DefaultWelcomeBody` (isonim-tui-flavoured); Textual's body text is
   different.
@@ -116,5 +148,6 @@ them up.
 
 Each port exports `build*App(h: TerminalTestHarness): TerminalNode` —
 the test harness mounts and snapshots one port per `test` block in
-`tests/test_textual_compat.nim` (Batch 1) or
-`tests/test_textual_compat_batch2.nim` (Batch 2).
+`tests/test_textual_compat.nim` (Batch 1),
+`tests/test_textual_compat_batch2.nim` (Batch 2), or
+`tests/test_textual_compat_batch3.nim` (Batch 3).

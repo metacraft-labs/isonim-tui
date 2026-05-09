@@ -27,11 +27,15 @@ proc buildHorizontalAutoWidthApp*(h: TerminalTestHarness): TerminalNode =
   let labels = @[
     "Docked left 1", "Docked left 2", "Widget 1", "Widget 2"]
 
-  # Compute the auto-width: sum of label widths + 2 for the border.
-  var total = 2
+  # Compute the auto-width: sum of label widths.
+  var total = 0
   for l in labels: total += cellWidth(l)
 
-  let row = newContainer(r, width = max(total, h.cols),
+  # Container inner width: at least the sum of label widths, capped at
+  # terminal cols minus 2 for the border so the right border stays on
+  # screen.
+  let innerWidth = min(max(total, h.cols - 2), h.cols - 2)
+  let row = newContainer(r, width = innerWidth,
                         viewportHeight = 3,
                         border = bsSolid,
                         layout = clHorizontal)

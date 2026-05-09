@@ -1,0 +1,14 @@
+<div> [0,0 40x6]
+  <div> [0,0 40x6]
+    <div> [0,0 40x1]
+      <> [0,0 0x0] text="\xE2\xA0\x8B loading                               "
+    <div> [1,0 40x1]
+      <> [0,0 0x0] text="\xE2\xA0\x8B saving                                "
+    <div> [2,0 40x1]
+      <> [0,0 0x0] text="\xE2\xA0\x8B uploading                             "
+    <div> [3,0 40x1]
+      <> [0,0 0x0] text="                                        "
+    <div> [4,0 40x1]
+      <> [0,0 0x0] text="                                        "
+    <div> [5,0 40x1]
+      <> [0,0 0x0] text="                                        "

@@ -22,22 +22,22 @@
       <> [0,0 0x0] text="                                                            "
   <div> [10,0 60x10]
     <div> [10,0 60x1]
-      <> [0,0 0x0] text="||||||||||                                                  "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [11,0 60x1]
-      <> [0,0 0x0] text="                                                            "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [12,0 60x1]
-      <> [0,0 0x0] text="\xE2\x94\x86\xE2\x94\x86\xE2\x94\x86\xE2\x94\x86\xE2\x94\x86\xE2\x94\x86\xE2\x94\x86\xE2\x94\x86\xE2\x94\x86\xE2\x94\x86                                                  "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [13,0 60x1]
-      <> [0,0 0x0] text="\xE2\x95\x91\xE2\x95\x91\xE2\x95\x91\xE2\x95\x91\xE2\x95\x91\xE2\x95\x91\xE2\x95\x91\xE2\x95\x91\xE2\x95\x91\xE2\x95\x91                                                  "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [14,0 60x1]
-      <> [0,0 0x0] text="\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83                                                  "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [15,0 60x1]
-      <> [0,0 0x0] text="                                                            "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [16,0 60x1]
-      <> [0,0 0x0] text="                                                            "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [17,0 60x1]
-      <> [0,0 0x0] text="\xE2\x94\x82\xE2\x94\x82\xE2\x94\x82\xE2\x94\x82\xE2\x94\x82\xE2\x94\x82\xE2\x94\x82\xE2\x94\x82\xE2\x94\x82\xE2\x94\x82                                                  "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [18,0 60x1]
-      <> [0,0 0x0] text="\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83\xE2\x94\x83                                                  "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
     <div> [19,0 60x1]
-      <> [0,0 0x0] text="                                                            "
+      <> [0,0 0x0] text="| \xE2\x94\x86\xE2\x95\x91\xE2\x94\x83  \xE2\x94\x82\xE2\x94\x83                                                   "
