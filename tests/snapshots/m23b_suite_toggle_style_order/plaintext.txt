@@ -1,0 +1,6 @@
+[ ] [red bold]This is just[/] some text.
+[bold red]This is just[/] some text.
+                                                  
+                                                  
+                                                  
+                                                  

@@ -1,0 +1,7 @@
+<div> [0,0 50x2]
+  <div.checkbox> [0,0 50x1]
+    <div> [0,0 50x1]
+      <> [0,0 0x0] text="[ ] [red bold]This is just[/] some text."
+  <div> [1,0 50x1]
+    <div> [1,0 50x1]
+      <> [0,0 0x0] text="[bold red]This is just[/] some text."

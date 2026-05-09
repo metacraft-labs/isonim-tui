@@ -1,0 +1,14 @@
+╭──────────────────────────────────────────────────────────╮
+│                         Welcome                          │
+│                                                          │
+│                  Welcome to isonim-tui!                  │
+│                                                          │
+│  isonim-tui is a Textual-equivalent terminal-UI runtime  │
+│ for Nim. The widget you are looking at right now is the  │
+│  default empty-state screen, ready to be replaced with   │
+│                    your own content.                     │
+│                                                          │
+│                   Press OK to dismiss.                   │
+│                                                          │
+│                          [ OK ]                          │
+╰──────────────────────────────────────────────────────────╯

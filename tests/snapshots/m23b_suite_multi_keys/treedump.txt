@@ -1,0 +1,4 @@
+<div> [0,0 40x1]
+  <div.footer> [0,0 40x1]
+    <div> [0,0 40x1]
+      <> [0,0 0x0] text="[o] Options                             "
