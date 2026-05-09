@@ -40,6 +40,23 @@ jobs:
           path: test-logs/
           retention-days: 30
 
+  test-real-terminal:
+    name: Test (real terminal — M29)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v30
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - run: nix develop --command just test-real-terminal
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-terminal-logs
+          path: test-logs/
+          retention-days: 30
+
   charter-matrix:
     name: Charter (${{ matrix.mm }}/${{ matrix.mode }}/threads:${{ matrix.threads }})
     runs-on: ubuntu-latest

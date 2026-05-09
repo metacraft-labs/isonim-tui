@@ -19,6 +19,14 @@ alias fmt := format
 # sibling-repo sources).
 src-paths := "--path:src --path:tests --path:../isonim/src --path:../nim-termctl/src --path:../nim-pty/src --path:../nim-faststreams --path:../nim-stew --path:../nim-everywhere/src"
 
+# Extra paths needed for the M29 real-terminal suite (TermAssert lives
+# in sibling repos that aren't on the default isonim-tui path list).
+real-terminal-paths := src-paths + " --path:../nim-libvterm/src --path:../TermAssert/src --path:../TermAssertClient/src"
+
+# M29 real-terminal scenario tests. Each spawns a small app under
+# TermAssert (real pty + libvterm) and drives a scripted scenario.
+real-terminal-tests := "tests/real_terminal/test_real_static.nim tests/real_terminal/test_real_tier1.nim tests/real_terminal/test_real_tier2.nim tests/real_terminal/test_real_tier3.nim tests/real_terminal/test_real_special_cases.nim tests/real_terminal/test_real_cross_emulator.nim"
+
 # Hermetic + style checks - applied to every nim invocation in this file.
 nim-flags := "--styleCheck:usages --styleCheck:error"
 
@@ -54,6 +62,19 @@ test-snapshots:
       nim c {{nim-flags}} {{src-paths}} \
         --mm:orc -d:release --threads:on \
         -r $t 2>&1 | tee -a test-logs/snapshots.log; \
+    done
+
+# M29 — real-terminal integration suite. Spawns small per-widget test
+# apps under TermAssert (real pty + libvterm) and drives them via
+# scripted Pilot-style scenarios. Roughly 10x slower than the headless
+# `test` target — runs on PR but not on every iteration.
+test-real-terminal:
+    @mkdir -p test-logs/real-terminal
+    @for t in {{real-terminal-tests}}; do \
+      echo "[real-terminal] $t"; \
+      nim c {{nim-flags}} {{real-terminal-paths}} \
+        --mm:orc -d:release --threads:on \
+        -r $t 2>&1 | tee -a test-logs/real-terminal/run.log; \
     done
 
 # Lint: nim check + nixfmt --check + markdownlint.
