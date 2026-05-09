@@ -1,0 +1,12 @@
+ ⭐            Tasks — demo
+[x] Write docs
+[ ] Ship M27
+[ ] Celebrate
+[n] New task  [x] Toggle done  [q] Quit
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        

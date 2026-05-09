@@ -1,0 +1,126 @@
+<div.code-browser> [0,0 80x58]
+  <div.tree> [0,0 80x20]
+    <div> [0,0 80x1]
+      <> [0,0 0x0] text="\xE2\x95\xAD\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x95\xAE"
+    <div> [1,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82\xE2\x96\xB6 fixtures/                            \xE2\x94\x82"
+    <div> [2,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [3,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [4,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [5,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [6,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [7,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [8,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [9,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [10,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [11,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [12,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [13,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [14,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [15,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [16,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [17,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [18,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [19,0 80x1]
+      <> [0,0 0x0] text="\xE2\x95\xB0\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x95\xAF"
+  <textarea.textarea> [20,0 80x38]
+    <div> [20,0 80x1]
+      <> [0,0 0x0] text="\xE2\x95\xAD\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x95\xAE"
+    <div> [21,0 80x4]
+      <span> [21,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+      <span> [22,0 80x1]
+        <> [0,0 0x0] text="Alpha file"
+      <span> [23,0 80x1]
+        <> [0,0 0x0] text="                             "
+      <span> [24,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+    <div> [25,0 80x4]
+      <span> [25,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+      <span> [26,0 80x1]
+        <> [0,0 0x0] text="=========="
+      <span> [27,0 80x1]
+        <> [0,0 0x0] text="                             "
+      <span> [28,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+    <div> [29,0 80x3]
+      <span> [29,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+      <span> [30,0 80x1]
+        <> [0,0 0x0] text="                                       "
+      <span> [31,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+    <div> [32,0 80x3]
+      <span> [32,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+      <span> [33,0 80x1]
+        <> [0,0 0x0] text="A small fixture file used by the code_b"
+      <span> [34,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+    <div> [35,0 80x4]
+      <span> [35,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+      <span> [36,0 80x1]
+        <> [0,0 0x0] text="rowser demo. The browser"
+      <span> [37,0 80x1]
+        <> [0,0 0x0] text="               "
+      <span> [38,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+    <div> [39,0 80x3]
+      <span> [39,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+      <span> [40,0 80x1]
+        <> [0,0 0x0] text="loads its content into the TextArea on "
+      <span> [41,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+    <div> [42,0 80x4]
+      <span> [42,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+      <span> [43,0 80x1]
+        <> [0,0 0x0] text="startup."
+      <span> [44,0 80x1]
+        <> [0,0 0x0] text="                               "
+      <span> [45,0 80x1]
+        <> [0,0 0x0] text="\xE2\x94\x82"
+    <div> [46,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [47,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [48,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [49,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [50,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [51,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [52,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [53,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [54,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [55,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [56,0 80x1]
+      <> [0,0 0x0] text="\xE2\x94\x82                                       \xE2\x94\x82"
+    <div> [57,0 80x1]
+      <> [0,0 0x0] text="\xE2\x95\xB0\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x95\xAF"

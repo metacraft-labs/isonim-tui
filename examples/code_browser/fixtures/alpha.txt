@@ -1,0 +1,5 @@
+Alpha file
+==========
+
+A small fixture file used by the code_browser demo. The browser
+loads its content into the TextArea on startup.

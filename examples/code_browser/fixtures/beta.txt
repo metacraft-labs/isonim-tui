@@ -1,0 +1,5 @@
+Beta file
+=========
+
+Another fixture. Selecting this in the directory tree (when the demo
+wires in a selection handler) will swap the TextArea content.

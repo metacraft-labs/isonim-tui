@@ -1,0 +1,343 @@
+<div.markdown-viewer> [0,0 60x160]
+  <div.markdown> [0,0 60x160]
+    <div> [0,0 60x1]
+      <> [0,0 0x0] text="\xE2\x95\xAD\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x95\xAE"
+    <div> [1,0 60x158]
+      <div> [1,0 60x4]
+        <span> [1,0 60x1]
+          <> [0,0 0x0] text="#"
+        <span> [2,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [3,0 60x1]
+          <> [0,0 0x0] text="IsoNim-TUI"
+        <span> [4,0 60x1]
+          <> [0,0 0x0] text="                                              "
+      <div> [5,0 60x1]
+        <> [0,0 0x0] text="                                                          "
+      <div> [6,0 60x17]
+        <span> [6,0 60x1]
+          <> [0,0 0x0] text="A"
+        <span> [7,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [8,0 60x1]
+          <> [0,0 0x0] text="Textual-equivalent"
+        <span> [9,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [10,0 60x1]
+          <> [0,0 0x0] text="TUI"
+        <span> [11,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [12,0 60x1]
+          <> [0,0 0x0] text="runtime"
+        <span> [13,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [14,0 60x1]
+          <> [0,0 0x0] text="built"
+        <span> [15,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [16,0 60x1]
+          <> [0,0 0x0] text="on"
+        <span> [17,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [18,0 60x1]
+          <> [0,0 0x0] text="the"
+        <span> [19,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [20,0 60x1]
+          <> [0,0 0x0] text="IsoNim"
+        <span> [21,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [22,0 60x1]
+          <> [0,0 0x0] text="     "
+      <div> [23,0 60x4]
+        <span> [23,0 60x1]
+          <> [0,0 0x0] text="reactive"
+        <span> [24,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [25,0 60x1]
+          <> [0,0 0x0] text="core."
+        <span> [26,0 60x1]
+          <> [0,0 0x0] text="                                            "
+      <div> [27,0 60x1]
+        <> [0,0 0x0] text="                                                          "
+      <div> [28,0 60x4]
+        <span> [28,0 60x1]
+          <> [0,0 0x0] text="##"
+        <span> [29,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [30,0 60x1]
+          <> [0,0 0x0] text="Features"
+        <span> [31,0 60x1]
+          <> [0,0 0x0] text="                                               "
+      <div> [32,0 60x1]
+        <> [0,0 0x0] text="                                                          "
+      <div> [33,0 60x13]
+        <span> [33,0 60x1]
+          <> [0,0 0x0] text="- "
+        <span> [34,0 60x1]
+          <> [0,0 0x0] text="Real"
+        <span> [35,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [36,0 60x1]
+          <> [0,0 0x0] text="terminal"
+        <span> [37,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [38,0 60x1]
+          <> [0,0 0x0] text="driver"
+        <span> [39,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [40,0 60x1]
+          <> [0,0 0x0] text="(POSIX"
+        <span> [41,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [42,0 60x1]
+          <> [0,0 0x0] text="+"
+        <span> [43,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [44,0 60x1]
+          <> [0,0 0x0] text="Windows)"
+        <span> [45,0 60x1]
+          <> [0,0 0x0] text="                  "
+      <div> [46,0 60x13]
+        <span> [46,0 60x1]
+          <> [0,0 0x0] text="- "
+        <span> [47,0 60x1]
+          <> [0,0 0x0] text="TCSS"
+        <span> [48,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [49,0 60x1]
+          <> [0,0 0x0] text="engine"
+        <span> [50,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [51,0 60x1]
+          <> [0,0 0x0] text="with"
+        <span> [52,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [53,0 60x1]
+          <> [0,0 0x0] text="cascade"
+        <span> [54,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [55,0 60x1]
+          <> [0,0 0x0] text="and"
+        <span> [56,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [57,0 60x1]
+          <> [0,0 0x0] text="theming"
+        <span> [58,0 60x1]
+          <> [0,0 0x0] text="                    "
+      <div> [59,0 60x15]
+        <span> [59,0 60x1]
+          <> [0,0 0x0] text="- "
+        <span> [60,0 60x1]
+          <> [0,0 0x0] text="Tier-1"
+        <span> [61,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [62,0 60x1]
+          <> [0,0 0x0] text="/"
+        <span> [63,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [64,0 60x1]
+          <> [0,0 0x0] text="Tier-2"
+        <span> [65,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [66,0 60x1]
+          <> [0,0 0x0] text="/"
+        <span> [67,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [68,0 60x1]
+          <> [0,0 0x0] text="Tier-3"
+        <span> [69,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [70,0 60x1]
+          <> [0,0 0x0] text="widget"
+        <span> [71,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [72,0 60x1]
+          <> [0,0 0x0] text="set"
+        <span> [73,0 60x1]
+          <> [0,0 0x0] text="                     "
+      <div> [74,0 60x9]
+        <span> [74,0 60x1]
+          <> [0,0 0x0] text="- "
+        <span> [75,0 60x1]
+          <> [0,0 0x0] text="Animator"
+        <span> [76,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [77,0 60x1]
+          <> [0,0 0x0] text="with"
+        <span> [78,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [79,0 60x1]
+          <> [0,0 0x0] text="33"
+        <span> [80,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [81,0 60x1]
+          <> [0,0 0x0] text="easings"
+        <span> [82,0 60x1]
+          <> [0,0 0x0] text="                                "
+      <div> [83,0 60x15]
+        <span> [83,0 60x1]
+          <> [0,0 0x0] text="- "
+        <span> [84,0 60x1]
+          <> [0,0 0x0] text="Snapshot"
+        <span> [85,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [86,0 60x1]
+          <> [0,0 0x0] text="test"
+        <span> [87,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [88,0 60x1]
+          <> [0,0 0x0] text="harness"
+        <span> [89,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [90,0 60x1]
+          <> [0,0 0x0] text="with"
+        <span> [91,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [92,0 60x1]
+          <> [0,0 0x0] text="six"
+        <span> [93,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [94,0 60x1]
+          <> [0,0 0x0] text="output"
+        <span> [95,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [96,0 60x1]
+          <> [0,0 0x0] text="formats"
+        <span> [97,0 60x1]
+          <> [0,0 0x0] text="           "
+      <div> [98,0 60x2]
+        <span> [98,0 60x1]
+          <> [0,0 0x0] text="  "
+        <> [99,0 60x1] text="                                                        "
+      <div> [100,0 60x6]
+        <span> [100,0 60x1]
+          <> [0,0 0x0] text="##"
+        <span> [101,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [102,0 60x1]
+          <> [0,0 0x0] text="Quick"
+        <span> [103,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [104,0 60x1]
+          <> [0,0 0x0] text="start"
+        <span> [105,0 60x1]
+          <> [0,0 0x0] text="                                            "
+      <div> [106,0 60x1]
+        <> [0,0 0x0] text="                                                          "
+      <div> [107,0 60x3]
+        <span> [107,0 60x1]
+          <> [0,0 0x0] text="import"
+        <span> [108,0 60x1]
+          <> [0,0 0x0] text=" isonim_tui"
+        <span> [109,0 60x1]
+          <> [0,0 0x0] text="                                         "
+      <div> [110,0 60x1]
+        <span> [110,0 60x1]
+          <> [0,0 0x0] text="                                                          "
+      <div> [111,0 60x3]
+        <span> [111,0 60x1]
+          <> [0,0 0x0] text="let"
+        <span> [112,0 60x1]
+          <> [0,0 0x0] text=" h = newTerminalTestHarness(40, 5)"
+        <span> [113,0 60x1]
+          <> [0,0 0x0] text="                     "
+      <div> [114,0 60x4]
+        <span> [114,0 60x1]
+          <> [0,0 0x0] text="h.mount("
+        <span> [115,0 60x1]
+          <> [0,0 0x0] text="proc"
+        <span> [116,0 60x1]
+          <> [0,0 0x0] text="(r: TerminalRenderer): TerminalNode ="
+        <span> [117,0 60x1]
+          <> [0,0 0x0] text="         "
+      <div> [118,0 60x6]
+        <span> [118,0 60x1]
+          <> [0,0 0x0] text="  "
+        <span> [119,0 60x1]
+          <> [0,0 0x0] text="let"
+        <span> [120,0 60x1]
+          <> [0,0 0x0] text=" root = r.createElement(\""
+        <span> [121,0 60x1]
+          <> [0,0 0x0] text="div"
+        <span> [122,0 60x1]
+          <> [0,0 0x0] text="\")"
+        <span> [123,0 60x1]
+          <> [0,0 0x0] text="                       "
+      <div> [124,0 60x2]
+        <span> [124,0 60x1]
+          <> [0,0 0x0] text="  r.appendChild(root, newLabel(r, \"Hello!\").node)"
+        <span> [125,0 60x1]
+          <> [0,0 0x0] text="         "
+      <div> [126,0 60x2]
+        <span> [126,0 60x1]
+          <> [0,0 0x0] text="  root)"
+        <span> [127,0 60x1]
+          <> [0,0 0x0] text="                                                   "
+      <div> [128,0 60x2]
+        <span> [128,0 60x1]
+          <> [0,0 0x0] text="echo encodePlaintext(h.driver.buffer)"
+        <span> [129,0 60x1]
+          <> [0,0 0x0] text="                     "
+      <div> [130,0 60x1]
+        <> [0,0 0x0] text="                                                          "
+      <div> [131,0 60x18]
+        <span> [131,0 60x1]
+          <> [0,0 0x0] text="> "
+        <span> [132,0 60x1]
+          <> [0,0 0x0] text="Every"
+        <span> [133,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [134,0 60x1]
+          <> [0,0 0x0] text="example"
+        <span> [135,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [136,0 60x1]
+          <> [0,0 0x0] text="under"
+        <span> [137,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [138,0 60x1]
+          <> [0,0 0x0] text="examples/"
+        <span> [139,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [140,0 60x1]
+          <> [0,0 0x0] text="ships"
+        <span> [141,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [142,0 60x1]
+          <> [0,0 0x0] text="with"
+        <span> [143,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [144,0 60x1]
+          <> [0,0 0x0] text="a"
+        <span> [145,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [146,0 60x1]
+          <> [0,0 0x0] text="recorded"
+        <span> [147,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [148,0 60x1]
+          <> [0,0 0x0] text="    "
+      <div> [149,0 60x10]
+        <span> [149,0 60x1]
+          <> [0,0 0x0] text="> "
+        <span> [150,0 60x1]
+          <> [0,0 0x0] text="golden"
+        <span> [151,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [152,0 60x1]
+          <> [0,0 0x0] text="snapshot"
+        <span> [153,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [154,0 60x1]
+          <> [0,0 0x0] text="under"
+        <span> [155,0 60x1]
+          <> [0,0 0x0] text=" "
+        <span> [156,0 60x1]
+          <> [0,0 0x0] text="tests/snapshots/examples/<name>/"
+        <span> [157,0 60x1]
+          <> [0,0 0x0] text="."
+        <span> [158,0 60x1]
+          <> [0,0 0x0] text=" "
+    <div> [159,0 60x1]
+      <> [0,0 0x0] text="\xE2\x95\xB0\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x94\x80\xE2\x95\xAF"

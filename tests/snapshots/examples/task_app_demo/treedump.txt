@@ -1,0 +1,20 @@
+<div.task-app-demo> [0,0 40x5]
+  <div.header> [0,0 40x1]
+    <div> [0,0 40x1]
+      <> [0,0 0x0] text=" \xE2\xAD\x90           Tasks \xE2\x80\x94 demo           "
+  <div.task-list> [1,0 40x3]
+    <div> [1,0 40x1]
+      <div> [1,0 40x1]
+        <div> [1,0 40x1]
+          <> [0,0 0x0] text="[x] Write docs"
+    <div> [2,0 40x1]
+      <div> [2,0 40x1]
+        <div> [2,0 40x1]
+          <> [0,0 0x0] text="[ ] Ship M27"
+    <div> [3,0 40x1]
+      <div> [3,0 40x1]
+        <div> [3,0 40x1]
+          <> [0,0 0x0] text="[ ] Celebrate"
+  <div.footer> [4,0 40x1]
+    <div> [4,0 40x1]
+      <> [0,0 0x0] text="[n] New task  [x] Toggle done  [q] Quit "

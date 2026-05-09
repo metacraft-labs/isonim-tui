@@ -1,0 +1,20 @@
+╭──────────────────────────────────────────────────────────╮
+│Search…                                                   │
+╰──────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────╮
+│aardvark — burrowing nocturnal mammal                     │
+│balloon — inflatable rubber bag                           │
+│cipher — encryption scheme                                │
+│delta — river mouth                                       │
+│entropy — thermodynamic disorder                          │
+│forge — workshop with a hearth                            │
+│gauntlet — armoured glove                                 │
+│harbour — sheltered body of water                         │
+│indigo — deep blue dye                                    │
+│juniper — evergreen shrub                                 │
+│kestrel — small falcon                                    │
+│lantern — portable light                                  │
+│meridian — great circle of longitude                      │
+│nebula — interstellar cloud                               │
+│orchid — flowering plant                                  │
+│pyramid — polyhedral structure                            │

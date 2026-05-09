@@ -1,0 +1,15 @@
+2026-05-01 09:00:01 INFO  startup: process pid=12345
+2026-05-01 09:00:01 INFO  config loaded from /etc/app.toml
+2026-05-01 09:00:02 INFO  database connection established
+2026-05-01 09:00:02 DEBUG cache warmed: 142 entries
+2026-05-01 09:00:03 INFO  http server listening on :8080
+2026-05-01 09:00:05 INFO  request id=req-001 path=/healthz status=200 dur=2ms
+2026-05-01 09:00:09 INFO  request id=req-002 path=/api/items status=200 dur=14ms
+2026-05-01 09:00:12 WARN  upstream slow: dur=420ms
+2026-05-01 09:00:14 INFO  request id=req-003 path=/api/items status=200 dur=38ms
+2026-05-01 09:00:18 ERROR upstream timeout after 30000ms
+2026-05-01 09:00:20 INFO  retry succeeded id=req-004
+2026-05-01 09:00:25 INFO  request id=req-005 path=/api/users status=200 dur=8ms
+2026-05-01 09:00:30 INFO  request id=req-006 path=/api/orders status=201 dur=22ms
+2026-05-01 09:00:34 INFO  cache hit ratio=0.93
+2026-05-01 09:00:40 INFO  metrics flushed
