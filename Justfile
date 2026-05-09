@@ -84,8 +84,8 @@ test-real-terminal:
         -r $t 2>&1 | tee -a test-logs/real-terminal/run.log; \
     done
 
-# Lint: nim check + nixfmt --check + markdownlint.
-lint: lint-nim lint-nix lint-markdown
+# Lint: nim check + nixfmt --check + markdownlint + shellcheck/shfmt on scripts.
+lint: lint-nim lint-nix lint-markdown lint-shell
 
 lint-nim:
     @mkdir -p test-logs
@@ -105,7 +105,24 @@ lint-markdown:
       echo "markdownlint-cli2 not available; skipping"; \
     fi
 
-format: format-nim format-nix
+# Shell linting per repo-requirements §8 (table row: Shell | shfmt | shellcheck).
+# Both binaries are provided by the dev shell (flake.nix). Outside the dev
+# shell we degrade gracefully so a developer running `just lint` from a
+# bare zsh still gets the Nim / Nix / Markdown checks.
+lint-shell:
+    @mkdir -p test-logs
+    @if command -v shellcheck >/dev/null 2>&1; then \
+      shellcheck scripts/*.sh 2>&1 | tee test-logs/lint-shell.log; \
+    else \
+      echo "shellcheck not available; skipping (run in nix develop)"; \
+    fi
+    @if command -v shfmt >/dev/null 2>&1; then \
+      shfmt -d -i 2 -ci scripts/*.sh 2>&1 | tee -a test-logs/lint-shell.log; \
+    else \
+      echo "shfmt not available; skipping (run in nix develop)"; \
+    fi
+
+format: format-nim format-nix format-shell
 
 format-nim:
     @if command -v nimpretty >/dev/null 2>&1; then \
@@ -116,6 +133,13 @@ format-nim:
 
 format-nix:
     nixfmt flake.nix
+
+format-shell:
+    @if command -v shfmt >/dev/null 2>&1; then \
+      shfmt -w -i 2 -ci scripts/*.sh; \
+    else \
+      echo "shfmt not available; skipping shell formatting"; \
+    fi
 
 # Single-source-of-truth version bump (§6).
 bump-version version:

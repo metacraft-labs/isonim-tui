@@ -82,7 +82,7 @@ ALL_BENCHES=(
 )
 
 if [ -n "$ONLY" ]; then
-  IFS=',' read -ra BENCHES <<< "$ONLY"
+  IFS=',' read -ra BENCHES <<<"$ONLY"
 else
   BENCHES=("${ALL_BENCHES[@]}")
 fi
