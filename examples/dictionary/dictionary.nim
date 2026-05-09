@@ -8,9 +8,16 @@
 ##
 ## The word list is intentionally small (~30 entries) so the demo
 ## binary stays self-contained and the snapshot is stable.
+##
+## DM-M2: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. Structural divs use `tdiv(class=...)`,
+## widgets compose via the `w*` wrappers in
+## `isonim_tui/dsl/widget_blocks`.
 
 import std/strutils
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 # A hardcoded mini dictionary. Each entry is `(headword, gloss)`. The
 # gloss is short so it fits inside the ListView label.
@@ -70,38 +77,42 @@ proc setQuery*(vm: DictionaryVM; q: string) =
       vm.results.add (word: entry[0], gloss: entry[1])
 
 # ----------------------------------------------------------------------------
-# Composition
+# Helpers
 # ----------------------------------------------------------------------------
 
-proc buildResultsList(r: TerminalRenderer; vm: DictionaryVM;
-                      width, height: int): ListViewWidget =
-  var items: seq[ListItem] = @[]
+proc resultItems(vm: DictionaryVM): seq[ListItem] =
+  ## Build the ListView item list from the current results, with a
+  ## sentinel "(no matches)" row when the query filters everything out.
+  result = @[]
   for i, entry in vm.results:
-    items.add ListItem(id: "row" & $i,
-                       label: entry.word & " — " & entry.gloss)
-  if items.len == 0:
-    items.add ListItem(id: "empty", label: "(no matches)")
-  newListView(r, items = items, width = width,
-              viewportHeight = height, border = bsRound)
+    result.add ListItem(id: "row" & $i,
+                        label: entry.word & " — " & entry.gloss)
+  if result.len == 0:
+    result.add ListItem(id: "empty", label: "(no matches)")
+
+proc makeQueryHandler(vm: DictionaryVM): proc(s: string) =
+  ## Top-level factory so the closure captures `vm` cleanly when the
+  ## handler is built inside a DSL block.
+  result = proc(s: string) = vm.setQuery(s)
+
+# ----------------------------------------------------------------------------
+# Composition
+# ----------------------------------------------------------------------------
 
 proc buildDictionaryApp*(h: TerminalTestHarness; vm: DictionaryVM):
                         TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  r.setAttribute(root, "class", "dictionary")
+  let inputWidth = h.cols - 2
+  let listWidth = h.cols - 2
+  let listHeight = max(3, h.rows - 4)
+  let items = resultItems(vm)
+  let onChange = makeQueryHandler(vm)
+  let seedQuery = vm.query
 
-  # Search box.
-  let inp = newInput(r, value = vm.query, placeholder = "Search…",
-                     width = h.cols - 2, border = bsRound,
-                     onChange = proc(s: string) = vm.setQuery(s))
-  r.appendChild(root, inp.node)
-
-  # Results list.
-  let listH = max(3, h.rows - 4)
-  let lv = buildResultsList(r, vm, h.cols - 2, listH)
-  r.appendChild(root, lv.node)
-
-  root
+  result = ui(r):
+    tdiv(class = "dictionary"):
+      wInput(r, seedQuery, "Search…", inputWidth, bsRound, onChange)
+      wListView(r, items, listWidth, listHeight, bsRound)
 
 proc mountDictionary*(h: TerminalTestHarness): DictionaryVM =
   let vm = newDictionaryVM()

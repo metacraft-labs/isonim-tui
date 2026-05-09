@@ -8,9 +8,16 @@
 ## Bundling a tiny README keeps the demo self-contained. The Markdown
 ## widget consumes the file at mount time; subsequent edits to the
 ## fixture won't propagate without remounting.
+##
+## DM-M2: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. Structural divs use `tdiv(class=...)`,
+## widgets compose via the `w*` wrappers in
+## `isonim_tui/dsl/widget_blocks`.
 
 import std/os
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 # ----------------------------------------------------------------------------
 # Fixture
@@ -52,14 +59,12 @@ proc readmeSource*(): string =
 
 proc buildMarkdownViewerApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  r.setAttribute(root, "class", "markdown-viewer")
+  let mdWidth = h.cols - 2
+  let mdSource = readmeSource()
 
-  let md = newMarkdown(r, source = readmeSource(),
-                       width = h.cols - 2,
-                       border = bsRound)
-  r.appendChild(root, md.node)
-  root
+  result = ui(r):
+    tdiv(class = "markdown-viewer"):
+      wMarkdown(r, mdSource, mdWidth, bsRound)
 
 proc mountMarkdownViewer*(h: TerminalTestHarness) =
   h.mount(proc(r: TerminalRenderer): TerminalNode =

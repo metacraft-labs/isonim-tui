@@ -6,8 +6,15 @@
 ## `tests/test_datatable_virtualisation_perf.nim` proves this. Here we
 ## use the same widget surface with deterministic synthetic data so a
 ## snapshot test can land a stable golden.
+##
+## DM-M2: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. Structural divs use `tdiv(class=...)`,
+## widgets compose via the `w*` wrappers in
+## `isonim_tui/dsl/widget_blocks`.
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 # ----------------------------------------------------------------------------
 # Deterministic dataset
@@ -32,26 +39,18 @@ proc generateRows*(count: int): seq[RowData] =
 
 proc buildDataTableDemoApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  r.setAttribute(root, "class", "datatable-demo")
-
-  let header = newHeader(r, title = "DataTable Demo",
-                         subtitle = "1000 rows, virtualised",
-                         width = h.cols)
-  r.appendChild(root, header.node)
-
+  let cols = h.cols
   let columns = @[
     ColumnDef(key: "id",     label: "id",     width: 5),
     ColumnDef(key: "name",   label: "name",   width: 12),
     ColumnDef(key: "amount", label: "amount", width: 8)]
-
   let rows = generateRows(1000)
-  let dt = newDataTable(r, columns = columns, rows = rows,
-                        viewportHeight = max(5, h.rows - 4),
-                        border = bsSolid)
-  r.appendChild(root, dt.node)
+  let viewport = max(5, h.rows - 4)
 
-  root
+  result = ui(r):
+    tdiv(class = "datatable-demo"):
+      wHeader(r, "DataTable Demo", "1000 rows, virtualised", cols)
+      wDataTable(r, columns, rows, viewport, bsSolid)
 
 proc mountDataTableDemo*(h: TerminalTestHarness) =
   h.mount(proc(r: TerminalRenderer): TerminalNode =

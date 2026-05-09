@@ -79,6 +79,13 @@ import ../widgets/footer
 import ../widgets/label
 import ../widgets/static
 import ../widgets/button
+import ../widgets/input
+import ../widgets/listview
+import ../widgets/directory_tree
+import ../widgets/textarea
+import ../widgets/sparkline
+import ../widgets/datatable
+import ../widgets/markdown
 
 # ----------------------------------------------------------------------------
 # Header / Footer
@@ -150,3 +157,117 @@ proc wButton*(renderer: TerminalRenderer; label: string;
   ## DM-M2+ demo needs them.
   newButton(renderer, label = label, width = width,
             onClick = onClick).node
+
+# ----------------------------------------------------------------------------
+# Input
+# ----------------------------------------------------------------------------
+
+proc wInput*(renderer: TerminalRenderer; value, placeholder: string;
+             width: int; border: BorderStyle;
+             onChange: proc(newValue: string)): TerminalNode =
+  ## DSL-friendly wrapper around `newInput` for the typical demo case:
+  ## seed value, placeholder text, explicit width, border style, and a
+  ## change handler. The parameter order diverges from `newInput` (which
+  ## interleaves password / borderColor / disabled / maxLength /
+  ## validator / suggester / onChange / onSubmit) so callers can pass
+  ## the handler positionally inside a `ui()` block without threading
+  ## defaults for every intermediate optional argument. Add an overload
+  ## here when a future demo needs password / suggester / validator
+  ## wiring through the DSL.
+  newInput(renderer, value = value, placeholder = placeholder,
+           width = width, border = border, onChange = onChange).node
+
+# ----------------------------------------------------------------------------
+# ListView
+# ----------------------------------------------------------------------------
+
+proc wListView*(renderer: TerminalRenderer;
+                items: openArray[ListItem];
+                width, viewportHeight: int;
+                border: BorderStyle = bsNone): TerminalNode =
+  ## DSL-friendly wrapper around `newListView`. Drops the optional
+  ## borderColor / color / onHighlight / onActivate slots; add an
+  ## overload here when a future demo needs them.
+  newListView(renderer, items = items, width = width,
+              viewportHeight = viewportHeight, border = border).node
+
+# ----------------------------------------------------------------------------
+# DirectoryTree
+# ----------------------------------------------------------------------------
+
+proc wDirectoryTree*(renderer: TerminalRenderer; path: string;
+                     width, viewportHeight: int;
+                     border: BorderStyle = bsNone): TerminalNode =
+  ## DSL-friendly wrapper around `newDirectoryTree`. Drops the optional
+  ## showRoot / borderColor / color / onSelect slots; add an overload
+  ## here when a future demo needs them.
+  newDirectoryTree(renderer, path = path, width = width,
+                   viewportHeight = viewportHeight, border = border).node
+
+# ----------------------------------------------------------------------------
+# TextArea
+# ----------------------------------------------------------------------------
+
+proc wTextArea*(renderer: TerminalRenderer; text: string;
+                width, viewportHeight: int;
+                border: BorderStyle = bsRound;
+                readOnly: bool = false): TerminalNode =
+  ## DSL-friendly wrapper around `newTextArea`. Drops the optional
+  ## borderColor / color / tabSize / softWrap / language / disabled /
+  ## maxUndoDepth / onChange slots; add an overload here when a future
+  ## demo needs them.
+  newTextArea(renderer, text = text, width = width,
+              viewportHeight = viewportHeight, border = border,
+              readOnly = readOnly).node
+
+# ----------------------------------------------------------------------------
+# RichLog
+# ----------------------------------------------------------------------------
+#
+# No `wRichLog` wrapper: demos that need a RichLog (e.g. log_viewer)
+# also need the widget object to call `body.write(line)`, so they
+# construct it outside the `ui()` block via `newRichLog` and append
+# `body.node` to the tree directly. Add a wrapper here when a future
+# demo uses RichLog purely as a static, unpopulated node.
+
+# ----------------------------------------------------------------------------
+# Sparkline
+# ----------------------------------------------------------------------------
+
+proc wSparkline*(renderer: TerminalRenderer; data: openArray[float64];
+                 width, height: int;
+                 summary: SparklineSummary = sumMax): TerminalNode =
+  ## DSL-friendly wrapper around `newSparkline`. Drops the optional
+  ## minColor / maxColor slots; add an overload here when a future
+  ## demo needs gradient configuration.
+  newSparkline(renderer, data = data, width = width, height = height,
+               summary = summary).node
+
+# ----------------------------------------------------------------------------
+# DataTable
+# ----------------------------------------------------------------------------
+
+proc wDataTable*(renderer: TerminalRenderer;
+                 columns: openArray[ColumnDef];
+                 rows: openArray[RowData];
+                 viewportHeight: int;
+                 border: BorderStyle = bsNone): TerminalNode =
+  ## DSL-friendly wrapper around `newDataTable`. Drops the optional
+  ## borderColor / color / onActivate / onSelectionChange slots; add
+  ## an overload here when a future demo needs them.
+  newDataTable(renderer, columns = columns, rows = rows,
+               viewportHeight = viewportHeight, border = border).node
+
+# ----------------------------------------------------------------------------
+# Markdown
+# ----------------------------------------------------------------------------
+
+proc wMarkdown*(renderer: TerminalRenderer; source: string;
+                width: int;
+                border: BorderStyle = bsNone): TerminalNode =
+  ## DSL-friendly wrapper around `newMarkdown`. Drops the optional
+  ## borderColor / color / codeBlockColor / headingColor / quoteColor /
+  ## linkColor slots; add an overload here when a future demo needs
+  ## per-element colour configuration.
+  newMarkdown(renderer, source = source, width = width,
+              border = border).node

@@ -8,9 +8,19 @@
 ##
 ## The sample log is bundled as `sample.log` so the demo binary works
 ## without external state.
+##
+## DM-M2: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. Structural divs use `tdiv(class=...)`,
+## widgets compose via the `w*` wrappers in
+## `isonim_tui/dsl/widget_blocks`. The RichLog needs the widget
+## object (not just its node) to push lines, so it's built outside
+## the `ui()` block via `newRichLog` and inserted into the tree via
+## a small `mountRichLog` helper that returns its `.node`.
 
 import std/[os, strutils]
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 # ----------------------------------------------------------------------------
 # Fixture
@@ -48,44 +58,45 @@ proc streamAll*(vm: LogViewerVM) =
   vm.cursor = vm.lines.len
 
 # ----------------------------------------------------------------------------
+# Helpers
+# ----------------------------------------------------------------------------
+
+proc buildRichLogNode(r: TerminalRenderer; vm: LogViewerVM;
+                      width, height: int): TerminalNode =
+  ## Construct the RichLog widget with all sample lines pre-streamed,
+  ## and return its node so the DSL can append it as a child. The
+  ## RichLog's `write` API needs the widget object (not just the
+  ## node), so construction happens here in a helper rather than
+  ## through a DSL wrapper — see the RichLog comment in
+  ## `src/isonim_tui/dsl/widget_blocks.nim` for the rationale.
+  let body = newRichLog(r, width = width, viewportHeight = height,
+                        autoFollow = true, wrap = false,
+                        border = bsRound)
+  for line in vm.lines:
+    body.write(line)
+  vm.cursor = vm.lines.len
+  body.node
+
+# ----------------------------------------------------------------------------
 # Composition
 # ----------------------------------------------------------------------------
 
 proc buildLogViewerApp*(h: TerminalTestHarness; vm: LogViewerVM):
                        TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  r.setAttribute(root, "class", "log-viewer")
+  let cols = h.cols
+  let bodyHeight = max(3, h.rows - 4)
+  let footerBindings = @[
+    FooterBinding(key: "q",  description: "Quit"),
+    FooterBinding(key: "g",  description: "Top"),
+    FooterBinding(key: "G",  description: "Bottom"),
+    FooterBinding(key: "/",  description: "Search")]
 
-  # Header row.
-  let header = newHeader(r, title = "Log Viewer",
-                         subtitle = "tail of sample.log",
-                         width = h.cols)
-  r.appendChild(root, header.node)
-
-  # RichLog body — auto-follow on so the most recent line stays
-  # visible.
-  let body = newRichLog(r, width = h.cols,
-                        viewportHeight = max(3, h.rows - 4),
-                        autoFollow = true,
-                        wrap = false,
-                        border = bsRound)
-  r.appendChild(root, body.node)
-  for line in vm.lines:
-    body.write(line)
-  vm.cursor = vm.lines.len
-
-  # Footer with bindings.
-  let footer = newFooter(r,
-    bindings = @[
-      FooterBinding(key: "q",  description: "Quit"),
-      FooterBinding(key: "g",  description: "Top"),
-      FooterBinding(key: "G",  description: "Bottom"),
-      FooterBinding(key: "/",  description: "Search")],
-    width = h.cols, compact = true)
-  r.appendChild(root, footer.node)
-
-  root
+  result = ui(r):
+    tdiv(class = "log-viewer"):
+      wHeader(r, "Log Viewer", "tail of sample.log", cols)
+      buildRichLogNode(r, vm, cols, bodyHeight)
+      wFooter(r, footerBindings, cols, true)
 
 proc mountLogViewer*(h: TerminalTestHarness): LogViewerVM =
   let vm = newLogViewerVM()

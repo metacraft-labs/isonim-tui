@@ -11,9 +11,16 @@
 ## binary works without network or external state. The selection
 ## handler isn't wired into the textarea here — keeping the bundle
 ## simple matters more for the snapshot test.
+##
+## DM-M2: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. Structural divs use `tdiv(class=...)`,
+## widgets compose via the `w*` wrappers in
+## `isonim_tui/dsl/widget_blocks`.
 
 import std/os
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 # ----------------------------------------------------------------------------
 # Fixture path resolution. The example dir contains a bundled `fixtures/`
@@ -57,27 +64,16 @@ proc newCodeBrowserVM*(): CodeBrowserVM =
 proc buildCodeBrowserApp*(h: TerminalTestHarness; vm: CodeBrowserVM):
                          TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  r.setAttribute(root, "class", "code-browser")
-
   let halfWidth = max(20, h.cols div 2 - 1)
+  let viewport = h.rows - 2
+  let textWidth = h.cols - halfWidth - 2
+  let treePath = fixtureRoot()
+  let textBody = vm.content
 
-  # Left pane: directory tree.
-  let dt = newDirectoryTree(r, path = fixtureRoot(),
-                            width = halfWidth,
-                            viewportHeight = h.rows - 2,
-                            border = bsRound)
-  r.appendChild(root, dt.node)
-
-  # Right pane: textarea.
-  let ta = newTextArea(r, text = vm.content,
-                       width = h.cols - halfWidth - 2,
-                       viewportHeight = h.rows - 2,
-                       border = bsRound,
-                       readOnly = true)
-  r.appendChild(root, ta.node)
-
-  root
+  result = ui(r):
+    tdiv(class = "code-browser"):
+      wDirectoryTree(r, treePath, halfWidth, viewport, bsRound)
+      wTextArea(r, textBody, textWidth, viewport, bsRound, true)
 
 proc mountCodeBrowser*(h: TerminalTestHarness): CodeBrowserVM =
   let vm = newCodeBrowserVM()
