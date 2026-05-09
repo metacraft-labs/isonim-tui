@@ -21,6 +21,14 @@ examples/markdown_viewer/markdown_viewer
 examples/system_monitor/system_monitor
 examples/task_app_demo/task_app_demo
 
+# M29 real-terminal scenario binaries (one per scenario file).
+tests/real_terminal/test_real_*
+!tests/real_terminal/test_real_*.nim
+# M29 per-widget test app binaries (each apps/<name> stripped of extension).
+tests/real_terminal/apps/*
+!tests/real_terminal/apps/*.nim
+!tests/real_terminal/apps/*.nims
+
 # Nim caches.
 *.dSYM
 *.exe
