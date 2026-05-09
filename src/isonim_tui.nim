@@ -29,6 +29,13 @@ import isonim_tui/testing/snapshot/svg as snapSvg
 import isonim_tui/testing/snapshot/annotated_svg as snapAnnotatedSvg
 import isonim_tui/testing/snapshot/treedump as snapTreedump
 import isonim_tui/testing/snapshot/runner as snapRunner
+import isonim_tui/testing/snapshot/timeline as snapTimeline
+
+# M25 surface — recording / replay / time-travel / assertions
+import isonim_tui/testing/recording_types as recordingTypes
+import isonim_tui/testing/recorder as recorderMod
+import isonim_tui/testing/replayer as replayerMod
+import isonim_tui/testing/assertions as assertionsMod
 
 # M3 surface — layout
 import isonim_tui/layout/terminal_layout
@@ -95,7 +102,8 @@ export width, ansi, content
 export driver, headless_driver, compositor
 export introspection, harness, pilot
 export snapPlain, snapAnsi, snapCellmap, snapSvg, snapAnnotatedSvg
-export snapTreedump, snapRunner
+export snapTreedump, snapRunner, snapTimeline
+export recordingTypes, recorderMod, replayerMod, assertionsMod
 export terminal_layout, vertical, horizontal, grid, stream, dock, arrange
 export inputParser, inputKeymap
 export cssEngine

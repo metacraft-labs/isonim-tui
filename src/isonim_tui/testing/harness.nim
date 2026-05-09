@@ -14,7 +14,7 @@
 ## fixpoint, runs layout, runs the compositor, returns only after the
 ## next paint has committed to the headless driver's screen buffer.
 
-import std/tables
+import std/[tables, os]
 
 import ../cells
 import ../renderer
@@ -26,6 +26,8 @@ import ../worker/manager as workerMgrMod
 import ../worker/worker as workerMod
 import ./introspection
 import ./snapshot/runner as snapRunner
+import ./snapshot/annotated_svg as snapAnnotatedSvg
+import ./snapshot/timeline as snapTimelineMod
 
 # Use isonim's clock for virtual-time plumbing.
 import isonim/core/clock
@@ -366,6 +368,44 @@ proc snap*(h: TerminalTestHarness; name: string;
     compositor: h.compositor,
     focusedId: h.focusedId)
   return snapRunner.snapImpl(inputs, recordMode)
+
+proc snap*(h: TerminalTestHarness; name: string;
+           overlays: set[snapAnnotatedSvg.AnnotationOverlay];
+           recordMode: bool = false): string {.discardable.} =
+  ## M25 overlay-controlled snapshot. Returns the annotated SVG with
+  ## *only* the requested overlay classes. Useful in tests that want
+  ## to assert "the focus ring was present" without the bounding-box
+  ## rects cluttering the diff. Does *not* write to
+  ## `tests/snapshots/<name>/`; this is an in-process inspector.
+  snapAnnotatedSvg.encodeAnnotatedSvgWith(
+    h.driver.buffer, h.root, h.compositor, h.focusedId, overlays)
+
+proc snapTimeline*(h: TerminalTestHarness; recording: snapTimelineMod.Recording;
+                   name: string; recordMode: bool = false): bool
+                  {.discardable.} =
+  ## Generate `tests/snapshots/<name>/_timeline.html` from the supplied
+  ## recording. Behaves like `snap` for the comparison logic: first
+  ## run records, subsequent runs compare. Tests strip the dynamic
+  ## timestamp before comparing so the golden is byte-stable.
+  let html = snapTimelineMod.encodeTimelineHtml(recording,
+                                                includeTimestamp = false)
+  let dir = (
+    block:
+      let cwd = getCurrentDir()
+      if dirExists(cwd / "tests" / "snapshots"):
+        cwd / "tests" / "snapshots"
+      elif dirExists(cwd / "snapshots"):
+        cwd / "snapshots"
+      else:
+        cwd / "tests" / "snapshots") / name
+  let path = dir / "_timeline.html"
+  let effectiveRecord = recordMode or snapRunner.isRecordMode()
+  if effectiveRecord or not fileExists(path):
+    createDir(dir)
+    writeFile(path, html)
+    return true
+  let golden = readFile(path)
+  return golden == html
 
 # ----------------------------------------------------------------------------
 # Pilot — surface area below.
