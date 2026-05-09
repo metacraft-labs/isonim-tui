@@ -353,6 +353,96 @@ proc parseLayerNames(toks: seq[Token]): seq[string] =
   if result.len == 0:
     raise newException(ParseError, "layers expects one or more identifiers")
 
+proc parseGridSizeTokens(toks: seq[Token]): GridSize =
+  ## Parse `grid-size <cols> [<rows>]`. Both values must be non-negative
+  ## integers; if rows is omitted, the grid is unbounded vertically and
+  ## we encode that as `rows == 0`.
+  var ints: seq[int]
+  for tok in toks:
+    if tok.kind == tkComma: continue
+    if tok.kind in {tkNumber, tkScalar}:
+      try:
+        let v = parseInt(tok.value)
+        if v < 0:
+          raise newException(ParseError,
+            "grid-size requires non-negative integers")
+        ints.add(v)
+      except ValueError:
+        raise newException(ParseError,
+          "cannot parse grid-size integer: " & tok.value)
+  if ints.len == 0:
+    raise newException(ParseError, "grid-size requires at least <cols>")
+  let cols = ints[0]
+  let rows = if ints.len >= 2: ints[1] else: 0
+  GridSize(cols: cols, rows: rows)
+
+proc parseGridTracksTokens(toks: seq[Token]): seq[GridTrack] =
+  ## Parse a `grid-rows` / `grid-columns` track list. Each track is one
+  ## of: `auto`, `<n>`, `<n>fr`, `<n>%`. Whitespace separates tracks;
+  ## commas are tolerated.
+  for tok in toks:
+    if tok.kind == tkComma: continue
+    case tok.kind
+    of tkToken:
+      if tok.value == "auto":
+        result.add(GridTrack(kind: gtkAuto, value: 1.0))
+      else:
+        raise newException(ParseError,
+          "unknown grid track keyword: " & tok.value)
+    of tkScalar:
+      let v = tok.value
+      if v.endsWith("fr"):
+        try:
+          let f = parseFloat(v[0 ..< v.len - 2])
+          result.add(GridTrack(kind: gtkFr, value: f))
+        except ValueError:
+          raise newException(ParseError, "cannot parse fr track: " & v)
+      elif v.endsWith("%"):
+        try:
+          let f = parseFloat(v[0 ..< v.len - 1])
+          result.add(GridTrack(kind: gtkPercent, value: f))
+        except ValueError:
+          raise newException(ParseError, "cannot parse percent track: " & v)
+      else:
+        try:
+          let f = parseFloat(v)
+          result.add(GridTrack(kind: gtkFixed, value: f))
+        except ValueError:
+          raise newException(ParseError, "cannot parse track: " & v)
+    of tkNumber:
+      try:
+        let f = parseFloat(tok.value)
+        result.add(GridTrack(kind: gtkFixed, value: f))
+      except ValueError:
+        raise newException(ParseError,
+          "cannot parse grid track: " & tok.value)
+    else:
+      discard
+  if result.len == 0:
+    raise newException(ParseError, "grid track list must not be empty")
+
+proc parseGridGutterTokens(toks: seq[Token]): GridGutter =
+  ## Parse `grid-gutter <horizontal> [<vertical>]`. Single value applies
+  ## to both axes; the textual order is horizontal first then vertical
+  ## (matches Textual's convention).
+  var ints: seq[int]
+  for tok in toks:
+    if tok.kind == tkComma: continue
+    if tok.kind in {tkNumber, tkScalar}:
+      try:
+        let v = parseInt(tok.value)
+        if v < 0:
+          raise newException(ParseError, "grid-gutter must be non-negative")
+        ints.add(v)
+      except ValueError:
+        raise newException(ParseError,
+          "cannot parse grid-gutter: " & tok.value)
+  if ints.len == 0:
+    raise newException(ParseError, "grid-gutter requires at least one value")
+  let h = ints[0]
+  let v = if ints.len >= 2: ints[1] else: ints[0]
+  GridGutter(horizontal: h, vertical: v)
+
 proc parseSmallInt(toks: seq[Token]): int =
   if toks.len == 0:
     raise newException(ParseError, "expected integer")
@@ -527,6 +617,15 @@ proc parsePropertyValue*(prop: PropertyKind; toks: seq[Token]): PropertyValue =
     intValue(ints[0])
   of pkScrollbarSizeVertical, pkScrollbarSizeHorizontal:
     intValue(parseSmallInt(toks))
+  of pkGridSize:
+    gridSizeValue(parseGridSizeTokens(toks))
+  of pkGridRows, pkGridColumns:
+    gridTracksValue(parseGridTracksTokens(toks))
+  of pkGridGutter:
+    gridGutterValue(parseGridGutterTokens(toks))
+  of pkColumnSpan, pkRowSpan:
+    let v = parseSmallInt(toks)
+    intValue(max(1, v))
 
 # ----------------------------------------------------------------------------
 # Declaration parsing

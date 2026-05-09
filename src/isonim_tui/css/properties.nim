@@ -20,8 +20,6 @@
 ##
 ## Properties still deferred (require deeper architectural work and so
 ## are explicitly not part of this closure):
-##   - `grid-size`, `grid-rows`, `grid-columns`, `grid-gutter`,
-##     `column-span`, `row-span` — wait on the grid layout pass.
 ##   - `keyline` — needs a per-edge rendering pass.
 ##   - `auto-color` — depends on the M6 luminosity engine selecting
 ##     contrast.
@@ -422,6 +420,33 @@ type
     color*: CssColor
     colorSet*: bool
 
+  GridTrackKind* = enum
+    ## Kinds of CSS-grid track sizes that the M5 grid resolver
+    ## understands. Mirrors Textual's `Scalar` semantics for
+    ## `grid-rows` / `grid-columns` track lists.
+    gtkAuto       ## `auto` — sized to children's intrinsic content
+    gtkFixed      ## bare integer cell count, e.g. `3`
+    gtkFr         ## `Nfr` — fractional remaining-space share
+    gtkPercent    ## `N%` — percentage of available container space
+
+  GridTrack* = object
+    ## One row or column track in a `grid-rows` / `grid-columns` list.
+    kind*: GridTrackKind
+    value*: float64
+
+  GridSize* = object
+    ## Result of the `grid-size <cols> [<rows>]` shorthand. `rows == 0`
+    ## means "rows are unbounded — auto-flow grows the grid as
+    ## children are placed".
+    cols*: int
+    rows*: int
+
+  GridGutter* = object
+    ## Result of the `grid-gutter <horizontal> [<vertical>]` shorthand.
+    ## Cells of inter-track gap on each axis.
+    horizontal*: int
+    vertical*: int
+
 # ----------------------------------------------------------------------------
 # Property kind enum + tagged-union value
 # ----------------------------------------------------------------------------
@@ -491,6 +516,12 @@ type
     pkLinkColor
     pkLinkBackground
     pkLinkStyle
+    pkGridSize
+    pkGridRows
+    pkGridColumns
+    pkGridGutter
+    pkColumnSpan
+    pkRowSpan
 
   ValueKind* = enum
     vkScalar
@@ -513,6 +544,9 @@ type
     vkLayer        ## single layer name
     vkLayers       ## ordered list of layer names
     vkInt          ## small non-negative integer (scrollbar-size cells)
+    vkGridSize     ## `grid-size <cols> [<rows>]`
+    vkGridTracks   ## `grid-rows` / `grid-columns` track list
+    vkGridGutter   ## `grid-gutter <horizontal> [<vertical>]`
     vkUnset
 
   PropertyValue* = object
@@ -543,6 +577,9 @@ type
     of vkLayer:       layerVal*: string
     of vkLayers:      layersVal*: seq[string]
     of vkInt:         intVal*: int
+    of vkGridSize:    gridSizeVal*: GridSize
+    of vkGridTracks:  gridTracksVal*: seq[GridTrack]
+    of vkGridGutter:  gridGutterVal*: GridGutter
     of vkUnset:       discard
 
 proc unsetValue*(): PropertyValue {.inline.} =
@@ -607,6 +644,15 @@ proc layersValue*(names: seq[string]): PropertyValue {.inline.} =
 
 proc intValue*(n: int): PropertyValue {.inline.} =
   PropertyValue(kind: vkInt, intVal: n)
+
+proc gridSizeValue*(g: GridSize): PropertyValue {.inline.} =
+  PropertyValue(kind: vkGridSize, gridSizeVal: g)
+
+proc gridTracksValue*(t: seq[GridTrack]): PropertyValue {.inline.} =
+  PropertyValue(kind: vkGridTracks, gridTracksVal: t)
+
+proc gridGutterValue*(g: GridGutter): PropertyValue {.inline.} =
+  PropertyValue(kind: vkGridGutter, gridGutterVal: g)
 
 # ----------------------------------------------------------------------------
 # Property name lookup
@@ -677,6 +723,12 @@ proc propertyKindFromName*(name: string): (bool, PropertyKind) =
   of "link-color":       (true, pkLinkColor)
   of "link-background":  (true, pkLinkBackground)
   of "link-style":       (true, pkLinkStyle)
+  of "grid-size":        (true, pkGridSize)
+  of "grid-rows":        (true, pkGridRows)
+  of "grid-columns":     (true, pkGridColumns)
+  of "grid-gutter":      (true, pkGridGutter)
+  of "column-span":      (true, pkColumnSpan)
+  of "row-span":         (true, pkRowSpan)
   else: (false, pkWidth)
 
 proc propertyKindName*(p: PropertyKind): string =
@@ -740,6 +792,12 @@ proc propertyKindName*(p: PropertyKind): string =
   of pkLinkColor: "link-color"
   of pkLinkBackground: "link-background"
   of pkLinkStyle: "link-style"
+  of pkGridSize: "grid-size"
+  of pkGridRows: "grid-rows"
+  of pkGridColumns: "grid-columns"
+  of pkGridGutter: "grid-gutter"
+  of pkColumnSpan: "column-span"
+  of pkRowSpan: "row-span"
 
 # ----------------------------------------------------------------------------
 # Keyword parsers

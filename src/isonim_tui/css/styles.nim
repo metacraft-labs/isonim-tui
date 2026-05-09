@@ -114,6 +114,18 @@ type
     linkBackgroundSet*: bool
     linkStyle*: set[TextStyleFlag]
     linkStyleSet*: bool
+    gridSize*: GridSize
+    gridSizeSet*: bool
+    gridRows*: seq[GridTrack]
+    gridRowsSet*: bool
+    gridColumns*: seq[GridTrack]
+    gridColumnsSet*: bool
+    gridGutter*: GridGutter
+    gridGutterSet*: bool
+    columnSpan*: int
+    columnSpanSet*: bool
+    rowSpan*: int
+    rowSpanSet*: bool
 
 proc defaultStyles*(): Styles =
   ## The default per-property values that apply when no rule sets the
@@ -155,6 +167,12 @@ proc defaultStyles*(): Styles =
   result.linkColor = CssColor(kind: cckCurrent)
   result.linkBackground = transparentCss()
   result.linkStyle = {tsUnderline}
+  result.gridSize = GridSize(cols: 1, rows: 0)
+  result.gridRows = @[]
+  result.gridColumns = @[]
+  result.gridGutter = GridGutter(horizontal: 0, vertical: 0)
+  result.columnSpan = 1
+  result.rowSpan = 1
 
 # ----------------------------------------------------------------------------
 # Helpers for per-edge spacing
@@ -363,6 +381,24 @@ proc applyValue*(s: var Styles; prop: PropertyKind; value: PropertyValue) =
   of pkLinkStyle:
     if value.kind == vkTextStyle:
       s.linkStyle = value.textStyleVal; s.linkStyleSet = true
+  of pkGridSize:
+    if value.kind == vkGridSize:
+      s.gridSize = value.gridSizeVal; s.gridSizeSet = true
+  of pkGridRows:
+    if value.kind == vkGridTracks:
+      s.gridRows = value.gridTracksVal; s.gridRowsSet = true
+  of pkGridColumns:
+    if value.kind == vkGridTracks:
+      s.gridColumns = value.gridTracksVal; s.gridColumnsSet = true
+  of pkGridGutter:
+    if value.kind == vkGridGutter:
+      s.gridGutter = value.gridGutterVal; s.gridGutterSet = true
+  of pkColumnSpan:
+    if value.kind == vkInt:
+      s.columnSpan = max(1, value.intVal); s.columnSpanSet = true
+  of pkRowSpan:
+    if value.kind == vkInt:
+      s.rowSpan = max(1, value.intVal); s.rowSpanSet = true
 
 # ----------------------------------------------------------------------------
 # Equality (used by cache invalidation and tests)
@@ -444,4 +480,14 @@ proc `==`*(a, b: Styles): bool =
     a.linkColor == b.linkColor and a.linkColorSet == b.linkColorSet and
     a.linkBackground == b.linkBackground and
       a.linkBackgroundSet == b.linkBackgroundSet and
-    a.linkStyle == b.linkStyle and a.linkStyleSet == b.linkStyleSet
+    a.linkStyle == b.linkStyle and a.linkStyleSet == b.linkStyleSet and
+    a.gridSize.cols == b.gridSize.cols and
+      a.gridSize.rows == b.gridSize.rows and
+      a.gridSizeSet == b.gridSizeSet and
+    a.gridRows == b.gridRows and a.gridRowsSet == b.gridRowsSet and
+    a.gridColumns == b.gridColumns and a.gridColumnsSet == b.gridColumnsSet and
+    a.gridGutter.horizontal == b.gridGutter.horizontal and
+      a.gridGutter.vertical == b.gridGutter.vertical and
+      a.gridGutterSet == b.gridGutterSet and
+    a.columnSpan == b.columnSpan and a.columnSpanSet == b.columnSpanSet and
+    a.rowSpan == b.rowSpan and a.rowSpanSet == b.rowSpanSet
