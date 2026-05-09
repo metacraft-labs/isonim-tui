@@ -60,6 +60,12 @@
               markdownlint-cli2
               shellcheck
               shfmt
+              # M19: tree-sitter runtime for the TextArea syntax
+              # highlighter. Vendored grammars (parser.c + scanner.c)
+              # are compiled in via {.compile.}; the runtime library
+              # itself is linked from this dev-shell package.
+              tree-sitter
+              pkg-config
             ];
             shellHook = ''
               ${preCommit.shellHook}

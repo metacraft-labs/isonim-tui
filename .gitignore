@@ -33,3 +33,6 @@ tests/real_terminal/apps/*
 *.dSYM
 *.exe
 *.pdb
+src/isonim_tui/syntax/highlighter
+src/isonim_tui/syntax/treesitter_ffi
+tests/snapshots/_report.html

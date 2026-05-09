@@ -80,9 +80,17 @@ type
 
   HighlightKind* = enum
     ## Categories of syntactic highlight. Tree-sitter grammars surface
-    ## many more (function names, types, constants…), but the editor
-    ## only needs a small fixed palette to colour cells. The categories
-    ## mirror what M5's CSS `.token-*` selectors paint.
+    ## many more — the editor maps them down to this small palette to
+    ## colour cells. The categories mirror what M5's CSS `.token-*`
+    ## selectors paint.
+    ##
+    ## M19 originally shipped with the smaller palette (Plain, Keyword,
+    ## String, Number, Comment, Operator, Type, Function). The
+    ## tree-sitter backbone added in the M19 follow-up extended it
+    ## with `hkIdentifier`, `hkPunctuation`, `hkConstant`,
+    ## `hkAttribute`, and `hkVariable` so that real grammar walks have
+    ## somewhere to land their finer-grained node-type categories
+    ## without forcing the renderer to know about the long tail.
     hkPlain
     hkKeyword
     hkString
@@ -91,6 +99,11 @@ type
     hkOperator
     hkType
     hkFunction
+    hkIdentifier
+    hkPunctuation
+    hkConstant
+    hkAttribute
+    hkVariable
 
   Highlight* = object
     ## A coloured run inside a logical line. `startCluster` and
@@ -480,14 +493,19 @@ proc colorForKind*(kind: HighlightKind): string =
   ## the keyword colour matches `"syntax-keyword"`; the mapping is the
   ## minimal palette that exercises the renderer wiring.
   case kind
-  of hkPlain:    ""
-  of hkKeyword:  "syntax-keyword"
-  of hkString:   "syntax-string"
-  of hkNumber:   "syntax-number"
-  of hkComment:  "syntax-comment"
-  of hkOperator: "syntax-operator"
-  of hkType:     "syntax-type"
-  of hkFunction: "syntax-function"
+  of hkPlain:       ""
+  of hkKeyword:     "syntax-keyword"
+  of hkString:      "syntax-string"
+  of hkNumber:      "syntax-number"
+  of hkComment:     "syntax-comment"
+  of hkOperator:    "syntax-operator"
+  of hkType:        "syntax-type"
+  of hkFunction:    "syntax-function"
+  of hkIdentifier:  "syntax-identifier"
+  of hkPunctuation: "syntax-punctuation"
+  of hkConstant:    "syntax-constant"
+  of hkAttribute:   "syntax-attribute"
+  of hkVariable:    "syntax-variable"
 
 proc emitRow(r: TerminalRenderer; parent: TerminalNode;
              text: string; color: string = "";
@@ -505,19 +523,55 @@ proc emitRow(r: TerminalRenderer; parent: TerminalNode;
   r.appendChild(box, r.createTextNode(text))
   r.appendChild(parent, box)
 
+proc allSegmentsPlain(segments: seq[tuple[text: string; color: string]]):
+    bool =
+  ## True when no segment carries a colour. When the highlighter is
+  ## off (or the line has no highlights) we can collapse the row into
+  ## a single plain text node so the compositor's `allText` coalesce
+  ## fires and produces one `LayoutEntry` per row.
+  for s in segments:
+    if s.color.len > 0: return false
+  true
+
+proc joinSegments(segments: seq[tuple[text: string; color: string]]): string =
+  result = ""
+  for s in segments:
+    result.add s.text
+
 proc emitHighlightedRow(r: TerminalRenderer; parent: TerminalNode;
                         segments: seq[tuple[text: string; color: string]];
-                        leftEdge, rightEdge, edgeColor: string) =
+                        leftEdge, rightEdge, edgeColor: string;
+                        reverse: bool = false) =
   ## Emit a row whose body has multiple coloured segments. The renderer
-  ## represents this as a parent `div` (one display row) with one child
-  ## `div` per segment. The compositor's strip cache keys on the parent
-  ## node id — segment changes invalidate the row, segment-static rows
-  ## hit the cache.
+  ## represents this as a parent `div`. When all segments share no
+  ## colour (the common no-highlights case), the row collapses to a
+  ## single text child so the compositor's `allText` coalesce fires
+  ## and the row stays one cell-strip. Otherwise we emit one styled
+  ## `span` per segment with their per-segment `color` style; the
+  ## compositor treats each span as its own row at present, but
+  ## per-segment colour is the load-bearing visual the M19 follow-up
+  ## tests assert at the renderer-tree level (the span-coalescing
+  ## upgrade in the compositor is tracked separately).
+  ##
+  ## When `reverse` is true (cursor row without a selection), each
+  ## segment / the flat row carries `reverse: "true"` so the
+  ## compositor inverts the SGR while per-segment colour styles
+  ## are preserved.
+  if allSegmentsPlain(segments):
+    let body = joinSegments(segments)
+    let box = r.createElement("div")
+    if reverse:
+      r.setStyle(box, "reverse", "true")
+    r.appendChild(box, r.createTextNode(leftEdge & body & rightEdge))
+    r.appendChild(parent, box)
+    return
   let row = r.createElement("div")
   if leftEdge.len > 0:
     let edgeBox = r.createElement("span")
     if edgeColor.len > 0:
       r.setStyle(edgeBox, "color", edgeColor)
+    if reverse:
+      r.setStyle(edgeBox, "reverse", "true")
     r.appendChild(edgeBox, r.createTextNode(leftEdge))
     r.appendChild(row, edgeBox)
   for seg in segments:
@@ -525,12 +579,16 @@ proc emitHighlightedRow(r: TerminalRenderer; parent: TerminalNode;
     let segBox = r.createElement("span")
     if seg.color.len > 0:
       r.setStyle(segBox, "color", seg.color)
+    if reverse:
+      r.setStyle(segBox, "reverse", "true")
     r.appendChild(segBox, r.createTextNode(seg.text))
     r.appendChild(row, segBox)
   if rightEdge.len > 0:
     let edgeBox = r.createElement("span")
     if edgeColor.len > 0:
       r.setStyle(edgeBox, "color", edgeColor)
+    if reverse:
+      r.setStyle(edgeBox, "reverse", "true")
     r.appendChild(edgeBox, r.createTextNode(rightEdge))
     r.appendChild(row, edgeBox)
   r.appendChild(parent, row)
@@ -641,15 +699,14 @@ proc renderTree*(t: TextAreaWidget) =
       t.selection.cursor.column <= row.endCluster
     if isCursorRow and not t.hasSelection():
       # Reverse-video the cursor row to make the position visible
-      # without a separate cursor cell.  Selection rendering is left
-      # for a richer styled-runs pass in a later milestone.
-      let totalText = block:
-        var s = ""
-        for seg in segs:
-          s.add seg.text
-        s
-      emitRow(r, t.node, leftEdge & totalText & rightEdge, t.color,
-              reverse = true)
+      # without a separate cursor cell. We still emit per-segment
+      # children with their colour styles intact — the M19
+      # tree-sitter highlighter pipeline assumes per-segment colour
+      # cells, and flattening the row would erase that information.
+      # The compositor inverts every cell on a `reverse: true` span,
+      # which is the visual we want regardless of segment count.
+      emitHighlightedRow(r, t.node, segs, leftEdge, rightEdge,
+                         t.borderColor, reverse = true)
     else:
       emitHighlightedRow(r, t.node, segs, leftEdge, rightEdge,
                          t.borderColor)

@@ -101,6 +101,14 @@ import isonim_tui/worker/decorator as workerDecoratorMod
 import isonim_tui/command/fuzzy as fuzzyMod
 import isonim_tui/command/palette as paletteMod
 
+# M19 follow-up surface — tree-sitter syntax highlighting for the
+# TextArea widget. The FFI module ports the codetracer pattern; the
+# highlighter walks the parse tree and projects spans onto per-line
+# cluster-indexed `Highlight` runs that the existing rendering path
+# consumes unchanged.
+import isonim_tui/syntax/treesitter_ffi as tsFfi
+import isonim_tui/syntax/highlighter as tsHighlighter
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -122,3 +130,4 @@ export tier1Widgets
 export focusManagerMod
 export workerMod, workerManagerMod, workerDecoratorMod
 export fuzzyMod, paletteMod
+export tsFfi, tsHighlighter
