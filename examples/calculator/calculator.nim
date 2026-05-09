@@ -11,9 +11,16 @@
 ## with `+ - * /` plus `=` and `c` (clear). Decimal points and
 ## negative-number entry are out of scope; the goal is a snapshot-
 ## stable demo, not a Replacement Calculator.
+##
+## DM-M1: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. Structural divs use `tdiv(class=...)`,
+## widgets compose via the `w*` wrappers in
+## `isonim_tui/dsl/widget_blocks`.
 
 import std/strutils
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 # ----------------------------------------------------------------------------
 # ViewModel
@@ -73,19 +80,14 @@ proc clear*(vm: CalculatorVM) =
   vm.fresh = true
 
 # ----------------------------------------------------------------------------
-# Layer-1 leaves (TUI specific)
+# Per-key handler factory
 # ----------------------------------------------------------------------------
 
-proc renderDisplay(r: TerminalRenderer; parent: TerminalNode;
-                   vm: CalculatorVM; width: int) =
-  let body = align(vm.display, width - 4, ' ')
-  let s = newStatic(r, body, width = width - 4, height = 1,
-                    border = bsRound)
-  r.appendChild(parent, s.node)
-
-proc keyButton(r: TerminalRenderer; parent: TerminalNode;
-               label: string; vm: CalculatorVM) =
-  let onClick = proc() =
+proc makeKeyHandler(label: string; vm: CalculatorVM): proc() =
+  ## Build the click handler for one keypad button. Defined out of
+  ## line so each iteration of the keypad-row `for` loop captures its
+  ## own `label` value rather than aliasing the loop variable.
+  result = proc() =
     case label
     of "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
       vm.digit(parseInt(label))
@@ -96,15 +98,6 @@ proc keyButton(r: TerminalRenderer; parent: TerminalNode;
     of "=": vm.equals()
     of "C": vm.clear()
     else: discard
-  let b = newButton(r, label, width = 6, onClick = onClick)
-  r.appendChild(parent, b.node)
-
-proc renderKeypadRow(r: TerminalRenderer; parent: TerminalNode;
-                     labels: openArray[string]; vm: CalculatorVM) =
-  let row = r.createElement("div")
-  r.setAttribute(row, "class", "keypad-row")
-  for lbl in labels: keyButton(r, row, lbl, vm)
-  r.appendChild(parent, row)
 
 # ----------------------------------------------------------------------------
 # Composition root
@@ -113,17 +106,21 @@ proc renderKeypadRow(r: TerminalRenderer; parent: TerminalNode;
 proc buildCalculatorApp*(h: TerminalTestHarness; vm: CalculatorVM):
                         TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  r.setAttribute(root, "class", "calculator")
+  let dispWidth = h.cols - 4
+  let displayBody = align(vm.display, dispWidth, ' ')
+  const keypadRows = [
+    ["7", "8", "9", "/"],
+    ["4", "5", "6", "*"],
+    ["1", "2", "3", "-"],
+    ["0", "C", "=", "+"]]
 
-  renderDisplay(r, root, vm, h.cols)
-
-  renderKeypadRow(r, root, ["7", "8", "9", "/"], vm)
-  renderKeypadRow(r, root, ["4", "5", "6", "*"], vm)
-  renderKeypadRow(r, root, ["1", "2", "3", "-"], vm)
-  renderKeypadRow(r, root, ["0", "C", "=", "+"], vm)
-
-  root
+  result = ui(r):
+    tdiv(class = "calculator"):
+      wStatic(r, displayBody, dispWidth, 1, bsRound)
+      for row in keypadRows:
+        tdiv(class = "keypad-row"):
+          for label in row:
+            wButton(r, label, 6, makeKeyHandler(label, vm))
 
 proc mountCalculator*(h: TerminalTestHarness): CalculatorVM =
   let vm = newCalculatorVM()

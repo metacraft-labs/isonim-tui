@@ -73,9 +73,12 @@
 
 import ../renderer
 import ../text/content
+import ../css/properties
 import ../widgets/header
 import ../widgets/footer
 import ../widgets/label
+import ../widgets/static
+import ../widgets/button
 
 # ----------------------------------------------------------------------------
 # Header / Footer
@@ -111,3 +114,39 @@ proc wLabel*(renderer: TerminalRenderer; text: string;
              width: int = 0): TerminalNode =
   ## DSL-friendly wrapper around `newLabel(renderer, text, width)`.
   newLabel(renderer, text, width).node
+
+# ----------------------------------------------------------------------------
+# Static
+# ----------------------------------------------------------------------------
+
+proc wStatic*(renderer: TerminalRenderer; content: string;
+              width, height: int;
+              border: BorderStyle = bsNone;
+              borderColor: string = "";
+              scrollable: bool = false): TerminalNode =
+  ## DSL-friendly wrapper around `newStatic`. The parameter order
+  ## mirrors the underlying constructor so the full configuration
+  ## surface (border style, colour, scrolling) is reachable
+  ## positionally inside a `ui()` block.
+  newStatic(renderer, content = content, width = width, height = height,
+            border = border, borderColor = borderColor,
+            scrollable = scrollable).node
+
+# ----------------------------------------------------------------------------
+# Button
+# ----------------------------------------------------------------------------
+
+proc wButton*(renderer: TerminalRenderer; label: string;
+              width: int;
+              onClick: proc()): TerminalNode =
+  ## DSL-friendly wrapper around `newButton` for the common case:
+  ## label + explicit width + click handler. The parameter order
+  ## diverges from `newButton` (which interleaves variant / border /
+  ## borderColor / disabled between `width` and `onClick`) so callers
+  ## can pass a handler positionally inside a `ui()` block without
+  ## threading defaults for every intermediate optional argument.
+  ## Variants / non-default borders / disabled state aren't yet
+  ## reachable through this wrapper — add an overload here when a
+  ## DM-M2+ demo needs them.
+  newButton(renderer, label = label, width = width,
+            onClick = onClick).node
