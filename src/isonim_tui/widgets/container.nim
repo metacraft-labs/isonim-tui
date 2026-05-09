@@ -113,27 +113,79 @@ proc childRows(child: TerminalNode): seq[string] =
   return @[textContent(child)]
 
 proc renderVertical(c: ContainerWidget) =
+  ## Real vertical stack — children are stacked top-to-bottom within
+  ## the inner viewport height. Each child contributes its full row
+  ## sequence (top border + body + bottom border for a bordered
+  ## Static, multi-row Buttons, Tabs + body, etc.) rather than only
+  ## row 0. Mirrors the renderHorizontal fix that landed in the M23
+  ## Batch-3 commit: `childRows()` (not concatenated `childText`) is
+  ## the source of per-row content; we walk each child's row sequence
+  ## and project row N of child i into the (cumulative-offset + N)th
+  ## viewport row.
+  ##
+  ## Heights: a child that carries a `data-cell-height` attribute is
+  ## honoured at exactly that many rows; otherwise the child's
+  ## intrinsic `childRows().len` determines the slot height. If the
+  ## sum of slot heights exceeds `viewportHeight`, we clip from the
+  ## bottom (Textual's behaviour for an overflowing vertical layout
+  ## is clip + scrollbar; the scrollbar lands in M14, this fix lays
+  ## the clip half).
+  ##
+  ## Scrolling: `scrollY` is the index of the *first visible child*
+  ## (the established M11 contract — see `test_container_scroll_keyboard`).
+  ## Children before `scrollY` are skipped entirely; remaining
+  ## children stack until the inner viewport fills.
   let r = c.renderer
   let glyphs = bordersGlyphs(c.border)
   let useBorder = c.border != bsNone
+  let n = c.childWidgets.len
+
+  # Pre-extract each child's per-row text and per-child slot height.
+  var rowsOf = newSeq[seq[string]](n)
+  var heightOf = newSeq[int](n)
+  for i, child in c.childWidgets:
+    rowsOf[i] = childRows(child)
+    var declared = 0
+    if child != nil and child.attributes.hasKey("data-cell-height"):
+      try:
+        declared = parseInt(child.attributes["data-cell-height"])
+      except ValueError:
+        declared = 0
+    if declared > 0:
+      heightOf[i] = declared
+    else:
+      heightOf[i] = max(1, rowsOf[i].len)
+
   if useBorder:
     emitTextRow(r, c.node, topBorderRow(glyphs, c.width), c.borderColor)
-  let visible = max(0, min(c.childWidgets.len - c.scrollY, c.viewportHeight))
-  for i in 0 ..< visible:
-    let child = c.childWidgets[c.scrollY + i]
-    let body = padOrTruncate(childText(child), c.width)
+
+  # Walk children from `scrollY` and stack their rows into the
+  # viewport. We materialise the visible body into a flat seq[string]
+  # of length `viewportHeight`; this keeps the border-stamping path
+  # uniform with the no-border case.
+  var body = newSeq[string](c.viewportHeight)
+  for i in 0 ..< c.viewportHeight:
+    body[i] = spaces(c.width)
+  var cursor = 0
+  var i = c.scrollY
+  while i < n and cursor < c.viewportHeight:
+    let h = heightOf[i]
+    for r2 in 0 ..< h:
+      if cursor >= c.viewportHeight: break
+      let raw =
+        if r2 < rowsOf[i].len: rowsOf[i][r2]
+        else: ""
+      body[cursor] = padOrTruncate(raw, c.width)
+      inc cursor
+    inc i
+
+  for r2 in 0 ..< c.viewportHeight:
     if useBorder:
       emitTextRow(r, c.node,
-                  glyphs.left & body & glyphs.right, c.borderColor)
+                  glyphs.left & body[r2] & glyphs.right, c.borderColor)
     else:
-      emitTextRow(r, c.node, body, "")
-  # Pad to viewport.
-  for _ in visible ..< c.viewportHeight:
-    let body = spaces(c.width)
-    if useBorder:
-      emitTextRow(r, c.node, glyphs.left & body & glyphs.right, c.borderColor)
-    else:
-      emitTextRow(r, c.node, body, "")
+      emitTextRow(r, c.node, body[r2], "")
+
   if useBorder:
     emitTextRow(r, c.node, bottomBorderRow(glyphs, c.width), c.borderColor)
 

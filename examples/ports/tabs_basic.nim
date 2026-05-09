@@ -4,6 +4,13 @@
 ## `Tabs` widget with three tab entries plus a Static body line that
 ## reflects the active tab. Exercises the M11 Tabs surface in its
 ## simplest form (no content-switcher integration).
+##
+## Originally Tabs and the bordered Static were mounted directly
+## under the root (Batch-3 workaround) because `renderVertical` only
+## consumed the first text row of each direct child. The
+## vertical-multi-row fix that landed alongside the renderHorizontal
+## fix retired that workaround; the natural composition (Tabs + body
+## stacked inside a vertical Container) now survives.
 
 import isonim_tui
 
@@ -23,9 +30,14 @@ proc buildTabsBasicApp*(h: TerminalTestHarness): TerminalNode =
                        height = max(1, h.rows - 4),
                        border = bsSolid)
 
-  # Mount the tabs and the bordered Static directly under the root —
-  # M11's vertical Container only consumes one text-row per child,
-  # which would crush the Static's top/bottom border rows.
-  r.appendChild(root, tabs.node)
-  r.appendChild(root, body.node)
+  # 1 row for Tabs + (1 + 2) for the bordered Static body =
+  # `1 + max(1, h.rows - 4) + 2` rows total. Use a vertical Container
+  # whose inner viewport accommodates the full stack.
+  let outer = newContainer(r,
+    width = max(20, h.cols),
+    viewportHeight = max(7, 1 + max(1, h.rows - 4) + 2),
+    layout = clVertical)
+  outer.append(tabs.node)
+  outer.append(body.node)
+  r.appendChild(root, outer.node)
   root

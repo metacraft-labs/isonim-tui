@@ -131,15 +131,19 @@ them up.
   horizontal goldens (`button_widths`, `rules`,
   `horizontal_auto_width`) were re-recorded against the new layout
   in the same change-set.
-- **Container vertical layout — multi-row children** — M11's
-  `renderVertical` only consumes the first text-row of each direct
-  child (a wrapper `<div>` whose subtree concatenates to one row).
-  Bordered Statics nested inside a vertical Container therefore lose
-  their top/bottom border rows; Batch-3 ports that need a stack of
-  bordered widgets mount them directly under the root instead. The
-  parallel `renderHorizontal` fix landed in the same change-set
-  shows the shape of the eventual vertical fix; tracked as a
-  follow-up.
+- **Container vertical layout — multi-row children** — *RESOLVED*
+  (post-Batch-3 follow-up). `renderVertical` now extracts each
+  child's per-row content via `childRows()` and stacks rows
+  top-to-bottom, honouring an optional `data-cell-height` attribute
+  or falling back to the child's intrinsic row count. Bordered
+  Statics, Tabs + body, and other multi-row widgets nested inside a
+  vertical Container survive with all their rows intact. The three
+  Batch-3 ports that worked around the gap by mounting children
+  directly under the root (`static_padding`, `multiple_borders`,
+  `tabs_basic`) were reverted to the natural nested-Container
+  composition; goldens were re-recorded against the new render path
+  and remain visually identical to the pre-fix workaround output
+  (the bordered Statics paint the same cells either way).
 - **Welcome body content** — the M21 `Welcome` widget ships its own
   `DefaultWelcomeBody` (isonim-tui-flavoured); Textual's body text is
   different.
