@@ -84,6 +84,19 @@ test-real-terminal:
         -r $t 2>&1 | tee -a test-logs/real-terminal/run.log; \
     done
 
+# M29 cross-emulator follow-up — runs `tests/real_terminal/
+# test_real_cross_emulator.nim` only, in isolation, so CI can pin a
+# job that requires the X11 / Xvfb stack without dragging the full
+# real-terminal suite onto the same lane. The test itself spawns
+# xvfb-run + xterm / kitty / alacritty + tmux; if any of those tools
+# is absent from PATH, the affected sub-test self-skips.
+test-cross-emulator:
+    @mkdir -p test-logs/real-terminal
+    nim c {{nim-flags}} {{real-terminal-paths}} \
+      --mm:orc -d:release --threads:on \
+      -r tests/real_terminal/test_real_cross_emulator.nim 2>&1 | \
+      tee -a test-logs/real-terminal/cross-emulator.log
+
 # Lint: nim check + nixfmt --check + markdownlint + shellcheck/shfmt on scripts.
 lint: lint-nim lint-nix lint-markdown lint-shell
 

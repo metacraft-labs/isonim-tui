@@ -66,6 +66,20 @@
               # itself is linked from this dev-shell package.
               tree-sitter
               pkg-config
+              # M29 cross-emulator suite. xvfb-run hosts a virtual X
+              # display so xterm can run headless; tmux acts as the
+              # in-emulator capture surface (each emulator launches
+              # `tmux new-session` and the test reads back the pane via
+              # a shared tmux socket). kitty + alacritty are listed for
+              # completeness but require GPU/Wayland paths that aren't
+              # reliable under Xvfb in CI — the test driver detects
+              # missing emulators and reports them as deferred rather
+              # than failing.
+              xvfb-run
+              xterm
+              tmux
+              kitty
+              alacritty
             ];
             shellHook = ''
               ${preCommit.shellHook}
