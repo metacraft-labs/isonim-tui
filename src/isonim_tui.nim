@@ -67,6 +67,10 @@ import isonim_tui/animation/scalar as animScalar
 # The Windows analogue lands as M10's `windows_driver.nim`.
 when not defined(windows):
   import isonim_tui/drivers/posix_driver as posixDriverMod
+  # M26 surface — packet driver for the optional serve-as-browser path.
+  # Same `Driver` concept; emits `D`/`M`/`P` packets over stdio so a
+  # host websocket server can bridge to a browser-side xterm.js.
+  import isonim_tui/drivers/web_driver as webDriverMod
 
 # M10 surface — production Windows driver. Imported behind
 # `when defined(windows)` because the implementation reaches into the
@@ -111,6 +115,7 @@ export themeEngine
 export animEasing, animAnimator, animScalar
 when not defined(windows):
   export posixDriverMod
+  export webDriverMod
 when defined(windows):
   export windowsDriverMod
 export tier1Widgets
