@@ -11,6 +11,16 @@ tests/test_*
 !tests/test_*.nim
 !tests/test_*.cfg
 
+# Compiled example binaries (each examples/<name>/<name> matching its dir name).
+examples/calculator/calculator
+examples/code_browser/code_browser
+examples/datatable_demo/datatable_demo
+examples/dictionary/dictionary
+examples/log_viewer/log_viewer
+examples/markdown_viewer/markdown_viewer
+examples/system_monitor/system_monitor
+examples/task_app_demo/task_app_demo
+
 # Nim caches.
 *.dSYM
 *.exe
