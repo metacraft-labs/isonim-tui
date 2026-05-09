@@ -6,9 +6,29 @@
 ## fall-through. `width: 100%` parses to `Scalar(unit: suPercent,
 ## value: 100.0)`, never `string("100%")`.
 ##
-## Scope (M5 load-bearing subset): the most-used ~12 properties from
-## Textual's full set. Deferred properties (offset, layers, scrollbar,
-## opacity, etc.) ship with M6/M11.
+## Scope: the M5-closure expanded property set. The original M5 ship
+## delivered the 12 load-bearing core properties (width/height/edges/
+## color/border/text/display/visibility/layout/dock). The M5 closure
+## drop adds typed support for: per-edge spacing (margin-top/...,
+## padding-top/...), per-edge borders, overflow / overflow-x /
+## overflow-y, text-align, offset / offset-x / offset-y, align /
+## align-horizontal / align-vertical, opacity, layer / layers, tint,
+## scrollbar-* sizing and colours, link-* colour and style,
+## border-title-* and border-subtitle-* (colour, background, style,
+## align). Together these are the properties referenced by the M11-M21
+## widget set, the existing TCSS fixtures, and the M7 animation engine.
+##
+## Properties still deferred (require deeper architectural work and so
+## are explicitly not part of this closure):
+##   - `grid-size`, `grid-rows`, `grid-columns`, `grid-gutter`,
+##     `column-span`, `row-span` — wait on the grid layout pass.
+##   - `keyline` — needs a per-edge rendering pass.
+##   - `auto-color` — depends on the M6 luminosity engine selecting
+##     contrast.
+##   - `text-overflow: ellipsis` — needs the wrap engine to learn the
+##     ellipsis policy.
+##   - `text-wrap` and `overflow: scroll` runtime — depend on a
+##     scroll/clip pass that lives outside the cascade.
 
 import std/[strutils, parseutils, tables]
 import ../cells
@@ -357,15 +377,61 @@ type
     tsBlink
     tsOverline
 
+  OverflowKind* = enum
+    ## `overflow` — what happens when content exceeds the box.
+    ovVisible   ## let content paint past the box
+    ovHidden    ## clip silently
+    ovScroll    ## clip and reserve a scrollbar
+    ovAuto      ## scrollbar appears only if content overflows
+
+  TextAlignKind* = enum
+    taLeft
+    taCenter
+    taRight
+    taJustify
+    taStart   ## flow-relative left
+    taEnd     ## flow-relative right
+
+  HAlignKind* = enum
+    ## `align-horizontal` plus the horizontal half of `align`.
+    haLeft
+    haCenter
+    haRight
+
+  VAlignKind* = enum
+    ## `align-vertical` plus the vertical half of `align`.
+    vaTop
+    vaMiddle
+    vaBottom
+
+  Offset* = object
+    ## Two-axis offset value used by `offset` and animated by the M7
+    ## animator. Stored as cell-typed Scalars so `offset: 50% 0` lands
+    ## as `(suPercent, 50.0)` / `(suCells, 0)`.
+    x*: Scalar
+    y*: Scalar
+
+  EdgeBorder* = object
+    ## A per-edge border — style + colour. The bare `border-top`,
+    ## `border-right`, etc. shorthands take a style keyword optionally
+    ## followed by a colour (`border-top: solid red`). Plain colour-
+    ## only or style-only forms are accepted; missing pieces fall back
+    ## to the cascade's existing `border-style` / `border-color`.
+    style*: BorderStyle
+    styleSet*: bool
+    color*: CssColor
+    colorSet*: bool
+
 # ----------------------------------------------------------------------------
 # Property kind enum + tagged-union value
 # ----------------------------------------------------------------------------
 
 type
   PropertyKind* = enum
-    ## Properties supported by the load-bearing M5 subset. Adding a new
-    ## property is: extend this enum, add a parser branch in
-    ## `parsePropertyValue`, add a field to the `Styles` cascade output.
+    ## Properties supported by the M5 cascade. Adding a new property is:
+    ## extend this enum, add a parser branch in `parsePropertyValue`,
+    ## add a field to the `Styles` cascade output, and an apply branch
+    ## in `applyValue`.
     pkWidth
     pkHeight
     pkMinWidth
@@ -373,27 +439,80 @@ type
     pkMaxWidth
     pkMaxHeight
     pkMargin
+    pkMarginTop
+    pkMarginRight
+    pkMarginBottom
+    pkMarginLeft
     pkPadding
+    pkPaddingTop
+    pkPaddingRight
+    pkPaddingBottom
+    pkPaddingLeft
     pkBorderStyle
     pkBorderColor
+    pkBorderTop
+    pkBorderRight
+    pkBorderBottom
+    pkBorderLeft
+    pkBorderTitleColor
+    pkBorderTitleBackground
+    pkBorderTitleStyle
+    pkBorderTitleAlign
+    pkBorderSubtitleColor
+    pkBorderSubtitleBackground
+    pkBorderSubtitleStyle
+    pkBorderSubtitleAlign
     pkBackground
     pkColor
+    pkTint
+    pkOpacity
     pkTextStyle
+    pkTextAlign
     pkDisplay
     pkVisibility
     pkLayout
     pkDock
+    pkOverflow
+    pkOverflowX
+    pkOverflowY
+    pkOffset
+    pkOffsetX
+    pkOffsetY
+    pkAlign
+    pkAlignHorizontal
+    pkAlignVertical
+    pkLayer
+    pkLayers
+    pkScrollbarSize
+    pkScrollbarSizeVertical
+    pkScrollbarSizeHorizontal
+    pkScrollbarColor
+    pkScrollbarBackground
+    pkLinkColor
+    pkLinkBackground
+    pkLinkStyle
 
   ValueKind* = enum
     vkScalar
+    vkNumber       ## bare float (used for `opacity`)
     vkEdges
     vkColor
     vkBorderStyle
+    vkEdgeBorder   ## border-{top,right,bottom,left}
     vkTextStyle
     vkDisplay
     vkVisibility
     vkLayout
     vkDock
+    vkOverflow
+    vkTextAlign
+    vkOffset
+    vkHAlign
+    vkVAlign
+    vkAlignPair    ## `align: horizontal vertical` — both halves typed
+    vkLayer        ## single layer name
+    vkLayers       ## ordered list of layer names
+    vkInt          ## small non-negative integer (scrollbar-size cells)
     vkUnset
 
   PropertyValue* = object
@@ -403,14 +522,27 @@ type
     ## merger has a uniform input.
     case kind*: ValueKind
     of vkScalar:      scalarVal*: Scalar
+    of vkNumber:      numberVal*: float64
     of vkEdges:       edgesVal*: Edges
     of vkColor:       colorVal*: CssColor
     of vkBorderStyle: borderVal*: BorderStyle
+    of vkEdgeBorder:  edgeBorderVal*: EdgeBorder
     of vkTextStyle:   textStyleVal*: set[TextStyleFlag]
     of vkDisplay:     displayVal*: DisplayKind
     of vkVisibility:  visibilityVal*: VisibilityKind
     of vkLayout:      layoutVal*: LayoutKind
     of vkDock:        dockVal*: DockKind
+    of vkOverflow:    overflowVal*: OverflowKind
+    of vkTextAlign:   textAlignVal*: TextAlignKind
+    of vkOffset:      offsetVal*: Offset
+    of vkHAlign:      hAlignVal*: HAlignKind
+    of vkVAlign:      vAlignVal*: VAlignKind
+    of vkAlignPair:
+      hAlignPairVal*: HAlignKind
+      vAlignPairVal*: VAlignKind
+    of vkLayer:       layerVal*: string
+    of vkLayers:      layersVal*: seq[string]
+    of vkInt:         intVal*: int
     of vkUnset:       discard
 
 proc unsetValue*(): PropertyValue {.inline.} =
@@ -443,33 +575,108 @@ proc layoutValue*(l: LayoutKind): PropertyValue {.inline.} =
 proc dockValue*(d: DockKind): PropertyValue {.inline.} =
   PropertyValue(kind: vkDock, dockVal: d)
 
+proc numberValue*(v: float64): PropertyValue {.inline.} =
+  PropertyValue(kind: vkNumber, numberVal: v)
+
+proc edgeBorderValue*(b: EdgeBorder): PropertyValue {.inline.} =
+  PropertyValue(kind: vkEdgeBorder, edgeBorderVal: b)
+
+proc overflowValue*(o: OverflowKind): PropertyValue {.inline.} =
+  PropertyValue(kind: vkOverflow, overflowVal: o)
+
+proc textAlignValue*(a: TextAlignKind): PropertyValue {.inline.} =
+  PropertyValue(kind: vkTextAlign, textAlignVal: a)
+
+proc offsetValue*(o: Offset): PropertyValue {.inline.} =
+  PropertyValue(kind: vkOffset, offsetVal: o)
+
+proc hAlignValue*(h: HAlignKind): PropertyValue {.inline.} =
+  PropertyValue(kind: vkHAlign, hAlignVal: h)
+
+proc vAlignValue*(v: VAlignKind): PropertyValue {.inline.} =
+  PropertyValue(kind: vkVAlign, vAlignVal: v)
+
+proc alignPairValue*(h: HAlignKind; v: VAlignKind): PropertyValue {.inline.} =
+  PropertyValue(kind: vkAlignPair, hAlignPairVal: h, vAlignPairVal: v)
+
+proc layerValue*(name: string): PropertyValue {.inline.} =
+  PropertyValue(kind: vkLayer, layerVal: name)
+
+proc layersValue*(names: seq[string]): PropertyValue {.inline.} =
+  PropertyValue(kind: vkLayers, layersVal: names)
+
+proc intValue*(n: int): PropertyValue {.inline.} =
+  PropertyValue(kind: vkInt, intVal: n)
+
 # ----------------------------------------------------------------------------
 # Property name lookup
 # ----------------------------------------------------------------------------
 
 proc propertyKindFromName*(name: string): (bool, PropertyKind) =
-  ## Map a CSS declaration name to a `PropertyKind`. The supported set
-  ## is intentionally narrow (M5 load-bearing); unknown names return
-  ## `(false, _)` and the parser drops the declaration with a warning.
+  ## Map a CSS declaration name to a `PropertyKind`. Unknown names
+  ## return `(false, _)` and the parser drops the declaration with a
+  ## warning.
   let lower = name.toLowerAscii
   case lower
-  of "width":         (true, pkWidth)
-  of "height":        (true, pkHeight)
-  of "min-width":     (true, pkMinWidth)
-  of "min-height":    (true, pkMinHeight)
-  of "max-width":     (true, pkMaxWidth)
-  of "max-height":    (true, pkMaxHeight)
-  of "margin":        (true, pkMargin)
-  of "padding":       (true, pkPadding)
+  of "width":            (true, pkWidth)
+  of "height":           (true, pkHeight)
+  of "min-width":        (true, pkMinWidth)
+  of "min-height":       (true, pkMinHeight)
+  of "max-width":        (true, pkMaxWidth)
+  of "max-height":       (true, pkMaxHeight)
+  of "margin":           (true, pkMargin)
+  of "margin-top":       (true, pkMarginTop)
+  of "margin-right":     (true, pkMarginRight)
+  of "margin-bottom":    (true, pkMarginBottom)
+  of "margin-left":      (true, pkMarginLeft)
+  of "padding":          (true, pkPadding)
+  of "padding-top":      (true, pkPaddingTop)
+  of "padding-right":    (true, pkPaddingRight)
+  of "padding-bottom":   (true, pkPaddingBottom)
+  of "padding-left":     (true, pkPaddingLeft)
   of "border", "border-style": (true, pkBorderStyle)
-  of "border-color":  (true, pkBorderColor)
-  of "background":    (true, pkBackground)
-  of "color":         (true, pkColor)
-  of "text-style":    (true, pkTextStyle)
-  of "display":       (true, pkDisplay)
-  of "visibility":    (true, pkVisibility)
-  of "layout":        (true, pkLayout)
-  of "dock":          (true, pkDock)
+  of "border-color":     (true, pkBorderColor)
+  of "border-top":       (true, pkBorderTop)
+  of "border-right":     (true, pkBorderRight)
+  of "border-bottom":    (true, pkBorderBottom)
+  of "border-left":      (true, pkBorderLeft)
+  of "border-title-color":      (true, pkBorderTitleColor)
+  of "border-title-background": (true, pkBorderTitleBackground)
+  of "border-title-style":      (true, pkBorderTitleStyle)
+  of "border-title-align":      (true, pkBorderTitleAlign)
+  of "border-subtitle-color":      (true, pkBorderSubtitleColor)
+  of "border-subtitle-background": (true, pkBorderSubtitleBackground)
+  of "border-subtitle-style":      (true, pkBorderSubtitleStyle)
+  of "border-subtitle-align":      (true, pkBorderSubtitleAlign)
+  of "background":       (true, pkBackground)
+  of "color":            (true, pkColor)
+  of "tint":             (true, pkTint)
+  of "opacity":          (true, pkOpacity)
+  of "text-style":       (true, pkTextStyle)
+  of "text-align":       (true, pkTextAlign)
+  of "display":          (true, pkDisplay)
+  of "visibility":       (true, pkVisibility)
+  of "layout":           (true, pkLayout)
+  of "dock":             (true, pkDock)
+  of "overflow":         (true, pkOverflow)
+  of "overflow-x":       (true, pkOverflowX)
+  of "overflow-y":       (true, pkOverflowY)
+  of "offset":           (true, pkOffset)
+  of "offset-x":         (true, pkOffsetX)
+  of "offset-y":         (true, pkOffsetY)
+  of "align":            (true, pkAlign)
+  of "align-horizontal": (true, pkAlignHorizontal)
+  of "align-vertical":   (true, pkAlignVertical)
+  of "layer":            (true, pkLayer)
+  of "layers":           (true, pkLayers)
+  of "scrollbar-size":              (true, pkScrollbarSize)
+  of "scrollbar-size-vertical":     (true, pkScrollbarSizeVertical)
+  of "scrollbar-size-horizontal":   (true, pkScrollbarSizeHorizontal)
+  of "scrollbar-color":      (true, pkScrollbarColor)
+  of "scrollbar-background": (true, pkScrollbarBackground)
+  of "link-color":       (true, pkLinkColor)
+  of "link-background":  (true, pkLinkBackground)
+  of "link-style":       (true, pkLinkStyle)
   else: (false, pkWidth)
 
 proc propertyKindName*(p: PropertyKind): string =
@@ -481,16 +688,58 @@ proc propertyKindName*(p: PropertyKind): string =
   of pkMaxWidth: "max-width"
   of pkMaxHeight: "max-height"
   of pkMargin: "margin"
+  of pkMarginTop: "margin-top"
+  of pkMarginRight: "margin-right"
+  of pkMarginBottom: "margin-bottom"
+  of pkMarginLeft: "margin-left"
   of pkPadding: "padding"
+  of pkPaddingTop: "padding-top"
+  of pkPaddingRight: "padding-right"
+  of pkPaddingBottom: "padding-bottom"
+  of pkPaddingLeft: "padding-left"
   of pkBorderStyle: "border-style"
   of pkBorderColor: "border-color"
+  of pkBorderTop: "border-top"
+  of pkBorderRight: "border-right"
+  of pkBorderBottom: "border-bottom"
+  of pkBorderLeft: "border-left"
+  of pkBorderTitleColor: "border-title-color"
+  of pkBorderTitleBackground: "border-title-background"
+  of pkBorderTitleStyle: "border-title-style"
+  of pkBorderTitleAlign: "border-title-align"
+  of pkBorderSubtitleColor: "border-subtitle-color"
+  of pkBorderSubtitleBackground: "border-subtitle-background"
+  of pkBorderSubtitleStyle: "border-subtitle-style"
+  of pkBorderSubtitleAlign: "border-subtitle-align"
   of pkBackground: "background"
   of pkColor: "color"
+  of pkTint: "tint"
+  of pkOpacity: "opacity"
   of pkTextStyle: "text-style"
+  of pkTextAlign: "text-align"
   of pkDisplay: "display"
   of pkVisibility: "visibility"
   of pkLayout: "layout"
   of pkDock: "dock"
+  of pkOverflow: "overflow"
+  of pkOverflowX: "overflow-x"
+  of pkOverflowY: "overflow-y"
+  of pkOffset: "offset"
+  of pkOffsetX: "offset-x"
+  of pkOffsetY: "offset-y"
+  of pkAlign: "align"
+  of pkAlignHorizontal: "align-horizontal"
+  of pkAlignVertical: "align-vertical"
+  of pkLayer: "layer"
+  of pkLayers: "layers"
+  of pkScrollbarSize: "scrollbar-size"
+  of pkScrollbarSizeVertical: "scrollbar-size-vertical"
+  of pkScrollbarSizeHorizontal: "scrollbar-size-horizontal"
+  of pkScrollbarColor: "scrollbar-color"
+  of pkScrollbarBackground: "scrollbar-background"
+  of pkLinkColor: "link-color"
+  of pkLinkBackground: "link-background"
+  of pkLinkStyle: "link-style"
 
 # ----------------------------------------------------------------------------
 # Keyword parsers
@@ -560,3 +809,39 @@ proc parseTextStyleFlag*(s: string): (bool, TextStyleFlag) =
   of "blink":     (true, tsBlink)
   of "overline":  (true, tsOverline)
   else:           (false, tsBold)
+
+proc parseOverflow*(s: string): (bool, OverflowKind) =
+  case s.toLowerAscii
+  of "visible": (true, ovVisible)
+  of "hidden":  (true, ovHidden)
+  of "scroll":  (true, ovScroll)
+  of "auto":    (true, ovAuto)
+  else:         (false, ovVisible)
+
+proc parseTextAlign*(s: string): (bool, TextAlignKind) =
+  case s.toLowerAscii
+  of "left":    (true, taLeft)
+  of "center":  (true, taCenter)
+  of "centre":  (true, taCenter)   ## Textual accepts both spellings
+  of "right":   (true, taRight)
+  of "justify": (true, taJustify)
+  of "start":   (true, taStart)
+  of "end":     (true, taEnd)
+  else:         (false, taLeft)
+
+proc parseHAlign*(s: string): (bool, HAlignKind) =
+  case s.toLowerAscii
+  of "left":   (true, haLeft)
+  of "center": (true, haCenter)
+  of "centre": (true, haCenter)
+  of "right":  (true, haRight)
+  else:        (false, haLeft)
+
+proc parseVAlign*(s: string): (bool, VAlignKind) =
+  case s.toLowerAscii
+  of "top":    (true, vaTop)
+  of "middle": (true, vaMiddle)
+  of "center": (true, vaMiddle)
+  of "centre": (true, vaMiddle)
+  of "bottom": (true, vaBottom)
+  else:        (false, vaTop)

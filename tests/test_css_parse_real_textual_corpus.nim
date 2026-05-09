@@ -17,10 +17,24 @@ suite "M5: CSS parser real-stack corpus":
     let parsed = parseCss(calc, "calculator.tcss")
     # `Screen`, `#calculator`, `Button`, `#numbers`, `#number-0` = 5 rules
     check parsed.rules.len == 5
-    # `overflow` isn't in our M5 subset, so the declaration is reported
-    # as an error and dropped — the rule still parses.
-    check parsed.errors.len == 1
-    check parsed.errors[0].contains("overflow")
+    # The M5 closure adds `overflow` as a typed property, so the
+    # `Screen { overflow: auto; }` declaration parses cleanly with
+    # no errors — earlier in M5's life it was an unsupported
+    # property and produced a dropped-declaration warning.
+    check parsed.errors.len == 0
+    # Verify the typed overflow value lives on the Screen rule.
+    block:
+      var screenRule: Rule
+      for r in parsed.rules:
+        if r.selectorSets.len > 0 and
+           r.selectorSets[0].selectors.len == 1 and
+           r.selectorSets[0].selectors[0].kind == skType and
+           r.selectorSets[0].selectors[0].name == "Screen":
+          screenRule = r; break
+      check screenRule.declarations.len == 1
+      check screenRule.declarations[0].propertyKind == pkOverflow
+      check screenRule.declarations[0].value.kind == vkOverflow
+      check screenRule.declarations[0].value.overflowVal == ovAuto
     check parsed.rules[0].selectorSets.len == 1
     check parsed.rules[0].selectorSets[0].selectors.len == 1
     check parsed.rules[0].selectorSets[0].selectors[0].kind == skType

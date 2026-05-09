@@ -269,18 +269,147 @@ proc parseTextStyleTokens(toks: seq[Token]): set[TextStyleFlag] =
     let (found, flag) = parseTextStyleFlag(tok.value)
     if found: result.incl(flag)
 
+proc parseEdgeBorderTokens(toks: seq[Token]): EdgeBorder =
+  ## `border-top: solid red` — one keyword (style) and/or one colour.
+  ## Either piece may be omitted; the cascade falls back to the
+  ## non-edge border-style/border-color.
+  for tok in toks:
+    case tok.kind
+    of tkToken:
+      let (foundStyle, bs) = parseBorderStyle(tok.value)
+      if foundStyle:
+        result.style = bs
+        result.styleSet = true
+      else:
+        # Treat unrecognised keyword as a named colour (e.g. `red`).
+        result.color = namedCss(tok.value)
+        result.colorSet = true
+    of tkColorHex:
+      result.color = parseHexColor(tok.value)
+      result.colorSet = true
+    of tkColorFunc:
+      result.color = parseRgbFunc(tok.value)
+      result.colorSet = true
+    of tkVariableRef:
+      result.color = varRefCss(tok.value)
+      result.colorSet = true
+    else:
+      discard
+
+proc parseSingleScalar(toks: seq[Token]): Scalar =
+  if toks.len == 0:
+    raise newException(ParseError, "empty length value")
+  parseScalarToken(toks[0])
+
+proc parseOffsetTokens(toks: seq[Token]): Offset =
+  ## `offset: x y` — two scalars, separated by whitespace or a comma.
+  var scalars: seq[Scalar]
+  for tok in toks:
+    if tok.kind == tkComma: continue
+    scalars.add(parseScalarToken(tok))
+  if scalars.len == 0:
+    raise newException(ParseError, "offset requires at least one value")
+  if scalars.len == 1:
+    return Offset(x: scalars[0], y: scalars[0])
+  Offset(x: scalars[0], y: scalars[1])
+
+proc parseAlignPair(toks: seq[Token]): tuple[h: HAlignKind; v: VAlignKind] =
+  ## `align: horizontal vertical` (e.g. `align: center middle`).
+  var h: HAlignKind = haLeft
+  var v: VAlignKind = vaTop
+  var hSeen = false
+  var vSeen = false
+  for tok in toks:
+    if tok.kind != tkToken: continue
+    let (hOk, hk) = parseHAlign(tok.value)
+    if hOk and not hSeen:
+      h = hk; hSeen = true
+      continue
+    let (vOk, vk) = parseVAlign(tok.value)
+    if vOk:
+      v = vk; vSeen = true
+  if not hSeen and not vSeen:
+    raise newException(ParseError, "align requires horizontal+vertical keywords")
+  (h: h, v: v)
+
+proc parseLayerName(toks: seq[Token]): string =
+  for tok in toks:
+    if tok.kind in {tkToken, tkString}:
+      var v = tok.value
+      if v.len >= 2 and v[0] == '"' and v[^1] == '"':
+        v = v[1 ..< v.len - 1]
+      if v.len > 0:
+        return v
+  raise newException(ParseError, "layer expects an identifier")
+
+proc parseLayerNames(toks: seq[Token]): seq[string] =
+  for tok in toks:
+    if tok.kind in {tkToken, tkString}:
+      var v = tok.value
+      if v.len >= 2 and v[0] == '"' and v[^1] == '"':
+        v = v[1 ..< v.len - 1]
+      if v.len > 0:
+        result.add(v)
+  if result.len == 0:
+    raise newException(ParseError, "layers expects one or more identifiers")
+
+proc parseSmallInt(toks: seq[Token]): int =
+  if toks.len == 0:
+    raise newException(ParseError, "expected integer")
+  case toks[0].kind
+  of tkNumber, tkScalar:
+    try:
+      let v = parseInt(toks[0].value)
+      if v < 0:
+        raise newException(ParseError, "expected non-negative integer")
+      return v
+    except ValueError:
+      raise newException(ParseError, "cannot parse integer: " & toks[0].value)
+  else:
+    raise newException(ParseError, "expected integer")
+
+proc parseFloatLike(toks: seq[Token]): float64 =
+  if toks.len == 0:
+    raise newException(ParseError, "expected number")
+  let tok = toks[0]
+  case tok.kind
+  of tkNumber:
+    try:
+      return parseFloat(tok.value)
+    except ValueError:
+      raise newException(ParseError, "cannot parse number: " & tok.value)
+  of tkScalar:
+    # Allow `opacity: 50%` to mean 0.5.
+    if tok.value.endsWith("%"):
+      try:
+        return parseFloat(tok.value[0 ..< tok.value.len - 1]) / 100.0
+      except ValueError:
+        raise newException(ParseError, "cannot parse percent: " & tok.value)
+    try:
+      return parseFloat(tok.value)
+    except ValueError:
+      raise newException(ParseError, "cannot parse number: " & tok.value)
+  else:
+    raise newException(ParseError, "expected number")
+
 proc parsePropertyValue*(prop: PropertyKind; toks: seq[Token]): PropertyValue =
   ## Convert a sequence of value tokens into a typed `PropertyValue`.
   ## Charter: every value lands in a typed enum / scalar — never a
   ## bare string.
   case prop
   of pkWidth, pkHeight, pkMinWidth, pkMinHeight, pkMaxWidth, pkMaxHeight:
-    if toks.len == 0:
-      raise newException(ParseError, "empty length value")
-    scalarValue(parseScalarToken(toks[0]))
+    scalarValue(parseSingleScalar(toks))
   of pkMargin, pkPadding:
     edgesValue(parseEdgesTokens(toks))
-  of pkBackground, pkColor, pkBorderColor:
+  of pkMarginTop, pkMarginRight, pkMarginBottom, pkMarginLeft,
+     pkPaddingTop, pkPaddingRight, pkPaddingBottom, pkPaddingLeft,
+     pkOffsetX, pkOffsetY:
+    scalarValue(parseSingleScalar(toks))
+  of pkBackground, pkColor, pkBorderColor, pkTint,
+     pkBorderTitleColor, pkBorderTitleBackground,
+     pkBorderSubtitleColor, pkBorderSubtitleBackground,
+     pkScrollbarColor, pkScrollbarBackground,
+     pkLinkColor, pkLinkBackground:
     colorValue(parseColorTokens(toks))
   of pkBorderStyle:
     if toks.len == 0:
@@ -293,8 +422,28 @@ proc parsePropertyValue*(prop: PropertyKind; toks: seq[Token]): PropertyValue =
       raise newException(ParseError,
         "unknown border style: " & toks[0].value)
     borderStyleValue(bs)
-  of pkTextStyle:
+  of pkBorderTop, pkBorderRight, pkBorderBottom, pkBorderLeft:
+    edgeBorderValue(parseEdgeBorderTokens(toks))
+  of pkTextStyle, pkBorderTitleStyle, pkBorderSubtitleStyle, pkLinkStyle:
     textStyleValue(parseTextStyleTokens(toks))
+  of pkTextAlign:
+    if toks.len == 0 or toks[0].kind != tkToken:
+      raise newException(ParseError, "text-align expects a keyword")
+    let (found, a) = parseTextAlign(toks[0].value)
+    if not found:
+      raise newException(ParseError, "unknown text-align: " & toks[0].value)
+    textAlignValue(a)
+  of pkBorderTitleAlign, pkBorderSubtitleAlign:
+    if toks.len == 0 or toks[0].kind != tkToken:
+      raise newException(ParseError,
+        propertyKindName(prop) & " expects a keyword")
+    let (found, h) = parseHAlign(toks[0].value)
+    if not found:
+      raise newException(ParseError,
+        "unknown " & propertyKindName(prop) & ": " & toks[0].value)
+    hAlignValue(h)
+  of pkOpacity:
+    numberValue(parseFloatLike(toks))
   of pkDisplay:
     if toks.len == 0 or toks[0].kind != tkToken:
       raise newException(ParseError, "display expects a keyword")
@@ -323,6 +472,61 @@ proc parsePropertyValue*(prop: PropertyKind; toks: seq[Token]): PropertyValue =
     if not found:
       raise newException(ParseError, "unknown dock: " & toks[0].value)
     dockValue(d)
+  of pkOverflow, pkOverflowX, pkOverflowY:
+    if toks.len == 0 or toks[0].kind != tkToken:
+      raise newException(ParseError, "overflow expects a keyword")
+    let (found, o) = parseOverflow(toks[0].value)
+    if not found:
+      raise newException(ParseError, "unknown overflow: " & toks[0].value)
+    overflowValue(o)
+  of pkOffset:
+    offsetValue(parseOffsetTokens(toks))
+  of pkAlign:
+    let pair = parseAlignPair(toks)
+    alignPairValue(pair.h, pair.v)
+  of pkAlignHorizontal:
+    if toks.len == 0 or toks[0].kind != tkToken:
+      raise newException(ParseError, "align-horizontal expects a keyword")
+    let (found, h) = parseHAlign(toks[0].value)
+    if not found:
+      raise newException(ParseError,
+        "unknown align-horizontal: " & toks[0].value)
+    hAlignValue(h)
+  of pkAlignVertical:
+    if toks.len == 0 or toks[0].kind != tkToken:
+      raise newException(ParseError, "align-vertical expects a keyword")
+    let (found, v) = parseVAlign(toks[0].value)
+    if not found:
+      raise newException(ParseError,
+        "unknown align-vertical: " & toks[0].value)
+    vAlignValue(v)
+  of pkLayer:
+    layerValue(parseLayerName(toks))
+  of pkLayers:
+    layersValue(parseLayerNames(toks))
+  of pkScrollbarSize:
+    # Either one int (uniform) or two ints (horizontal, vertical) —
+    # mirrors Textual's `scrollbar-size: H V` shorthand.
+    var ints: seq[int]
+    for tok in toks:
+      if tok.kind == tkComma: continue
+      if tok.kind in {tkNumber, tkScalar}:
+        try:
+          let v = parseInt(tok.value)
+          if v >= 0: ints.add(v)
+        except ValueError:
+          discard
+    if ints.len == 0:
+      raise newException(ParseError, "scrollbar-size expects integer(s)")
+    # We carry the uniform value as a single int; the two-value form
+    # is split by the cascade through the per-axis properties
+    # `scrollbar-size-horizontal` / `scrollbar-size-vertical`. For the
+    # shorthand we only use the first value here; widget code that
+    # wants the asymmetric form should set the two axis properties
+    # explicitly. (Textual's two-value form is rare in practice.)
+    intValue(ints[0])
+  of pkScrollbarSizeVertical, pkScrollbarSizeHorizontal:
+    intValue(parseSmallInt(toks))
 
 # ----------------------------------------------------------------------------
 # Declaration parsing
