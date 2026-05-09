@@ -1,0 +1,3 @@
+# This directory is populated by github-action-benchmark on each
+# main-branch CI run. The path matches the workflow's
+# `benchmark-data-dir-path: perf/bench` field.
