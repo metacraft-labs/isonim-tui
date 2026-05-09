@@ -5,9 +5,16 @@
 ## complete Layer 1/2/3/4 split for the cross-platform story. This
 ## variant keeps the same core ViewModel pattern but in one file so
 ## it works as a standalone snapshot demo.
+##
+## DSL pilot (DM-M0): the renderer-tree construction lives inside a
+## single `ui(r):` block. Structural divs use the `tdiv(class=...)`
+## form, while M11+ widgets compose via the `w*` wrappers in
+## `isonim_tui/dsl/widget_blocks` (see `docs/dsl-pattern.md`).
 
 import std/strutils
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 # ----------------------------------------------------------------------------
 # ViewModel
@@ -45,36 +52,25 @@ proc toggleTask*(vm: TaskAppDemoVM; id: int) =
 proc buildTaskAppDemoApp*(h: TerminalTestHarness; vm: TaskAppDemoVM):
                          TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  r.setAttribute(root, "class", "task-app-demo")
+  let cols = h.cols
 
-  let header = newHeader(r, title = "Tasks", subtitle = "demo",
-                         width = h.cols)
-  r.appendChild(root, header.node)
+  let footerBindings = @[
+    FooterBinding(key: "n", description: "New task"),
+    FooterBinding(key: "x", description: "Toggle done"),
+    FooterBinding(key: "q", description: "Quit")]
 
-  # Task list rows.
-  let listBox = r.createElement("div")
-  r.setAttribute(listBox, "class", "task-list")
-  if vm.tasks.len == 0:
-    r.appendChild(listBox, r.createTextNode("(no tasks yet)"))
-  else:
-    for t in vm.tasks:
-      let row = r.createElement("div")
-      let mark = if t.completed: "[x] " else: "[ ] "
-      let lbl = newLabel(r, mark & t.name)
-      r.appendChild(row, lbl.node)
-      r.appendChild(listBox, row)
-  r.appendChild(root, listBox)
-
-  let footer = newFooter(r,
-    bindings = @[
-      FooterBinding(key: "n", description: "New task"),
-      FooterBinding(key: "x", description: "Toggle done"),
-      FooterBinding(key: "q", description: "Quit")],
-    width = h.cols, compact = true)
-  r.appendChild(root, footer.node)
-
-  root
+  result = ui(r):
+    tdiv(class = "task-app-demo"):
+      wHeader(r, "Tasks", "demo", cols)
+      tdiv(class = "task-list"):
+        if vm.tasks.len == 0:
+          text "(no tasks yet)"
+        else:
+          for t in vm.tasks:
+            tdiv:
+              let mark = if t.completed: "[x] " else: "[ ] "
+              wLabel(r, mark & t.name)
+      wFooter(r, footerBindings, cols, true)
 
 proc mountTaskAppDemo*(h: TerminalTestHarness): TaskAppDemoVM =
   let vm = newTaskAppDemoVM()
