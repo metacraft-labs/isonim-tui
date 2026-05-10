@@ -1,8 +1,9 @@
 ## examples/task_app_demo/task_app_demo.nim — M27 demo: a smaller
 ## variant of the M22 task app.
 ##
-## The full M22 task app lives at `examples/task_app/` with the
-## complete Layer 1/2/3/4 split for the cross-platform story. This
+## The full M22 task app lives at `isonim-examples/task_app/` (post
+## EX-M2) with the complete Layer 1/2/3/4 split for the cross-platform
+## story. This
 ## variant keeps the same core ViewModel pattern but in one file so
 ## it works as a standalone snapshot demo.
 ##

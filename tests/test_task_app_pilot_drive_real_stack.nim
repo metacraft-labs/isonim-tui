@@ -13,7 +13,11 @@
 import unittest
 import isonim_tui
 
-import ../examples/task_app/main_tui
+# EX-M2: the task-app composition roots and leaves now live in
+# `isonim-examples` (the canonical home for IsoNim demos). The
+# `--path:../isonim-examples` switch in `isonim-tui/Justfile` +
+# `config.nims` resolves the import below.
+import task_app/main_tui
 
 suite "M22: pilot drives the real task-app stack":
   test "test_task_app_pilot_drive_real_stack":

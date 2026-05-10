@@ -17,7 +17,12 @@ import unittest
 import std/tables
 
 import isonim/core/signals
-import ../examples/task_app/main_web
+
+# EX-M2: the task-app composition roots and leaves now live in
+# `isonim-examples` (the canonical home for IsoNim demos). The
+# `--path:../isonim-examples` switch in `isonim-tui/Justfile` +
+# `config.nims` resolves the import below.
+import task_app/main_web
 
 suite "M22: web composition root drives the same VM":
   test "test_task_app_web_target_compiles":
