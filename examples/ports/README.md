@@ -17,6 +17,45 @@ dev-shell as of M6 / M19). Three batches:
   re-recorded against the real left-to-right path in the same
   change-set).
 
+## DSL composition pattern
+
+Every port is a single `ui(r):` composition root following the
+canonical IsoNim DSL idiom. This was the focus of the DM-M0..DM-M7
+demo-modernization series (Batch 1 was refactored under DM-M3, Batch 2
+under DM-M4, Batch 3 under DM-M5). Inside `ui(r):` you mix two kinds
+of calls: raw HTML-flavoured structural elements (`tdiv(class=...)`,
+`span`, `button`, ...) emitted by the macro as `createElement` +
+`setAttribute` + child sub-tree, and `w*` wrappers from
+`src/isonim_tui/dsl/widget_blocks.nim` that mount M11-M21 widgets.
+**Wrappers must be called with positional arguments only** — any
+`name = value` argument promotes the call to a synthetic HTML element
+(see "Two DSL gaps" in `docs/dsl-pattern.md`).
+
+A small worked example (the shape used by every Batch-3 port that
+composes inside the DSL):
+
+```nim
+import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
+
+proc buildHeaderWithTitleApp*(h: TerminalTestHarness): TerminalNode =
+  let r = h.renderer
+  result = ui(r):
+    tdiv(class = "header-with-title-port"):
+      wHeader(r, "Demo Title", "subtitle text", 60)
+```
+
+When a port needs to call methods on the widget object after
+construction — for example `Input.setValue`, `RichLog.body.write`, or
+`Container.append` — build the widget in a small helper outside the
+`ui()` block and embed its `.node` using `embedNode(handle.node)`
+inside the composition root. Several ports use this pattern
+(`option_list_long`, `log_write`, `richlog_max_lines`,
+`button_widths`, `rules`, `listview_index`, `data_table_row_labels`).
+See `docs/dsl-pattern.md` for the full reference, the two known DSL
+gaps, and the rationale for each wrapper signature.
+
 ## What "parity" means here
 
 For each port the SVG (and five companion formats) emitted by
