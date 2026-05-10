@@ -14,6 +14,12 @@ switch("path", "$config/src")
 # Sibling isonim — primary dependency.
 switch("path", "$config/../isonim/src")
 
+# Sibling isonim-examples — canonical home for shared demo cores
+# (EX-M1+). The `examples/task_app/core/{vm,views}.nim` files in this
+# repo are re-export shims that pull from `task_app/core/...` which
+# resolves via this path.
+switch("path", "$config/../isonim-examples")
+
 # Sibling nim-termctl — M4 byte-level input parser.
 switch("path", "$config/../nim-termctl/src")
 

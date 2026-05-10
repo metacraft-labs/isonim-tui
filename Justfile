@@ -17,7 +17,7 @@ alias fmt := format
 # Path lookups - mirrors what `config.nims` exports (kept here so a
 # developer running `just <recipe>` outside direnv still resolves
 # sibling-repo sources).
-src-paths := "--path:src --path:tests --path:../isonim/src --path:../nim-termctl/src --path:../nim-pty/src --path:../nim-faststreams --path:../nim-stew --path:../nim-everywhere/src"
+src-paths := "--path:src --path:tests --path:../isonim/src --path:../isonim-examples --path:../nim-termctl/src --path:../nim-pty/src --path:../nim-faststreams --path:../nim-stew --path:../nim-everywhere/src"
 
 # Extra paths needed for the M29 real-terminal suite (TermAssert lives
 # in sibling repos that aren't on the default isonim-tui path list).
