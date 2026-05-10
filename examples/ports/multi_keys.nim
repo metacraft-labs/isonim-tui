@@ -14,18 +14,20 @@
 ## isonim-tui's M21 Footer takes pre-formed `FooterBinding` records;
 ## we render the same primary key chip + description so the
 ## cell-content lines up.
+##
+## DM-M4: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The Footer composes cleanly via the existing
+## `wFooter` wrapper.
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildMultiKeysApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
+  let bindings = @[
+    FooterBinding(key: "o", description: "Options", disabled: false)]
 
-  let f = newFooter(r,
-                    bindings = @[
-                      FooterBinding(key: "o",
-                                    description: "Options",
-                                    disabled: false)],
-                    width = h.cols)
-  r.appendChild(root, f.node)
-  root
+  result = ui(r):
+    tdiv(class = "multi-keys-port"):
+      wFooter(r, bindings, h.cols, true)

@@ -13,12 +13,19 @@
 ## isonim-tui-flavoured (`DefaultWelcomeBody`) so the snapshot is
 ## visually-equivalent to Textual's `Welcome()` rather than
 ## byte-identical.
+##
+## DM-M4: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The Welcome widget renders entirely from its
+## constructor inputs, so the new `wWelcome` wrapper composes cleanly
+## inside the DSL block (no need to retain the widget object).
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildWelcomeApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  let w = newWelcome(r, width = h.cols, height = h.rows)
-  r.appendChild(root, w.node)
-  root
+  result = ui(r):
+    tdiv(class = "welcome-widget-port"):
+      wWelcome(r, "Welcome", DefaultWelcomeBody, h.cols, h.rows,
+               "OK", "", "")

@@ -16,20 +16,28 @@
 ## A RichLog with a 3-line cap, driven by 5 simulated key presses.
 ## After the 5th write only the last 3 entries should be visible —
 ## confirming the M21 widget enforces `maxLines`.
+##
+## DM-M4: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The `RichLog` widget needs the widget object
+## to call `rl.write(line)` after construction, so it's built outside
+## the `ui()` block and embedded via `embedNode` (mirrors DM-M2's
+## `log_viewer.buildRichLogNode` precedent).
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildRichLogMaxLinesApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
 
   let rl = newRichLog(r,
                       width = max(20, h.cols - 2),
                       viewportHeight = max(4, h.rows - 2),
                       maxLines = 3,
                       border = bsSolid)
-  r.appendChild(root, rl.node)
-
   for i in 1 .. 5:
     rl.write("Key press #" & $i)
-  root
+
+  result = ui(r):
+    tdiv(class = "richlog-max-lines-port"):
+      embedNode(rl.node)

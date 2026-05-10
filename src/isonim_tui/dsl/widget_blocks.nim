@@ -102,6 +102,9 @@ import ../widgets/markdown
 import ../widgets/placeholder
 import ../widgets/rule
 import ../widgets/progress_bar
+import ../widgets/welcome
+import ../widgets/option_list
+import ../widgets/checkbox
 
 # ----------------------------------------------------------------------------
 # Identity wrapper for already-built nodes
@@ -377,3 +380,56 @@ proc wProgressBar*(h: TerminalTestHarness;
   newProgressBar(h, total = total, progress = progress, width = width,
                  showPercent = showPercent, barColor = barColor,
                  completeColor = completeColor, bgColor = bgColor).node
+
+# ----------------------------------------------------------------------------
+# Welcome
+# ----------------------------------------------------------------------------
+
+proc wWelcome*(renderer: TerminalRenderer;
+               title: string = "Welcome";
+               body: openArray[string] = DefaultWelcomeBody;
+               width: int = 60;
+               height: int = 14;
+               actionLabel: string = "OK";
+               backgroundColor: string = "";
+               color: string = ""): TerminalNode =
+  ## DSL-friendly wrapper around `newWelcome` (M21). Mirrors the
+  ## constructor's positional surface. First needed by DM-M4's
+  ## `welcome_widget` port.
+  newWelcome(renderer, title = title, body = body, width = width,
+             height = height, actionLabel = actionLabel,
+             backgroundColor = backgroundColor, color = color).node
+
+# ----------------------------------------------------------------------------
+# OptionList
+# ----------------------------------------------------------------------------
+
+proc wOptionList*(renderer: TerminalRenderer;
+                  rows: openArray[OptionRow];
+                  width, viewportHeight: int;
+                  border: BorderStyle = bsNone;
+                  borderColor: string = "";
+                  color: string = ""): TerminalNode =
+  ## DSL-friendly wrapper around `newOptionList` (M14). Drops the
+  ## optional onHighlight / onSelect callback slots; add an overload
+  ## here when a future port needs them. First needed by DM-M4's
+  ## `option_list_long` port.
+  newOptionList(renderer, rows = rows, width = width,
+                viewportHeight = viewportHeight, border = border,
+                borderColor = borderColor, color = color).node
+
+# ----------------------------------------------------------------------------
+# Checkbox
+# ----------------------------------------------------------------------------
+
+proc wCheckbox*(renderer: TerminalRenderer;
+                label: string = "";
+                value: bool = false;
+                disabled: bool = false;
+                color: string = ""): TerminalNode =
+  ## DSL-friendly wrapper around `newCheckbox` (M12). Drops the
+  ## optional `onChange` callback slot; add an overload here when a
+  ## future port needs it. First needed by DM-M4's
+  ## `toggle_style_order` port.
+  newCheckbox(renderer, label = label, value = value,
+              disabled = disabled, color = color).node

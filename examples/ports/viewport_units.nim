@@ -14,19 +14,22 @@
 ## we resolve `100vw / 100vh` against the harness's terminal size at
 ## build time, which produces the same painted cells as Textual's
 ## CSS-driven sizing.
+##
+## DM-M4: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The Static widget composes cleanly via the
+## existing `wStatic` wrapper.
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildViewportUnitsApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-
   # `100vw / 100vh` → resolve against the harness's terminal grid.
   # Subtract 2 cells for the border ring (Static counts inner content).
-  let inner = newStatic(r, "Hello, world!",
-                        width = max(2, h.cols - 2),
-                        height = max(1, h.rows - 2),
-                        border = bsSolid,
-                        borderColor = "cyan")
-  r.appendChild(root, inner.node)
-  root
+  let width = max(2, h.cols - 2)
+  let height = max(1, h.rows - 2)
+
+  result = ui(r):
+    tdiv(class = "viewport-units-port"):
+      wStatic(r, "Hello, world!", width, height, bsSolid, "cyan", false)

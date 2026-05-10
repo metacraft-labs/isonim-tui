@@ -12,12 +12,19 @@
 ## A 100-row `OptionList` exercising the M14 widget's scroll viewport.
 ## We render the same labels and let the harness window size pick the
 ## visible rows.
+##
+## DM-M4: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The post-mount Pilot needs the OptionList's
+## `.node` to focus, so we build the widget outside the `ui()` block
+## and embed its node via `embedNode` (mirrors DM-M3's
+## `listview_index` precedent).
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildOptionListLongApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
 
   var rows: seq[OptionRow] = @[]
   for n in 0 ..< 100:
@@ -28,9 +35,11 @@ proc buildOptionListLongApp*(h: TerminalTestHarness): TerminalNode =
                          width = max(20, h.cols - 2),
                          viewportHeight = max(4, h.rows - 2),
                          border = bsSolid)
-  r.appendChild(root, ol.node)
+
+  result = ui(r):
+    tdiv(class = "option-list-long-port"):
+      embedNode(ol.node)
 
   # Mirror the focus on mount so the highlighted-row chrome appears.
   let p = newPilot(h)
   p.focus(ol.node)
-  root

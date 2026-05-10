@@ -15,18 +15,22 @@
 ## bracketed source so the cell-content remains stable. The visual
 ## divergence (markup not interpreted) is documented as a follow-up
 ## gap in `examples/ports/README.md`. The third button is `disabled`.
+##
+## DM-M4: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The first two buttons use the simple
+## handler-less `wButton(label, width)` overload; the third needs
+## `wButtonStyled` so the `disabled = true` flag is reachable
+## positionally.
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildButtonMarkupApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-
-  let b1 = newButton(r, "[italic red]Focused[/] Button")
-  let b2 = newButton(r, "[italic red]Blurred[/] Button")
-  let b3 = newButton(r, "[italic red]Disabled[/] Button",
-                    disabled = true)
-  r.appendChild(root, b1.node)
-  r.appendChild(root, b2.node)
-  r.appendChild(root, b3.node)
-  root
+  result = ui(r):
+    tdiv(class = "button-markup-port"):
+      wButton(r, "[italic red]Focused[/] Button", 0)
+      wButton(r, "[italic red]Blurred[/] Button", 0)
+      wButtonStyled(r, "[italic red]Disabled[/] Button", 0,
+                    bvDefault, bsRound, "", true, nil)
