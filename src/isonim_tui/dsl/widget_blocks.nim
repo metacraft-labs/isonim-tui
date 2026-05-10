@@ -49,6 +49,18 @@
 ## Add new wrappers here as DM-M1 through DM-M6 land — keep this
 ## file flat (one wrapper per widget constructor).
 ##
+## ## `embedNode` identity wrapper
+##
+## Some demos need to construct a widget *outside* the `ui()` block —
+## either because they retain the widget object for post-mount
+## scripting (focus / keyboard pilots / mutation), or because the
+## widget needs `.append(child.node)` calls the DSL can't express. The
+## DSL only recognises positional *calls* as node-returning children;
+## a bare `lv.node` is `nnkDotExpr` and the macro passes it through
+## verbatim, leaving the compiler to reject it with "expression has to
+## be used (or discarded)". `embedNode(lv.node)` wraps the dot-expr
+## in a call so the DSL appends it like any other widget node.
+##
 ## ## Example
 ##
 ## ```nim
@@ -72,6 +84,7 @@
 ## DM-M1 through DM-M6 refactor.
 
 import ../renderer
+import ../testing/harness
 import ../text/content
 import ../css/properties
 import ../widgets/header
@@ -86,6 +99,20 @@ import ../widgets/textarea
 import ../widgets/sparkline
 import ../widgets/datatable
 import ../widgets/markdown
+import ../widgets/placeholder
+import ../widgets/rule
+import ../widgets/progress_bar
+
+# ----------------------------------------------------------------------------
+# Identity wrapper for already-built nodes
+# ----------------------------------------------------------------------------
+
+proc embedNode*(n: TerminalNode): TerminalNode {.inline.} = n
+  ## Identity wrapper that lets a `ui(r):` block append a node that
+  ## was constructed outside the block (e.g. when the caller retains
+  ## the widget object for post-mount Pilot scripting). See the module
+  ## docstring for why the DSL needs the call-form rather than a bare
+  ## `lv.node` dot-expression.
 
 # ----------------------------------------------------------------------------
 # Header / Footer
@@ -157,6 +184,33 @@ proc wButton*(renderer: TerminalRenderer; label: string;
   ## DM-M2+ demo needs them.
   newButton(renderer, label = label, width = width,
             onClick = onClick).node
+
+proc wButton*(renderer: TerminalRenderer; label: string;
+              width: int = 0): TerminalNode =
+  ## DSL-friendly wrapper around `newButton` for a click-handler-less
+  ## button (the M23 ports just want to render a labelled box —
+  ## activation isn't part of the snapshot contract). `width = 0`
+  ## inherits the auto-size behaviour of `newButton` (label + 4
+  ## padding cells). First needed by DM-M3's `button_widths` port.
+  newButton(renderer, label = label, width = width).node
+
+proc wButtonStyled*(renderer: TerminalRenderer; label: string;
+                    width: int;
+                    variant: ButtonVariant = bvDefault;
+                    border: BorderStyle = bsRound;
+                    borderColor: string = "";
+                    disabled: bool = false;
+                    onClick: proc() = nil): TerminalNode =
+  ## DSL-friendly wrapper around `newButton` exposing the styled
+  ## surface (variant / border / borderColor / disabled). Mirrors
+  ## `newButton`'s parameter order so the full configuration is
+  ## reachable positionally inside a `ui()` block. First needed by
+  ## DM-M3's `button_outline` port (which wants to set `borderColor =
+  ## "white"`); use the simpler `wButton` overloads when only label
+  ## + width + handler are needed.
+  newButton(renderer, label = label, width = width, variant = variant,
+            border = border, borderColor = borderColor,
+            disabled = disabled, onClick = onClick).node
 
 # ----------------------------------------------------------------------------
 # Input
@@ -271,3 +325,55 @@ proc wMarkdown*(renderer: TerminalRenderer; source: string;
   ## per-element colour configuration.
   newMarkdown(renderer, source = source, width = width,
               border = border).node
+
+# ----------------------------------------------------------------------------
+# Placeholder
+# ----------------------------------------------------------------------------
+
+proc wPlaceholder*(renderer: TerminalRenderer; name: string;
+                   width: int = 20; height: int = 5): TerminalNode =
+  ## DSL-friendly wrapper around `newPlaceholder`. Mirrors the
+  ## constructor's positional surface (name + width + height). First
+  ## needed by DM-M3's `placeholder_disabled` port; the disabled-band
+  ## styling stays a setStyle/setAttribute follow-up at the call site
+  ## (the placeholder itself doesn't carry a `disabled` constructor
+  ## arg).
+  newPlaceholder(renderer, name = name, width = width,
+                 height = height).node
+
+# ----------------------------------------------------------------------------
+# Rule
+# ----------------------------------------------------------------------------
+
+proc wRule*(renderer: TerminalRenderer;
+            orientation: RuleOrientation = roHorizontal;
+            width: int = 0; height: int = 1;
+            style: BorderStyle = bsSolid;
+            color: string = ""): TerminalNode =
+  ## DSL-friendly wrapper around `newRule`. Mirrors the constructor's
+  ## positional surface. First needed by DM-M3's `rules` port (which
+  ## stamps every BorderStyle horizontally and vertically).
+  newRule(renderer, orientation = orientation, width = width,
+          height = height, style = style, color = color).node
+
+# ----------------------------------------------------------------------------
+# ProgressBar
+# ----------------------------------------------------------------------------
+
+proc wProgressBar*(h: TerminalTestHarness;
+                   total: float64 = 100.0;
+                   progress: float64 = 0.0;
+                   width: int = 30;
+                   showPercent: bool = true;
+                   barColor: string = "blue";
+                   completeColor: string = "green";
+                   bgColor: string = ""): TerminalNode =
+  ## DSL-friendly wrapper around `newProgressBar`. Diverges from the
+  ## other `w*` wrappers in taking a `TerminalTestHarness` (not a
+  ## `TerminalRenderer`) because `newProgressBar` itself needs the
+  ## harness for animator wiring (M21 contract). Mirrors the
+  ## constructor's positional surface. First needed by DM-M3's
+  ## `progress_gradient` port.
+  newProgressBar(h, total = total, progress = progress, width = width,
+                 showPercent = showPercent, barColor = barColor,
+                 completeColor = completeColor, bgColor = bgColor).node

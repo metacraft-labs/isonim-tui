@@ -23,12 +23,19 @@
 ## this through its own keyboard-driven selection (we drive it
 ## directly here — no async / `watch` plumbing needed for the
 ## snapshot).
+##
+## DM-M3: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The post-mount Pilot needs the ListView's
+## `.node` to focus and key-drive selection, so the DSL embeds the
+## already-built node rather than going through `wListView` (which
+## would only return the node, dropping the handle we need).
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildListViewIndexApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
 
   var items: seq[ListItem] = @[]
   var i = 0
@@ -40,7 +47,10 @@ proc buildListViewIndexApp*(h: TerminalTestHarness): TerminalNode =
                        width = max(20, h.cols - 2),
                        viewportHeight = 10,
                        border = bsSolid)
-  r.appendChild(root, lv.node)
+
+  result = ui(r):
+    tdiv(class = "listview-index-port"):
+      embedNode(lv.node)
 
   # The Python `watch_data` sets `self._menu.index = len(self._menu) - 1`
   # — drive the ListView's keyboard handler to land on the same row.
@@ -48,5 +58,3 @@ proc buildListViewIndexApp*(h: TerminalTestHarness): TerminalNode =
   p.focus(lv.node)
   for _ in 0 ..< (items.len - 1):
     p.press("down")
-
-  root

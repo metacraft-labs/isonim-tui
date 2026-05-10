@@ -116,18 +116,18 @@
   <text id="t-11-38" x="304" y="190" style="fill:currentColor">─</text>
   <text id="t-11-39" x="312" y="190" style="fill:currentColor">┘</text>
 
-  <rect id="box-3" x="0" y="0" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-5" x="0" y="16" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-7" x="0" y="32" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-9" x="0" y="48" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-11" x="0" y="64" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-13" x="0" y="80" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-15" x="0" y="96" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-17" x="0" y="112" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-19" x="0" y="128" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-21" x="0" y="144" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-23" x="0" y="160" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
-  <rect id="box-25" x="0" y="176" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-2" x="0" y="0" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-4" x="0" y="16" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-6" x="0" y="32" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-8" x="0" y="48" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-10" x="0" y="64" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-12" x="0" y="80" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-14" x="0" y="96" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-16" x="0" y="112" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-18" x="0" y="128" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-20" x="0" y="144" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-22" x="0" y="160" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
+  <rect id="box-24" x="0" y="176" width="320" height="16" fill="none" stroke="#3399ff" stroke-width="1"/>
   <rect id="focus" x="0" y="0" width="320" height="192" fill="none" stroke="#ff9900" stroke-width="1"/>
   <rect id="dirty-0-0" x="0" y="0" width="320" height="16" fill="#ff0000" fill-opacity="0.2"/>
   <rect id="dirty-1-0" x="0" y="16" width="320" height="16" fill="#ff0000" fill-opacity="0.2"/>

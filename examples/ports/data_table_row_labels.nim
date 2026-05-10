@@ -27,12 +27,20 @@
 ## supports column definitions and string row cells — we render the
 ## row label as a synthetic prepended column so the cell-content
 ## matches the Textual frame.
+##
+## DM-M3: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The post-mount Pilot needs the DataTable's
+## `.node` to focus it (so the snapshot picks up the focused border),
+## so we build the table outside the `ui()` block and embed its node
+## via the same `embedNode` identity-wrapper pattern used by
+## `listview_index.nim`.
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildDataTableRowLabelsApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
 
   let columns = @[
     ColumnDef(key: "idx",     label: "",         width: 3),
@@ -63,10 +71,11 @@ proc buildDataTableRowLabelsApp*(h: TerminalTestHarness): TerminalNode =
   let dt = newDataTable(r, columns = columns, rows = rows,
                         viewportHeight = max(rows.len + 1, 10),
                         border = bsSolid)
-  r.appendChild(root, dt.node)
+
+  result = ui(r):
+    tdiv(class = "data-table-row-labels-port"):
+      embedNode(dt.node)
 
   # Mirror `table.focus()` so the snapshot picks up the focused border.
   let p = newPilot(h)
   p.focus(dt.node)
-
-  root

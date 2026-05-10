@@ -23,9 +23,15 @@
 ##
 ## The dataset is generated with a deterministic LCG so the port is
 ## reproducible without depending on Python's `random` module.
+##
+## DM-M3: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. Reuses the existing `wSparkline` wrapper
+## from DM-M2; no new wrappers needed.
 
 import std/math
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 # Deterministic dataset matching the *shape* of Python's
 # `random.expovariate(1/3)` series at `seed(73)` (length 1000). The
@@ -48,22 +54,12 @@ proc deterministicSeries(): seq[float64] =
 
 proc buildSparklineApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-
   let data = deterministicSeries()
   let third = max(1, h.rows div 3)
+  let lastHeight = h.rows - 2 * third
 
-  let s1 = newSparkline(r, data = data,
-                        width = h.cols, height = third, summary = sumMax)
-  r.appendChild(root, s1.node)
-
-  let s2 = newSparkline(r, data = data,
-                        width = h.cols, height = third, summary = sumMean)
-  r.appendChild(root, s2.node)
-
-  let s3 = newSparkline(r, data = data,
-                        width = h.cols, height = h.rows - 2 * third,
-                        summary = sumMin)
-  r.appendChild(root, s3.node)
-
-  root
+  result = ui(r):
+    tdiv(class = "sparkline-port"):
+      wSparkline(r, data, h.cols, third, sumMax)
+      wSparkline(r, data, h.cols, third, sumMean)
+      wSparkline(r, data, h.cols, lastHeight, sumMin)

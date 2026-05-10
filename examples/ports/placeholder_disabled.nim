@@ -18,26 +18,40 @@
 ## paints disabled widgets with a dimmed band; isonim-tui's M11
 ## placeholder maps the same intent through the standard widget
 ## lifecycle.
+##
+## DM-M3: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The disabled-band styling (data-disabled
+## attribute + dimmed colour) is a setStyle/setAttribute pass on the
+## constructed node, which can't be expressed inside the DSL block;
+## we build the second placeholder via a small helper outside the
+## block (mirrors the "needs the node before mounting" pattern from
+## DM-M2's RichLog precedent).
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
+
+proc buildDisabledPlaceholderNode(r: TerminalRenderer; width, height: int):
+                                 TerminalNode =
+  ## Construct a placeholder and mark it disabled. The setAttribute /
+  ## setStyle calls can't live inside the `ui()` block (they'd need
+  ## the node before it's appended), so the whole thing is built
+  ## here and returned as a node for the DSL to embed.
+  let p = newPlaceholder(r, name = "Placeholder",
+                         width = width, height = height)
+  # Mark the placeholder as disabled so the snapshot picks up the
+  # dimmed-band styling.
+  r.setAttribute(p.node, "data-disabled", "true")
+  r.setStyle(p.node, "color", "bright_black")
+  p.node
 
 proc buildPlaceholderDisabledApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-
   # `1fr` in a 2-row split → each placeholder gets half the height.
   let halfRows = max(2, h.rows div 2)
+  let secondHeight = h.rows - halfRows
 
-  let p1 = newPlaceholder(r, name = "Placeholder",
-                          width = h.cols, height = halfRows)
-  r.appendChild(root, p1.node)
-
-  let p2 = newPlaceholder(r, name = "Placeholder",
-                          width = h.cols, height = h.rows - halfRows)
-  # Mark the second placeholder as disabled so the snapshot picks up
-  # the dimmed-band styling.
-  r.setAttribute(p2.node, "data-disabled", "true")
-  r.setStyle(p2.node, "color", "bright_black")
-  r.appendChild(root, p2.node)
-
-  root
+  result = ui(r):
+    tdiv(class = "placeholder-disabled-port"):
+      wPlaceholder(r, "Placeholder", h.cols, halfRows)
+      buildDisabledPlaceholderNode(r, h.cols, secondHeight)

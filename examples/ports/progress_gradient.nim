@@ -20,20 +20,21 @@
 ## follow-up surface — captured as a known-difference in the M23
 ## tolerance doc); we pick the gradient's mid-stop so the painted
 ## colour matches what Textual chooses for the 50% bucket.
+##
+## DM-M3: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. The `wProgressBar` wrapper (added in DM-M3)
+## takes the harness directly, mirroring `newProgressBar`'s M21
+## constructor signature.
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
 
 proc buildProgressGradientApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
+  let barWidth = max(20, h.cols - 4)
 
-  # Mid-gradient stop at 50% — `#99dd55` is the 6th of 12 colours.
-  # M11 progress bar takes the harness directly (M15 / M21 refactor).
-  let pb = newProgressBar(h, total = 100.0, progress = 50.0,
-                          width = max(20, h.cols - 4),
-                          showPercent = true,
-                          barColor = "#99dd55",
-                          completeColor = "#22ccbb")
-  r.appendChild(root, pb.node)
-
-  root
+  result = ui(r):
+    tdiv(class = "progress-gradient-port"):
+      # Mid-gradient stop at 50% — `#99dd55` is the 6th of 12 colours.
+      wProgressBar(h, 100.0, 50.0, barWidth, true, "#99dd55", "#22ccbb", "")
