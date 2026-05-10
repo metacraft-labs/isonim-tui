@@ -5,17 +5,22 @@
 ## wire input through the VM's actions; the VM's signals never leak
 ## through to the higher layers.
 ##
-## Pattern: each leaf builds a real M11-M21 widget against the
-## `TerminalRenderer`. Activation handlers route through the VM, then
-## trigger a manual re-render by walking the tree and rebuilding the
-## affected sub-tree. We don't depend on `createRenderEffect` because
-## the task-app's mutation pattern is small enough that explicit
-## re-renders are simpler and more debuggable than full reactive
-## bindings — and the spec only requires byte-identical Layer-3/Layer-2
-## across platforms; the leaves are explicitly per-platform.
+## DM-M6: each leaf composes its node tree inside a single `ui(r):`
+## block from the `isonim/dsl/ui` Karax-style DSL. Widgets that need
+## post-construction handles (Input's `setValue`, RadioSet's `addAll`,
+## RadioButton's `setSelected`) are built outside the block and
+## embedded via `embedNode`. See `docs/dsl-pattern.md`.
+##
+## Manual re-render (rather than `createRenderEffect`) keeps the
+## rebuild path explicit — the cross-platform spec only requires
+## byte-identical Layer-3/Layer-2 across platforms; the leaves are
+## explicitly per-platform, and the task-app's mutation pattern is
+## small enough that explicit re-renders are simpler to debug.
 
 import isonim/core/signals
+import isonim/dsl/ui
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
 import ../core/vm
 
 # ----------------------------------------------------------------------------
@@ -123,47 +128,65 @@ proc rerender*(vm: TaskAppVM) =
       b.setSelected(i == want)
 
 # ----------------------------------------------------------------------------
+# Closure factories — top-level so loop-variable aliasing can't bite
+# (DSL pattern §"closures inside loops").
+# ----------------------------------------------------------------------------
+
+proc makeInputChangeHandler(vm: TaskAppVM): proc(newValue: string) =
+  result = proc(newValue: string) =
+    vm.setInputText(newValue)
+
+proc makeInputSubmitHandler(vm: TaskAppVM;
+                            s: TaskAppLeavesState): proc(value: string) =
+  result = proc(value: string) =
+    vm.addTask(value)
+    # After addTask the VM has cleared inputText; mirror that into
+    # the widget.
+    s.inputWidget.setValue("")
+    rerender(vm)
+
+proc makeFilterChangeHandler(vm: TaskAppVM):
+                            proc(oldId, newId: int; newValue: string) =
+  result = proc(oldId, newId: int; newValue: string) =
+    case newValue
+    of "all":       vm.setFilter(fmAll)
+    of "active":    vm.setFilter(fmActive)
+    of "completed": vm.setFilter(fmCompleted)
+    else: discard
+    rerender(vm)
+
+# ----------------------------------------------------------------------------
 # Layer-1 leaf procs — invoked by views.nim
 # ----------------------------------------------------------------------------
 
 proc appShell*(r: TerminalRenderer; vm: TaskAppVM): TerminalNode =
   ## Top-level container. Holds the rest of the leaves.
-  let root = r.createElement("div")
-  r.setAttribute(root, "data-app", "task-app")
-  r.setAttribute(root, "class", "task-app")
-  root
+  discard vm
+  ui(r):
+    tdiv(class = "task-app", `data-app` = "task-app")
 
 proc taskInput*(r: TerminalRenderer; vm: TaskAppVM): TerminalNode =
-  ## Single-line text field that adds a task on Enter.
+  ## Single-line text field that adds a task on Enter. Built outside
+  ## the `ui()` block because the InputWidget handle is needed for
+  ## post-mount `setValue("")` after submit.
   let s = leavesFor(vm)
   let inp = newInput(r,
     value = vm.inputText.val,
     placeholder = "New task...",
     width = 30,
     border = bsRound,
-    onChange = proc(newValue: string) =
-      vm.setInputText(newValue),
-    onSubmit = proc(value: string) =
-      vm.addTask(value)
-      # After addTask the VM has cleared inputText; mirror that into
-      # the widget.
-      s.inputWidget.setValue("")
-      rerender(vm))
+    onChange = makeInputChangeHandler(vm),
+    onSubmit = makeInputSubmitHandler(vm, s))
   s.inputWidget = inp
-  inp.node
+  ui(r):
+    embedNode(inp.node)
 
 proc filterBar*(r: TerminalRenderer; vm: TaskAppVM): TerminalNode =
-  ## Three-mode filter selector. Uses RadioSet so Enter/Space activates
-  ## the focused option.
+  ## Three-mode filter selector. Built outside the `ui()` block because
+  ## RadioSet needs `addAll` (post-construction child wiring) and the
+  ## RadioButton handles must be retained for `rerender`'s sync logic.
   let s = leavesFor(vm)
-  let rs = newRadioSet(r, onChange = proc(oldId, newId: int;
-                                          newValue: string) =
-    case newValue
-    of "all":       vm.setFilter(fmAll)
-    of "active":    vm.setFilter(fmActive)
-    of "completed": vm.setFilter(fmCompleted)
-    else: discard
-    rerender(vm))
+  let rs = newRadioSet(r, onChange = makeFilterChangeHandler(vm))
   let bAll = newRadioButton(r, "All",       value = "all",
                             selected = vm.filter.val == fmAll)
   let bAct = newRadioButton(r, "Active",    value = "active",
@@ -172,23 +195,27 @@ proc filterBar*(r: TerminalRenderer; vm: TaskAppVM): TerminalNode =
                             selected = vm.filter.val == fmCompleted)
   rs.addAll [bAll, bAct, bCom]
   s.filterButtons = @[bAll, bAct, bCom]
-  rs.node
+  ui(r):
+    embedNode(rs.node)
 
 proc taskList*(r: TerminalRenderer; vm: TaskAppVM): TerminalNode =
-  ## The visible task rows. Rebuild via `rerender`.
+  ## The visible task rows. The wrapper div is built via the DSL; the
+  ## row contents are populated (and re-populated on every `rerender`)
+  ## by `renderTaskListInto`, which can mutate the captured node.
   let s = leavesFor(vm)
-  let node = r.createElement("div")
-  r.setAttribute(node, "class", "task-list")
-  s.listNode = node
+  var listRef: TerminalNode
+  result = ui(r):
+    tdiv(class = "task-list", ref = listRef)
+  s.listNode = listRef
   s.listWidth = 30
-  renderTaskListInto(r, vm, node, s.listWidth)
-  node
+  renderTaskListInto(r, vm, listRef, s.listWidth)
 
 proc summaryBar*(r: TerminalRenderer; vm: TaskAppVM): TerminalNode =
-  ## "N of M remaining" footer.
+  ## "N of M remaining" footer. Same pattern as `taskList`: DSL builds
+  ## the wrapper, `renderSummaryInto` populates the body.
   let s = leavesFor(vm)
-  let node = r.createElement("div")
-  r.setAttribute(node, "class", "task-summary")
-  s.summaryNode = node
-  renderSummaryInto(r, vm, node)
-  node
+  var summaryRef: TerminalNode
+  result = ui(r):
+    tdiv(class = "task-summary", ref = summaryRef)
+  s.summaryNode = summaryRef
+  renderSummaryInto(r, vm, summaryRef)

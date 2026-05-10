@@ -6,11 +6,12 @@
 ## headless target for web tests (and the browser `WebRenderer` exposes
 ## the same proc interface, so the same DSL drives both).
 ##
-## Pattern: each leaf builds a tree of `MockNode` elements with an
-## `addEventListener` for the relevant action; activation routes
-## through the VM, then triggers a manual re-render via
-## `rerender(vm)`. Identical pattern to `tui/leaves.nim` — only the
-## widget primitives differ.
+## DM-M6: each leaf composes its node tree inside a single `ui(r):`
+## block. Web-target wrappers are the raw HTML tags from
+## `isonim/dsl/ui` (`tdiv`, `span`, `button`, `input`, `ul`, `li`,
+## `footer`) — there are no `w*` widget wrappers on the web side
+## because `MockRenderer`/`WebRenderer` build trees out of plain DOM
+## nodes, not the M11+ widget objects. See `docs/dsl-pattern.md`.
 ##
 ## To run under `WebRenderer` in a real browser, swap
 ## `import isonim/testing/mock_dom` for
@@ -21,6 +22,8 @@
 import std/[strutils, tables]
 
 import isonim/core/signals
+import isonim/core/computation  # createRenderEffect (DSL wraps dynamic text/attrs in it)
+import isonim/dsl/ui
 import isonim/testing/mock_dom
 import ../core/vm
 
@@ -105,67 +108,88 @@ proc rerender*(vm: TaskAppVM) =
     renderSummaryInto(r, vm, s.summaryNode)
 
 # ----------------------------------------------------------------------------
+# Closure factories — top-level so loop-variable aliasing can't bite.
+# ----------------------------------------------------------------------------
+
+proc makeAddTaskHandler(r: MockRenderer; vm: TaskAppVM;
+                        inp: MockNode): proc() =
+  result = proc() =
+    let text = inp.attributes.getOrDefault("value")
+    vm.addTask(text)
+    r.setAttribute(inp, "value", "")
+    rerender(vm)
+
+proc makeFilterClickHandler(vm: TaskAppVM; fm: FilterMode): proc() =
+  result = proc() =
+    vm.setFilter(fm)
+    rerender(vm)
+
+# ----------------------------------------------------------------------------
 # Layer-1 leaf procs
 # ----------------------------------------------------------------------------
 
 proc appShell*(r: MockRenderer; vm: TaskAppVM): MockNode =
-  let root = r.createElement("div")
-  r.setAttribute(root, "class", "task-app")
-  root
+  discard vm
+  ui(r):
+    tdiv(class = "task-app")
 
 proc taskInput*(r: MockRenderer; vm: TaskAppVM): MockNode =
+  ## Text input + add button. The input node and add button are
+  ## captured via the DSL `ref =` form; the click handler (built
+  ## outside via a factory) reads the input's current value at submit
+  ## time. The seeded `value` is set after construction because the
+  ## DSL would otherwise wrap a dynamic attribute in
+  ## `createRenderEffect` (the explicit re-render path makes the
+  ## reactive wrapping unnecessary).
   let s = leavesFor(vm)
-  let wrapper = r.createElement("div")
-  r.setAttribute(wrapper, "class", "task-input")
-  let inp = r.createElement("input")
-  r.setAttribute(inp, "type", "text")
-  r.setAttribute(inp, "placeholder", "New task...")
-  r.setAttribute(inp, "value", vm.inputText.val)
-  s.inputNode = inp
-  let addBtn = r.createElement("button")
-  r.appendChild(addBtn, r.createTextNode("Add Task"))
-  r.addEventListener(addBtn, "click", proc() =
-    let text = inp.attributes.getOrDefault("value")
-    vm.addTask(text)
-    r.setAttribute(inp, "value", "")
-    rerender(vm))
-  r.appendChild(wrapper, inp)
-  r.appendChild(wrapper, addBtn)
-  wrapper
+  var inpRef, addBtnRef: MockNode
+  result = ui(r):
+    tdiv(class = "task-input"):
+      input(`type` = "text", placeholder = "New task...",
+            ref = inpRef)
+      button(ref = addBtnRef):
+        text "Add Task"
+  r.setAttribute(inpRef, "value", vm.inputText.val)
+  s.inputNode = inpRef
+  r.addEventListener(addBtnRef, "click",
+                     makeAddTaskHandler(r, vm, inpRef))
 
 proc filterBar*(r: MockRenderer; vm: TaskAppVM): MockNode =
+  ## Three filter buttons. Built inside a `ui(r):` block; per-button
+  ## click handlers are produced by a top-level factory so the captured
+  ## `FilterMode` doesn't alias the loop variable. The selected
+  ## `aria-pressed` attribute is set after construction so unselected
+  ## buttons carry no attribute (preserves the original byte-shape).
   let s = leavesFor(vm)
-  let wrapper = r.createElement("div")
-  r.setAttribute(wrapper, "class", "filter-bar")
   s.filterNodes = @[]
-  for fm in [fmAll, fmActive, fmCompleted]:
-    let btn = r.createElement("button")
-    let lbl = $fm
-    r.appendChild(btn, r.createTextNode(lbl))
-    r.setAttribute(btn, "data-filter", lbl.toLowerAscii)
+  result = ui(r):
+    tdiv(class = "filter-bar"):
+      for fm in [fmAll, fmActive, fmCompleted]:
+        let lbl = $fm
+        button:
+          text lbl
+  for i, fm in [fmAll, fmActive, fmCompleted]:
+    let btn = result.children[i]
+    s.filterNodes.add btn
+    r.setAttribute(btn, "data-filter", ($fm).toLowerAscii)
     if vm.filter.val == fm:
       r.setAttribute(btn, "aria-pressed", "true")
-    let captured = fm
-    r.addEventListener(btn, "click", proc() =
-      vm.setFilter(captured)
-      rerender(vm))
-    s.filterNodes.add btn
-    r.appendChild(wrapper, btn)
-  wrapper
+    r.addEventListener(btn, "click",
+                       makeFilterClickHandler(vm, fm))
 
 proc taskList*(r: MockRenderer; vm: TaskAppVM): MockNode =
   let s = leavesFor(vm)
-  let node = r.createElement("ul")
-  r.setAttribute(node, "class", "task-list")
-  s.listNode = node
+  var listRef: MockNode
+  result = ui(r):
+    ul(class = "task-list", ref = listRef)
+  s.listNode = listRef
   s.listWidth = 30
-  renderTaskListInto(r, vm, node)
-  node
+  renderTaskListInto(r, vm, listRef)
 
 proc summaryBar*(r: MockRenderer; vm: TaskAppVM): MockNode =
   let s = leavesFor(vm)
-  let node = r.createElement("footer")
-  r.setAttribute(node, "class", "task-summary")
-  s.summaryNode = node
-  renderSummaryInto(r, vm, node)
-  node
+  var summaryRef: MockNode
+  result = ui(r):
+    footer(class = "task-summary", ref = summaryRef)
+  s.summaryNode = summaryRef
+  renderSummaryInto(r, vm, summaryRef)
