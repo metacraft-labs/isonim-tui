@@ -1,33 +1,40 @@
 ## examples/ports/multiple_borders.nim — Nim port (M23 Batch-3).
 ##
 ## Inspired by Textual's `border-styles` snapshot apps that demonstrate
-## the suite of `border` styles applied to a widget. We mount one
-## `Static` per BorderStyle in a vertical Container so the snapshot
-## captures every glyph variant in one frame.
+## the suite of `border` styles applied to a widget. One `Static` per
+## BorderStyle in a vertical Container so the snapshot captures every
+## glyph variant in one frame.
 ##
-## Originally each Static was mounted directly under the root (Batch-3
-## workaround) because `renderVertical` only consumed the first text
-## row of each direct child. The vertical-multi-row fix that landed
-## alongside the renderHorizontal fix retired that workaround;
-## bordered Statics now survive nesting inside a Container.
+## DM-M5: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`.
 
 import isonim_tui
+import isonim/dsl/ui
 
 const StyleSamples* = [
   bsSolid, bsDashed, bsDouble, bsHeavy, bsAscii, bsRound]
 
-proc buildMultipleBordersApp*(h: TerminalTestHarness): TerminalNode =
-  let r = h.renderer
-  let root = r.createElement("div")
-  # Sum of bordered heights = 6 * (1 + 2) = 18 rows. Use an
-  # 18-row inner viewport so every variant lands in the snapshot.
-  let outer = newContainer(r,
-    width = max(36, h.cols - 2),
-    viewportHeight = max(18, h.rows),
-    layout = clVertical)
+proc buildBordersStack(r: TerminalRenderer;
+                       width, viewportHeight, innerWidth: int): TerminalNode =
+  ## Build a vertical `Container` with one bordered `Static` per
+  ## sampled BorderStyle. Returns the container's `.node` for the DSL
+  ## to embed.
+  let outer = newContainer(r, width = width,
+                           viewportHeight = viewportHeight,
+                           layout = clVertical)
   for style in StyleSamples:
-    let s = newStatic(r, $style, width = max(10, h.cols - 4),
+    let s = newStatic(r, $style, width = innerWidth,
                       height = 1, border = style)
     outer.append(s.node)
-  r.appendChild(root, outer.node)
-  root
+  outer.node
+
+proc buildMultipleBordersApp*(h: TerminalTestHarness): TerminalNode =
+  let r = h.renderer
+  # Sum of bordered heights = 6 * (1 + 2) = 18 rows. Use an
+  # 18-row inner viewport so every variant lands in the snapshot.
+  let width = max(36, h.cols - 2)
+  let viewportHeight = max(18, h.rows)
+  let innerWidth = max(10, h.cols - 4)
+  result = ui(r):
+    tdiv(class = "multiple-borders-port"):
+      buildBordersStack(r, width, viewportHeight, innerWidth)

@@ -1,4 +1,4 @@
-<div> [0,0 50x7]
+<div.tabs-basic-port> [0,0 50x7]
   <div> [0,0 50x7]
     <div> [0,0 50x1]
       <> [0,0 0x0] text="[One]  Two   Three                                "

@@ -3,18 +3,22 @@
 ## Mirrors Textual's footer-chip snapshot apps: a `Footer` widget with
 ## several keyboard-binding entries rendered as chips along the bottom
 ## of the screen.
+##
+## DM-M5: composition root uses the `ui(r):` DSL — see
+## `docs/dsl-pattern.md`. Reuses the existing `wFooter` wrapper.
 
 import isonim_tui
+import isonim_tui/dsl/widget_blocks
+import isonim/dsl/ui
+
+const FooterBindings = [
+  FooterBinding(key: "q", description: "Quit"),
+  FooterBinding(key: "s", description: "Save"),
+  FooterBinding(key: "o", description: "Open"),
+  FooterBinding(key: "?", description: "Help")]
 
 proc buildFooterChipsApp*(h: TerminalTestHarness): TerminalNode =
   let r = h.renderer
-  let root = r.createElement("div")
-  let footer = newFooter(r,
-    bindings = [
-      FooterBinding(key: "q", description: "Quit"),
-      FooterBinding(key: "s", description: "Save"),
-      FooterBinding(key: "o", description: "Open"),
-      FooterBinding(key: "?", description: "Help")],
-    width = h.cols)
-  r.appendChild(root, footer.node)
-  root
+  result = ui(r):
+    tdiv(class = "footer-chips-port"):
+      wFooter(r, FooterBindings, h.cols, true)

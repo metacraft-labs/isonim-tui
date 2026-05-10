@@ -1,4 +1,4 @@
-<div> [0,0 40x6]
+<div.loading-indicator-demo-port> [0,0 40x6]
   <div> [0,0 40x6]
     <div> [0,0 40x1]
       <> [0,0 0x0] text="\xE2\xA0\x8B loading                               "

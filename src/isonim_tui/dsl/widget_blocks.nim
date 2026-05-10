@@ -433,3 +433,17 @@ proc wCheckbox*(renderer: TerminalRenderer;
   ## `toggle_style_order` port.
   newCheckbox(renderer, label = label, value = value,
               disabled = disabled, color = color).node
+
+# ----------------------------------------------------------------------------
+# Tabs / LoadingIndicator
+# ----------------------------------------------------------------------------
+#
+# No `wTabs` or `wLoadingIndicator` wrappers: every M23 batch-3 demo
+# that uses these widgets parents them under a `Container` (so the
+# vertical-stack layout/padding survives) — and `Container` needs
+# `.append(child.node)` calls the DSL can't express. The widgets are
+# constructed directly via `newTabs` / `newLoadingIndicator` outside
+# the `ui()` block alongside the container, and the container's
+# `.node` is embedded in the DSL block. Add a wrapper here when a
+# future demo uses one of these widgets as a stand-alone child of a
+# `tdiv`.

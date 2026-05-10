@@ -1,4 +1,4 @@
-<div> [0,0 40x8]
+<div.progress-bar-states-port> [0,0 40x8]
   <div> [0,0 40x8]
     <div> [0,0 40x1]
       <> [0,0 0x0] text="                                        "
