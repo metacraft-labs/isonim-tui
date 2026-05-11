@@ -105,6 +105,7 @@ import ../widgets/progress_bar
 import ../widgets/welcome
 import ../widgets/option_list
 import ../widgets/checkbox
+import ../widgets/switch
 
 # ----------------------------------------------------------------------------
 # Identity wrapper for already-built nodes
@@ -433,6 +434,21 @@ proc wCheckbox*(renderer: TerminalRenderer;
   ## `toggle_style_order` port.
   newCheckbox(renderer, label = label, value = value,
               disabled = disabled, color = color).node
+
+# ----------------------------------------------------------------------------
+# Switch
+# ----------------------------------------------------------------------------
+
+proc wSwitch*(renderer: TerminalRenderer;
+              value: bool = false;
+              disabled: bool = false;
+              color: string = "";
+              onChange: proc(newValue: bool) = nil): TerminalNode =
+  ## DSL-friendly wrapper around `newSwitch` (M12). Mirrors the
+  ## constructor's positional surface; first needed by EX-M10's
+  ## settings_app `toggleLeaf`.
+  newSwitch(renderer, value = value, disabled = disabled,
+            color = color, onChange = onChange).node
 
 # ----------------------------------------------------------------------------
 # Tabs / LoadingIndicator
