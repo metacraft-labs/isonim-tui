@@ -2,7 +2,7 @@
 ##
 ## Mounts a TextArea, attaches the real tree-sitter Nim highlighter
 ## (no stub, no mocks — the FFI compiles `parser.c` + `scanner.c` from
-## `codetracer-main/libs/tree-sitter-nim/src/` into the test binary),
+## `codetracer/libs/tree-sitter-nim/src/` into the test binary),
 ## sets the document content, and inspects the renderer tree to confirm
 ## that the cells covering the `proc` keyword carry the
 ## `syntax-keyword` colour style.

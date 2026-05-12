@@ -2,7 +2,7 @@
 ##
 ## Exercises the real tree-sitter parser via FFI on a small Nim
 ## snippet. No mocks: the test compiles `parser.c` + `scanner.c` from
-## `codetracer-main/libs/tree-sitter-nim/src/` into the binary and
+## `codetracer/libs/tree-sitter-nim/src/` into the binary and
 ## links the system `libtree-sitter` runtime. The walk produces real
 ## `Highlight` spans whose byte ranges align with the source text.
 

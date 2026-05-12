@@ -2,7 +2,7 @@
 ## API plus the bundled grammars (Nim, Aiken).
 ##
 ## Mirrors the codetracer pattern at
-## `codetracer-main/libs/tree-sitter-nim/tests/nim/ts_parser_bridge.nim`.
+## `codetracer/libs/tree-sitter-nim/tests/nim/ts_parser_bridge.nim`.
 ## Public surface: `Language`, `Parser`, `Tree`, `Node`, `Point`, `Span`,
 ## plus the constructors / accessors that the M19 highlighter needs.
 ##
@@ -24,14 +24,14 @@ import std/[options, os]
 const
   # currentSourcePath is .../isonim-tui/src/isonim_tui/syntax/treesitter_ffi.nim
   # Walk up four levels to reach the metacraft workspace root, then
-  # step sideways into the codetracer-main libs that vendor each
-  # grammar's `parser.c` (+ `scanner.c`) and the bundled
-  # `tree_sitter/parser.h` header.
+  # step sideways into the codetracer libs that vendor each grammar's
+  # `parser.c` (+ `scanner.c`) and the bundled `tree_sitter/parser.h`
+  # header.
   workspaceRoot =
     currentSourcePath().parentDir().parentDir().parentDir().parentDir().parentDir()
-  nimGrammarSrcDir = workspaceRoot / "codetracer-main/libs/tree-sitter-nim/src"
+  nimGrammarSrcDir = workspaceRoot / "codetracer/libs/tree-sitter-nim/src"
   aikenGrammarSrcDir =
-    workspaceRoot / "codetracer-main/libs/tree-sitter-aiken/src"
+    workspaceRoot / "codetracer/libs/tree-sitter-aiken/src"
 
 # Link against the system tree-sitter runtime. The runtime ships in the
 # nix dev-shell (see flake.nix) and is also available as a vendored
