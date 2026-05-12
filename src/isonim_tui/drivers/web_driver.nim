@@ -388,7 +388,7 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
     FD_SET(args.inputFd, rs)
     var tv: Timeval
     tv.tv_sec = posix.Time(0)
-    tv.tv_usec = clong(50_000)
+    tv.tv_usec = posix.Suseconds(50_000)
     let n = posix.select(args.inputFd + 1, addr rs, nil, nil, addr tv)
     if args.stopRequested[]: break
     if n <= 0:
