@@ -229,6 +229,109 @@ proc styleFor(node: TerminalNode; inherited: StyleSnapshot):
 # Tree walker — flattens to LayoutEntries with layer + style.
 # ----------------------------------------------------------------------------
 
+proc subtreeText(node: TerminalNode): string =
+  ## Concatenate every `tnkText` descendant's text in document order.
+  ## Used by the inline-row layout to extract a label's display text
+  ## from a label container (e.g. ``<span class=settings-label>Dark
+  ## mode</span>`` → ``"Dark mode"``).
+  if node == nil: return ""
+  if node.kind == tnkText:
+    return node.text
+  for ch in node.children:
+    result.add subtreeText(ch)
+
+proc widgetGlyph(node: TerminalNode): string =
+  ## Map a trailing widget node to its inline-row glyph representation.
+  ## Returns an empty string when the node's kind isn't recognised by
+  ## the inline path — the caller then falls back to the recursive
+  ## row-per-child walk so unsupported widgets don't regress.
+  ##
+  ## Recognised inputs:
+  ##   * ``tnkInput[type=checkbox]`` → ``[ ]`` / ``[x]`` (per the
+  ##     `checked` attribute).
+  ##   * ``tnkInput[type=number]`` → ``[- VALUE -]`` (per `value` /
+  ##     `data-value`).
+  ##   * ``tnkInput[type=text]`` → bare `value` text.
+  ##   * ``tnkButton`` with text content → ``[ TEXT ]``.
+  ##   * ``tnkBox[data-widget=option-list]`` → ``< SELECTED >`` (per
+  ##     the child carrying `data-selected="true"`, or the box's
+  ##     `data-value`).
+  ##
+  ## Settings-app host containers (``class="settings-toggle"`` /
+  ## ``settings-number`` / ``settings-choice``) wrap their real widget
+  ## tree under a host div carrying ``data-value``. The inline path
+  ## recognises those host containers directly using the host's
+  ## ``data-value`` attribute, so the glyph rendering doesn't depend
+  ## on the host's internal node layout.
+  if node == nil: return ""
+  let hostClass = node.attributes.getOrDefault("class", "")
+  case hostClass
+  of "settings-toggle":
+    let value = node.attributes.getOrDefault("data-value", "")
+    if value == "on": return "[x]"
+    return "[ ]"
+  of "settings-number":
+    let value = node.attributes.getOrDefault("data-value", "")
+    let suffix = node.attributes.getOrDefault("data-suffix", "")
+    if value.len == 0: return "[-  -]"
+    if suffix.len > 0:
+      return "[- " & value & suffix & " -]"
+    return "[- " & value & " -]"
+  of "settings-choice":
+    let value = node.attributes.getOrDefault("data-value", "")
+    if value.len == 0: return "<  >"
+    return "< " & value & " >"
+  else:
+    discard
+  case node.kind
+  of tnkInput:
+    let kindAttr = node.attributes.getOrDefault("type", "text")
+    case kindAttr
+    of "checkbox":
+      let checked = node.attributes.getOrDefault("checked", "")
+      if checked == "true" or checked == "checked" or checked == "on":
+        return "[x]"
+      return "[ ]"
+    of "number":
+      var value = node.attributes.getOrDefault("value", "")
+      if value.len == 0:
+        value = node.attributes.getOrDefault("data-value", "")
+      return "[- " & value & " -]"
+    of "text":
+      let value = node.attributes.getOrDefault("value", "")
+      return value
+    else:
+      return ""
+  of tnkButton:
+    let label = subtreeText(node)
+    if label.len == 0: return ""
+    return "[ " & label & " ]"
+  of tnkBox:
+    let widget = node.attributes.getOrDefault("data-widget", "")
+    if widget == "option-list":
+      # Cycler form: `< SELECTED >`. The selected option is whichever
+      # child carries `data-selected="true"`; the option's display
+      # text is its `subtreeText`. Fall back to `data-value` (or empty)
+      # if no child is marked.
+      for ch in node.children:
+        if ch.attributes.getOrDefault("data-selected", "") == "true":
+          return "< " & subtreeText(ch) & " >"
+      let value = node.attributes.getOrDefault("data-value", "")
+      if value.len > 0:
+        return "< " & value & " >"
+      return ""
+    return ""
+  else:
+    return ""
+
+proc isInlineDescription(node: TerminalNode): bool =
+  ## A child counts as the inline-row's description span when it's a
+  ## `tnkBox` carrying ``class="settings-description"``. Description
+  ## spans don't share the inline label+widget row; the walker emits
+  ## them on a separate row below.
+  if node == nil or node.kind != tnkBox: return false
+  node.attributes.getOrDefault("class", "") == "settings-description"
+
 proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
                     parentStyle: StyleSnapshot;
                     parentLayer: int;
@@ -237,7 +340,10 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
   ## Recursive tree walk. Mirrors M2's flatten-to-rows model but
   ## propagates inherited foreground / background / attribute style and
   ## the active layer. Boxes whose children are all text collapse to a
-  ## single row; mixed boxes emit one row per child.
+  ## single row; mixed boxes emit one row per child unless they opt in
+  ## to inline layout via ``data-tui-row="inline"`` (label spans laid
+  ## out left, trailing widget rendered as a glyph on the right of the
+  ## same row).
   if node == nil: return
   case node.kind
   of tnkText:
@@ -279,6 +385,78 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
           fillBackground: nodeHasBg)
         inc row
         return
+      # Inline-row opt-in. When ``data-tui-row="inline"`` is set on a
+      # container with mixed-kind children, the walker lays out the
+      # label spans on the left of one row and renders the trailing
+      # widget node as a glyph on the right of the same row. Any
+      # description spans (``class="settings-description"``) render on
+      # their own row below, indented two cells so the hierarchy reads
+      # at a glance. If the trailing widget isn't recognised by
+      # ``widgetGlyph`` (returns ""), the walker falls back to the
+      # existing per-child recursion so unsupported widgets don't
+      # regress to a broken inline layout.
+      if node.attributes.getOrDefault("data-tui-row", "") == "inline" and
+         node.children.len >= 2:
+        let widgetNode = node.children[^1]
+        let glyph = widgetGlyph(widgetNode)
+        if glyph.len > 0:
+          # Build the label text from every child that's neither the
+          # trailing widget nor a description span.
+          var labelText = ""
+          var descriptions: seq[TerminalNode] = @[]
+          for i in 0 ..< node.children.len - 1:
+            let ch = node.children[i]
+            if isInlineDescription(ch):
+              descriptions.add ch
+            else:
+              labelText.add subtreeText(ch)
+          # Anchor the glyph at the right edge of the row. When the
+          # label would overflow into the glyph slot we shrink the
+          # label's width so the glyph still lands at column
+          # (cols - glyph.runeCount).
+          let glyphRuneCount = block:
+            var n = 0
+            for _ in runes(glyph): inc n
+            n
+          let glyphCol = max(0, cols - glyphRuneCount)
+          entries.add LayoutEntry(
+            row: row, col: 0,
+            width: max(0, glyphCol),
+            text: labelText, nodeId: node.id,
+            layer: nodeLayer,
+            fg: resolved.snap.fg, bg: resolved.snap.bg,
+            attrs: resolved.snap.attrs,
+            fillBackground: nodeHasBg)
+          # Widget glyph entry — owned by the widget node so cache
+          # invalidation on a widget mutation still fires correctly.
+          let widgetStyle = styleFor(widgetNode, resolved.snap)
+          entries.add LayoutEntry(
+            row: row, col: glyphCol,
+            width: glyphRuneCount,
+            text: glyph, nodeId: widgetNode.id,
+            layer: nodeLayer,
+            fg: widgetStyle.snap.fg, bg: widgetStyle.snap.bg,
+            attrs: widgetStyle.snap.attrs,
+            fillBackground: nodeHasBg or widgetStyle.hasBg)
+          inc row
+          # Each description span renders on its own row, indented
+          # two columns. We synthesise a LayoutEntry directly rather
+          # than recursing so the indent is honoured even when the
+          # description span's container would otherwise collapse to
+          # column 0.
+          for desc in descriptions:
+            let descStyle = styleFor(desc, resolved.snap)
+            let descText = subtreeText(desc)
+            entries.add LayoutEntry(
+              row: row, col: 2,
+              width: max(0, cols - 2),
+              text: descText, nodeId: desc.id,
+              layer: nodeLayer,
+              fg: descStyle.snap.fg, bg: descStyle.snap.bg,
+              attrs: descStyle.snap.attrs,
+              fillBackground: nodeHasBg or descStyle.hasBg)
+            inc row
+          return
       for ch in node.children:
         walkLayoutImpl(ch, row, cols, resolved.snap, nodeLayer,
                        nodeHasBg, entries)
@@ -381,14 +559,22 @@ proc paintEntryOnto(buf: var ScreenBuffer; strip: Strip; entry: LayoutEntry;
   ## passed through; if the entry has `fillBackground`, the entry's
   ## styled blanks overwrite whatever is there. This is what gives a
   ## modal at layer=N the visual property of "masking" the layer below.
+  ##
+  ## Inline-row entries occupy ``[entry.col, entry.col + entry.width)``;
+  ## the strip's cells outside that span are inert (plain spaces) and
+  ## must not overwrite sibling entries on the same row. We clamp the
+  ## fillBackground branch to the entry's declared span so a label
+  ## entry on the left never masks the widget glyph entry on the right.
   if entry.row < 0 or entry.row >= buf.rowsCount: return
   let limit = min(strip.cells.len, cols)
+  let spanStart = max(0, entry.col)
+  let spanEnd = min(cols, max(0, entry.col + entry.width))
   var row = buf.rows[entry.row]
   for i in 0 ..< limit:
     let src = strip.cells[i]
     if src.width == 0:
       continue
-    if entry.fillBackground:
+    if entry.fillBackground and i >= spanStart and i < spanEnd:
       row.cells[i] = src
     else:
       if src.rune.int32 != 0 and src.rune != Rune(' '.ord):
