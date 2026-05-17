@@ -419,10 +419,33 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
             for _ in runes(glyph): inc n
             n
           let glyphCol = max(0, cols - glyphRuneCount)
+          # Leader-dot fill. When the label leaves enough room (>= 4
+          # cells of horizontal gap), pad the label with `" ........ "`
+          # so the eye follows a dotted line from the label to its
+          # widget. This is the macOS System Preferences / classic
+          # `menuconfig` pattern; without it the three widgets read as
+          # a vertical stack hugging the right margin and the binding
+          # back to each label is visually ambiguous.
+          let labelRuneCount = block:
+            var n = 0
+            for _ in runes(labelText): inc n
+            n
+          # Available gap = cols - label - widget. We reserve one space
+          # on each side of the dotted run, so dots only render when
+          # the gap is at least 4 cells (` .. `).
+          let gap = glyphCol - labelRuneCount
+          var renderedLabel = labelText
+          if gap >= 4 and labelText.len > 0:
+            let dotCount = gap - 3   # one leading space, one trailing space, one before-widget space
+            if dotCount >= 1:
+              renderedLabel.add ' '
+              for _ in 0 ..< dotCount:
+                renderedLabel.add '.'
+              renderedLabel.add ' '
           entries.add LayoutEntry(
             row: row, col: 0,
             width: max(0, glyphCol),
-            text: labelText, nodeId: node.id,
+            text: renderedLabel, nodeId: node.id,
             layer: nodeLayer,
             fg: resolved.snap.fg, bg: resolved.snap.bg,
             attrs: resolved.snap.attrs,
