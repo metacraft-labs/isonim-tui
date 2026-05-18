@@ -218,6 +218,8 @@ proc styleFor(node: TerminalNode; inherited: StyleSnapshot):
       result.hasBg = true
   if "bold" in node.styles and node.styles["bold"] == "true":
     result.snap.attrs.incl(attrBold)
+  if "dim" in node.styles and node.styles["dim"] == "true":
+    result.snap.attrs.incl(attrDim)
   if "italic" in node.styles and node.styles["italic"] == "true":
     result.snap.attrs.incl(attrItalic)
   if "underline" in node.styles and node.styles["underline"] == "true":
