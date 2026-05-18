@@ -171,13 +171,29 @@ proc clearStripCache*(c: Compositor) =
 
 proc parseColorOrDefault(s: string): Color =
   ## Parse a colour from the inline-style table. Honours the 16
-  ## ANSI palette names plus `default`; anything else falls back to
-  ## the terminal default. (Full CSS colour parsing lives in
-  ## `theme/color.nim`; the compositor only needs ANSI / default for
-  ## the M8 test surface — the M5/M6 cascade hands the compositor a
+  ## ANSI palette names plus `default`, plus 24-bit hex `#RRGGBB`
+  ## (emitted by ``ckRgb`` -> ``\x1b[38;2;R;G;Bm`` SGR by
+  ## ``ansi.fgParams``); anything else falls back to the terminal
+  ## default. (Full CSS colour parsing lives in ``theme/color.nim``;
+  ## the compositor only needs ANSI / default / 24-bit RGB for the
+  ## M8 test surface — the M5/M6 cascade hands the compositor a
   ## materialised inline value in those styles anyway.)
+  ##
+  ## M-EVP-14 Wave-T: ``#RRGGBB`` support lets the TUI leaves emit
+  ## the IsoNim brand indigo (``#7c7aed``) directly, instead of
+  ## degrading to the closest 16-ANSI fallback (``bright_magenta``
+  ## reads as pink, ``bright_blue`` as too-cool). Any terminal that
+  ## supports the truecolor SGR sequence renders the exact accent.
   if s.len == 0 or s == "default" or s == "transparent":
     return defaultColor()
+  if s.len == 7 and s[0] == '#':
+    try:
+      let r = parseHexInt(s[1 .. 2])
+      let g = parseHexInt(s[3 .. 4])
+      let b = parseHexInt(s[5 .. 6])
+      return rgbColor(uint8(r), uint8(g), uint8(b))
+    except CatchableError:
+      return defaultColor()
   return namedColor(s)
 
 proc layerFromStyle(node: TerminalNode; parentLayer: int): int =
