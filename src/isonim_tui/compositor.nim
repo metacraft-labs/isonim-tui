@@ -367,16 +367,50 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
         allText = false
         break
     if allText:
-      var s = ""
+      # Detect per-child style overrides. When any child text node
+      # carries its own `color` / `background-color` / `bold` / `dim` /
+      # `italic` / `underline` / `reverse` style, we must NOT fuse into
+      # a single LayoutEntry — the fused entry only honours the parent's
+      # resolved style, which would silently drop the per-segment
+      # accent colour. Emit one LayoutEntry per child at adjacent
+      # columns instead, anchored at the same row.
+      var anyChildStyled = false
       for ch in node.children:
-        s.add ch.text
-      entries.add LayoutEntry(
-        row: row, col: 0, width: cols, text: s, nodeId: node.id,
-        layer: nodeLayer,
-        fg: resolved.snap.fg, bg: resolved.snap.bg,
-        attrs: resolved.snap.attrs,
-        fillBackground: nodeHasBg)
-      inc row
+        if ch.styles.len > 0:
+          anyChildStyled = true
+          break
+      if anyChildStyled:
+        var segCol = 0
+        for ch in node.children:
+          if ch.text.len == 0: continue
+          let chResolved = styleFor(ch, resolved.snap)
+          var w = 0
+          for rune in runes(ch.text):
+            w.inc(displayWidth(rune))
+          let remaining = max(0, cols - segCol)
+          let segWidth = min(w, remaining)
+          entries.add LayoutEntry(
+            row: row, col: segCol,
+            width: segWidth,
+            text: ch.text, nodeId: ch.id,
+            layer: nodeLayer,
+            fg: chResolved.snap.fg, bg: chResolved.snap.bg,
+            attrs: chResolved.snap.attrs,
+            fillBackground: nodeHasBg or chResolved.hasBg)
+          segCol.inc(segWidth)
+          if segCol >= cols: break
+        inc row
+      else:
+        var s = ""
+        for ch in node.children:
+          s.add ch.text
+        entries.add LayoutEntry(
+          row: row, col: 0, width: cols, text: s, nodeId: node.id,
+          layer: nodeLayer,
+          fg: resolved.snap.fg, bg: resolved.snap.bg,
+          attrs: resolved.snap.attrs,
+          fillBackground: nodeHasBg)
+        inc row
     else:
       if node.children.len == 0 and nodeHasBg:
         entries.add LayoutEntry(
