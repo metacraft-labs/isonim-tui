@@ -85,12 +85,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Set up Nix
-        uses: cachix/install-nix-action@v30
+      - name: Setup Nix
+        uses: metacraft-labs/nixos-modules/.github/setup-nix@main
         with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-
+          trusted-public-keys: ${{ vars.TRUSTED_PUBLIC_KEYS }}
+          substituters: ${{ vars.SUBSTITUTERS }}
+          nix-github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run benchmark suite
         run: |
           nix develop --command just bench --quick
