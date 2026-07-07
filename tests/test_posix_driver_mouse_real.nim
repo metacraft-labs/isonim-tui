@@ -66,7 +66,7 @@ suite "M9: PosixDriver real-pty mouse":
       var sawMouse = false
       var mouseRow = 0
       var mouseCol = 0
-      var mouseButton: events.MouseButton = mbNone
+      var mouseButton: MouseButton = mbNone
       let deadline = getTime() + initDuration(seconds = 2)
       while getTime() < deadline:
         let evs = d.readEvents()
