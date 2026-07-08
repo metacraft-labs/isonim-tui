@@ -1,0 +1,7 @@
+# Cross-repo siblings cloned by setup-dev-env at workspace-lock-pinned
+# revisions (see codetracer-specs/Testing/Cross-Repo-CI-Integration.md).
+isonim
+isonim-examples
+nim-everywhere
+nim-pty
+nim-termctl
