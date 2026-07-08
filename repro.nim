@@ -128,7 +128,7 @@
 ## → the single default matrix point stands in for them.
 ##
 ## ==========================================================================
-## PASS-2 cycle-break — DEFERRED tests (documented, NOT deleted or weakened)
+## PASS-2 — isonim-examples landed: 1 task_app test modelled, 3 still deferred
 ## ==========================================================================
 ##
 ## isonim-tui and ``isonim-examples`` are MUTUALLY RECURSIVE at the TEST
@@ -136,41 +136,80 @@
 ## ``task_app/main_web`` (which live in the ``isonim-examples`` sibling and
 ## themselves ``import isonim_tui``), while isonim-examples' tests import
 ## ``isonim_tui``. Neither can land fully first. The sanctioned resolution
-## (identical to the earlier render-serve↔isonim cut in this campaign) is a
+## (identical to the earlier render-serve↔isonim cut in this campaign) was a
 ## documented TWO-PASS cycle-break:
 ##
-##   * **PASS 1 (THIS recipe):** land ``library isonim_tui`` + EVERY headless
-##     test in the ``Justfile`` ``tests`` list EXCEPT the four that pull the
-##     ``isonim-examples`` ``task_app`` main roots. The library src compiles
-##     with only ``uses: isonim + nim-termctl + nim-pty + nim-everywhere``
-##     (it does NOT import isonim-examples), which UNBLOCKS isonim-examples.
-##   * **PASS 2 (LATER, after isonim-examples lands its ``repro.nim`` with a
-##     ``library`` export):** add the four deferred edges below via
-##     ``uses: "isonim-examples"`` (threading ``../isonim-examples`` onto
-##     ``--path`` from source). The tests are UNCHANGED — not disabled — and
-##     land in Pass 2. This is a legitimate build-graph-cycle cut, not a
-##     weakening.
+##   * **PASS 1 (landed at ``4c0826e``):** landed ``library isonim_tui`` +
+##     EVERY headless test in the ``Justfile`` ``tests`` list EXCEPT the four
+##     that pull the ``isonim-examples`` ``task_app`` roots. The library src
+##     compiles with only ``uses: isonim + nim-termctl + nim-pty +
+##     nim-everywhere`` (it does NOT import isonim-examples), which UNBLOCKED
+##     isonim-examples.
+##   * **PASS 2 (THIS recipe):** isonim-examples has landed its ``repro.nim``
+##     with a ``library isonim_examples`` export. Of the four previously
+##     deferred edges, ONE is now modelled
+##     (``test_task_app_shared_vm_byte_identical``, a RUNTIME file-reader that
+##     passes green — ``[OK]`` / RC=0). The other THREE cannot be modelled
+##     without a product rewrite: they call the SYNCHRONOUS demo API
+##     (``newTaskAppVM()`` no-arg + ``rerender(vm)`` + ``vm.tasks.val``) that
+##     the landed isonim-examples DELETED in its EX-M17 async-VM redesign, so
+##     they fail to COMPILE against the current demo tree. They are DEFERRED
+##     (not disabled, not weakened) with grounded reasons below.
 ##
-## The four deferred tests, with per-test reason (grep-verified: these are
+## **Why ``paths:``, not a ``uses: "isonim-examples"`` edge.** isonim-examples
+## declares its library with ``exportedPath: "."`` — the repo ROOT, since its
+## demo modules live under ``task_app/`` and there is no ``src/`` directory.
+## The SC-11 ``uses:`` develop-mode channel that carries the four
+## library-sibling renderer deps CANNOT carry a repo-root-exported library
+## here: the consumed producer's declared ``exportedPath`` does not survive
+## into the resolved producer interface's Nim source-root splice (it arrives
+## empty and defaults to the ``src`` convention), so a ``uses:`` edge resolves
+## to a non-existent ``../isonim-examples/src`` and the cross-repo splice
+## aborts with "nothing to splice onto PATH or the aux channels" — a hard
+## build failure (root-caused: the DSL ``packageLiteral`` codegen omits the
+## library ``exportedPath`` field). The reprobuild-native fallback — and
+## exactly what this repo's own ``config.nims`` / ``Justfile`` already do
+## (``--path:../isonim-examples``) — is to thread ``../isonim-examples`` onto
+## the modelled task_app edge's ``paths:`` slot, the SAME mechanism the two
+## THIRD-PARTY status-im trees (``../nim-faststreams`` / ``../nim-stew``) use.
+## No producer sub-build of isonim-examples runs, which also sidesteps the
+## build-level near-cycle (isonim-examples ``uses: "isonim-tui"``).
+##
+## The four PASS-2 tests, with per-test status (grep-verified: these are
 ## EXACTLY the ``Justfile`` ``tests`` entries that transitively reach
 ## ``../isonim-examples/task_app`` — no ``settings_app`` parity test imports
 ## a main root, and no other test references ``isonim-examples``):
 ##
-##   1. ``test_task_app_tui_snapshot_five_states.nim`` — ``import
-##      task_app/main_tui`` (COMPILE-time: ``cannot open file: task_app/main_tui``
-##      without ``../isonim-examples`` on ``--path``).
-##   2. ``test_task_app_pilot_drive_real_stack.nim`` — ``import
-##      task_app/main_tui`` (same COMPILE-time root).
-##   3. ``test_task_app_web_target_compiles.nim`` — ``import
-##      task_app/main_web`` (COMPILE-time: ``cannot open file: task_app/main_web``;
-##      verified failing without the isonim-examples path).
-##   4. ``test_task_app_shared_vm_byte_identical.nim`` — RUNTIME: reads
-##      ``../../isonim-examples/task_app/{core,tui,web}/*.nim`` via
-##      ``fileExists`` / ``readFile`` (it does not COMPILE-import task_app,
-##      but its assertions fail unless the isonim-examples ``task_app`` tree
-##      is present — the byte-identity source of truth lands with
-##      isonim-examples). Deferred with the other three so the whole
-##      task_app arm crosses the cycle boundary together in Pass 2.
+##   1. ``test_task_app_shared_vm_byte_identical.nim`` — **MODELLED (green).**
+##      RUNTIME: reads ``../../isonim-examples/task_app/{core,tui,web}/*.nim``
+##      via ``fileExists`` / ``readFile`` to assert the shared Layer-3 VM /
+##      Layer-2 view are byte-identical across targets. It does NOT
+##      COMPILE-import ``task_app`` (no removed API), so it builds + runs to
+##      exit 0 against the landed isonim-examples tree. Verified ``[OK]``.
+##   2. ``test_task_app_tui_snapshot_five_states.nim`` — **DEFERRED (stale API).**
+##      ``import task_app/main_tui`` then calls ``newTaskAppVM()`` +
+##      ``rerender(vm)`` + ``vm.tasks.val`` — the pre-EX-M17 SYNCHRONOUS demo
+##      API. isonim-examples removed it (``leaves.nim`` docstrings: "there is
+##      no public ``rerender(vm)`` proc; VM mutations propagate via
+##      ``createRenderEffect`` / ``forEachKeyed``"; the async VM now needs
+##      ``newTaskAppVM(db)`` + ``drv.flush()``). Fails to compile:
+##      ``undeclared identifier: 'rerender'`` (and the tui leaves also now
+##      import ``isonim_render_serve/element_tree_attrs``). The canonical
+##      updated equivalents already live in isonim-examples' OWN test suite
+##      (``tests/test_web_target_compiles.nim`` etc., using the async driver).
+##   3. ``test_task_app_pilot_drive_real_stack.nim`` — **DEFERRED (stale API).**
+##      Same removed ``newTaskAppVM()`` / ``rerender`` / ``vm.tasks.val`` API.
+##   4. ``test_task_app_web_target_compiles.nim`` — **DEFERRED (stale API).**
+##      Same removed API (``rerender`` undeclared).
+##
+## Fixing tests 2-4 = rewriting each against isonim-examples' EX-M17 async
+## driver contract (``FakeAsyncContext`` + ``AsyncDriver`` + ``drv.flush()``,
+## whose test helper ``async_drive.nim`` lives in the read-only
+## isonim-examples repo), effectively re-deriving tests the canonical repo
+## already owns. That is a product change out of scope for this recipe — the
+## three edges are re-modelled once these isonim-tui demo tests are refreshed
+## to the effect-driven API. This is a documented deferral, NOT a weakening:
+## no test is disabled in the repo and no assertion is touched.
 ##
 ## ==========================================================================
 ## NON-REPRODUCIBLE REPO-STATE precondition — one test excluded (not faked)
@@ -228,17 +267,27 @@ type
     ## ``tests`` list. ``stem`` is the ``tests/<stem>.nim`` source /
     ## ``build/test-bin/<stem>`` output basename. ``realPty`` marks the M9
     ## ``test_posix_driver_*`` tests that need ``-lutil`` + the serial pool.
+    ## ``extraPaths`` carries additional ``nim c --path:`` roots — used only by
+    ## the modelled PASS-2 M22 ``task_app`` byte-identity test to thread
+    ## ``../isonim-examples`` (see the "Why ``paths:``" note in the module
+    ## docstring); empty for every other entry.
     stem: string
     realPty: bool
+    extraPaths: seq[string]
 
-proc spec(stem: string; realPty = false): TuiTestSpec =
-  TuiTestSpec(stem: stem, realPty: realPty)
+proc spec(stem: string; realPty = false;
+          extraPaths: seq[string] = @[]): TuiTestSpec =
+  TuiTestSpec(stem: stem, realPty: realPty, extraPaths: extraPaths)
 
 # The HEADLESS native corpus — the ``Justfile`` ``tests`` list (148 files)
-# MINUS the four ``isonim-examples``-dependent ``task_app`` tests deferred to
-# PASS 2 MINUS the one repo-state-dependent test
-# (``test_m24_gh_pages_branch_exists``, see the module docstring) = 143
-# modelled files. Every entry compiles + runs to exit 0 under ``nim c`` on
+# MINUS the one repo-state-dependent test
+# (``test_m24_gh_pages_branch_exists``, see the module docstring) MINUS the one
+# pre-existing-red ``test_textual_compat`` (documented below) MINUS the THREE
+# PASS-2 ``task_app`` tests still deferred on the removed synchronous demo API
+# (EX-M17; see the module docstring) = 143 modelled files. This INCLUDES the
+# one PASS-2 ``task_app`` test now green
+# (``test_task_app_shared_vm_byte_identical``). Every entry compiles + runs to
+# exit 0 under ``nim c`` on
 # this Linux host with the default matrix flags (``--mm:orc -d:release
 # --threads:on``); the six ``windows_driver`` / ``widget_set_snapshot_windows``
 # tests self-``skip()`` at runtime via their ``when defined(windows)`` guards
@@ -395,6 +444,16 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_progress_bar_animates"),
   spec("test_sparkline_renders"),
   spec("test_header_footer_welcome"),
+  # ---- M22 cross-platform task_app (PASS-2: isonim-examples landed) ----
+  # Only the byte-identity test is modelled here — it reads
+  # ``../../isonim-examples/task_app/*`` at RUNTIME (no removed-API compile
+  # import) and passes green. ``../isonim-examples`` is threaded via
+  # ``extraPaths`` (NOT a ``uses:`` edge — see the "Why ``paths:``" note in the
+  # module docstring). The other three task_app tests stay DEFERRED on the
+  # removed synchronous ``rerender`` / ``newTaskAppVM()`` demo API (EX-M17;
+  # see the per-test status list in the module docstring).
+  spec("test_task_app_shared_vm_byte_identical",
+       extraPaths = @["../isonim-examples"]),
   # ---- Textual-compat batches ----
   # NOTE: ``test_textual_compat`` is EXCLUDED — its
   # ``test_compat_progress_gradient`` sub-test snapshot-mismatches the
@@ -469,13 +528,15 @@ package isonim_tui:
     # runnable closure (each execute edge transitively depends on its build
     # edge).
     #
-    # ``paths`` supplies this repo's own ``src`` + ``tests`` roots and the
+    # ``basePaths`` supplies this repo's own ``src`` + ``tests`` roots and the
     # two THIRD-PARTY status-im trees (``../nim-faststreams`` + ``../nim-stew``).
     # The FOUR sibling ``src`` roots (isonim / nim-termctl / nim-pty /
     # nim-everywhere) are threaded off the ``uses:`` ``nimPathDirs`` channel,
-    # NOT listed here. Compile flags reproduce ``just test`` →
-    # ``_matrix orc release on``: ``--mm:orc`` (``mm``), ``-d:release``
-    # (``defines``), ``--threads:on`` (``threadsOn`` default).
+    # NOT listed here. The modelled PASS-2 M22 ``task_app`` byte-identity test
+    # additionally gets ``../isonim-examples`` via ``s.extraPaths`` (the "Why
+    # ``paths:``" note in the module docstring). Compile flags reproduce
+    # ``just test`` → ``_matrix orc release on``: ``--mm:orc`` (``mm``),
+    # ``-d:release`` (``defines``), ``--threads:on`` (``threadsOn`` default).
     const basePaths = @["src", "tests", "../nim-faststreams", "../nim-stew"]
 
     var testBuildActions: seq[BuildActionDef] = @[]
@@ -489,11 +550,16 @@ package isonim_tui:
       # extra link flag.
       let extraPassL = if s.realPty: @["-lutil"] else: newSeq[string]()
 
+      # The modelled PASS-2 ``task_app`` byte-identity test appends
+      # ``../isonim-examples`` via ``s.extraPaths``; every other edge uses
+      # ``basePaths`` unchanged (its cache key is untouched).
+      let paths = basePaths & s.extraPaths
+
       let edge = buildNimUnittest.build(
         source = source,
         binary = binary,
         defines = @["release"],
-        paths = basePaths,
+        paths = paths,
         mm = "orc",
         extraPassL = extraPassL,
         actionId = "isonim-tui.test_build." & s.stem,
