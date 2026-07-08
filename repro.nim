@@ -321,7 +321,15 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_findbyid_and_dumptree"),
   spec("test_eventlog_records_in_order"),
   # ---- snapshot machinery ----
-  spec("test_snapshot_six_formats_recorded"),
+  # EXCLUDED: ``test_snapshot_six_formats_recorded`` deterministically SIGILLs
+  # (exit 127) under reprobuild's monitor shim. ROOT CAUSE (gdb-confirmed): the
+  # feature-rich shim variant produced by reprobuild ``build_apps.sh`` byte-scans
+  # for the x86-64 ``syscall`` opcode ``0f 05`` and plants INT3, false-positive
+  # matching the ``0f 05`` inside this test's ``call rmdir@plt`` rel32
+  # displacement (via ``removeDir``) → corrupted instruction. Fixed at source in
+  # nim-stackable-hooks (skip ``0f 05`` after ``call/jmp rel32``) + by the reduced
+  # io-mon shim; re-include once ``build_apps.sh`` builds the hardened/reduced
+  # shim (the CI shim still regenerates the old variant). Passes standalone.
   spec("test_snapshot_html_report_on_failure"),
   spec("test_snapshot_record_mode"),
   spec("test_snapshot_stable_across_runs"),
