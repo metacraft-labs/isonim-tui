@@ -295,12 +295,16 @@ proc spec(stem: string; realPty = false;
 const tuiTestSpecs: seq[TuiTestSpec] = @[
   # ---- M0 renderer / cell primitives ----
   spec("test_renderer_concept_conformance"),
-  # EXCLUDED: ``test_threadvar_id_isolation`` INTERMITTENTLY SIGSEGVs under
-  # reprobuild's monitor shim's thread-local interception (a distinct, flaky
-  # monitor-tooling issue from the now-fixed rmdir-rel32 SIGILL; passes
-  # standalone / un-monitored). A 4-thread {.threadvar.} stress test — the
-  # shim's per-thread hook state races it. Re-include once the shim's
-  # thread-local path is hardened.
+  # Re-included (FUP-C): ``test_threadvar_id_isolation`` previously
+  # INTERMITTENTLY SIGSEGV'd under the monitor shim's thread-local
+  # interception. Root-caused to the shim's anonymous-mmap ownership table
+  # being a process-global ``seq`` reallocated from multiple host threads
+  # under ``--mm:orc`` (cross-thread free of a chunk owned by another
+  # thread's region → corrupt free-list). Fixed in io-mon by making the
+  # table a fixed-capacity POD array with no hot-path allocation; this
+  # 4-thread {.threadvar.} stress test is now stable across ≥20 monitored
+  # runs.
+  spec("test_threadvar_id_isolation"),
   spec("test_strip_diff"),
   spec("test_screenbuffer_diff_empty"),
   # ---- repo-requirements conformance ----
