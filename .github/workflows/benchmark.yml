@@ -28,7 +28,9 @@ permissions:
 
 jobs:
   benchmark-baseline-store:
-    runs-on: ubuntu-latest
+    # Orchestration leg (gh-pages baseline prep) on a general Linux
+    # ephemeral class; the measurement job stays on [self-hosted, benchmark].
+    runs-on: incus
     name: prepare benchmark baseline store
     steps:
       - name: Checkout repository
