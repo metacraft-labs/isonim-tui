@@ -30,7 +30,7 @@ jobs:
   benchmark-baseline-store:
     # Orchestration leg (gh-pages baseline prep) on a general Linux
     # ephemeral class; the measurement job stays on [self-hosted, benchmark].
-    runs-on: incus
+    runs-on: eph-linux-x64
     name: prepare benchmark baseline store
     steps:
       - name: Checkout repository
