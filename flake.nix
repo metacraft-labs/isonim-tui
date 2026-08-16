@@ -65,6 +65,11 @@
               # are compiled in via {.compile.}; the runtime library
               # itself is linked from this dev-shell package.
               tree-sitter
+              # `tree-sitter generate` (the `grammars` Justfile recipe) loads
+              # the grammar's `grammar.js` through node; without it the CLI
+              # fails with "Failed to run `node`". codetracer's nix package
+              # runs the same generate step with nodejs on PATH.
+              nodejs
               pkg-config
               # M29 cross-emulator suite. xvfb-run hosts a virtual X
               # display so xterm can run headless; tmux acts as the

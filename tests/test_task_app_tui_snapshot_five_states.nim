@@ -35,10 +35,20 @@ suite "M22: task-app TUI snapshot coverage":
     discard h.snap("m22_task_app_empty")
 
     # State 2: three tasks.
+    # EX-M16 (isonim-examples@0ea4c03) replaced the imperative
+    # `rerender(vm)` with reactive bindings: each leaf builds its tree once
+    # inside a `ui(r):` block and binds through `createRenderEffect` /
+    # `forEachKeyed`, so a VM mutation propagates through the reactive graph
+    # on its own. That commit removed the proc with "no deprecated shim per
+    # project house style; all ~49 call sites updated" -- but the call sites
+    # in THIS repo were not among them, and nothing noticed because CI here
+    # compiled nothing at all. Dropping the calls is the same migration
+    # isonim-examples applied to its own tests (see
+    # isonim-examples/tests/test_tui_leaves_end_to_end.nim: "there is no
+    # per-action `rerender(vm)` call").
     vm.addTask("Buy milk")
     vm.addTask("Write specs")
     vm.addTask("Review PR")
-    rerender(vm)
     h.flush()
     discard h.snap("m22_task_app_three_tasks")
     check vm.totalCount == 3
@@ -47,7 +57,6 @@ suite "M22: task-app TUI snapshot coverage":
     # State 3: complete the first task.
     let firstId = vm.tasks.val[0].id
     vm.toggleTask(firstId)
-    rerender(vm)
     h.flush()
     discard h.snap("m22_task_app_one_completed")
     check vm.activeCount == 2
@@ -55,7 +64,6 @@ suite "M22: task-app TUI snapshot coverage":
 
     # State 4: filter to Active — first task hidden.
     vm.setFilter(fmActive)
-    rerender(vm)
     h.flush()
     discard h.snap("m22_task_app_filter_active")
     check vm.visibleTasks.len == 2
@@ -64,7 +72,6 @@ suite "M22: task-app TUI snapshot coverage":
 
     # State 5: filter to Completed — only first task visible.
     vm.setFilter(fmCompleted)
-    rerender(vm)
     h.flush()
     discard h.snap("m22_task_app_filter_completed")
     check vm.visibleTasks.len == 1

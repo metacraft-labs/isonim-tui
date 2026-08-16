@@ -23,15 +23,28 @@ import std/[options, os]
 
 const
   # currentSourcePath is .../isonim-tui/src/isonim_tui/syntax/treesitter_ffi.nim
-  # Walk up four levels to reach the metacraft workspace root, then
-  # step sideways into the codetracer libs that vendor each grammar's
-  # `parser.c` (+ `scanner.c`) and the bundled `tree_sitter/parser.h`
-  # header.
+  # Walk up four levels to reach the workspace root, then step sideways
+  # into each grammar's own repository, which vendors `parser.c`
+  # (+ `scanner.c`) and the bundled `tree_sitter/parser.h` header.
+  #
+  # These used to read `codetracer/libs/tree-sitter-{nim,aiken}/src` --
+  # the grammars as codetracer vendors them, as git submodules. That
+  # spelled a dependency on a repository this one has nothing else to do
+  # with, and it was declared nowhere: `codetracer` appears in no
+  # `.github/sibling-repos` file, so CI never cloned it and the two
+  # `{.compile.}` directives below could not resolve. (It is also a
+  # dependency on a MOVING target: the `codetracer` revision pinned by
+  # this repo's most recent workspace lock no longer exists on the
+  # remote, so provisioning it from the lock would fail outright.)
+  #
+  # tree-sitter-nim and tree-sitter-aiken are standalone repositories;
+  # codetracer is simply another consumer of them. Point at them
+  # directly and declare them in `.github/sibling-repos`, where they are
+  # pinned to the same revisions codetracer's submodules record.
   workspaceRoot =
     currentSourcePath().parentDir().parentDir().parentDir().parentDir().parentDir()
-  nimGrammarSrcDir = workspaceRoot / "codetracer/libs/tree-sitter-nim/src"
-  aikenGrammarSrcDir =
-    workspaceRoot / "codetracer/libs/tree-sitter-aiken/src"
+  nimGrammarSrcDir = workspaceRoot / "tree-sitter-nim/src"
+  aikenGrammarSrcDir = workspaceRoot / "tree-sitter-aiken/src"
 
 # Link against the system tree-sitter runtime. The runtime ships in the
 # nix dev-shell (see flake.nix) and is also available as a vendored
@@ -47,6 +60,16 @@ const
 # Compile each grammar's C sources. The `-I` arg makes the
 # grammar-local `tree_sitter/parser.h` header visible during the C
 # compile of `parser.c` / `scanner.c`.
+#
+# NOTE: `tree-sitter-nim/src/parser.c` is NOT in that repository -- it is
+# listed in its `.gitignore` and produced by `tree-sitter generate` from
+# `grammar.js` (codetracer's nix package runs exactly that step before
+# building). A fresh clone therefore has `grammar.json`, `scanner.c` and
+# `tree_sitter/` but no `parser.c`, and `nim check` fails with
+# "cannot find: .../parser.c" before it type-checks anything. The
+# `grammars` recipe in the Justfile runs the generate step; every recipe
+# that invokes nim depends on it. tree-sitter-aiken commits its
+# `parser.c`, so only the Nim grammar needs generating.
 {.compile(nimGrammarSrcDir & "/parser.c", "-I" & nimGrammarSrcDir).}
 {.compile(nimGrammarSrcDir & "/scanner.c", "-I" & nimGrammarSrcDir).}
 

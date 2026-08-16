@@ -35,40 +35,45 @@ suite "M22: web composition root drives the same VM":
     # appShell contains: input, filter bar, list, summary.
     check root.children.len == 4
 
-    # Drive via VM — the leaves rebuild on every rerender.
+    # Drive via VM — the leaves rebind reactively.
+    # EX-M16 (isonim-examples@0ea4c03) replaced the imperative
+    # `rerender(vm)` with reactive bindings: each leaf builds its tree once
+    # inside a `ui(r):` block and binds through `createRenderEffect` /
+    # `forEachKeyed`, so a VM mutation propagates through the reactive graph
+    # on its own. That commit removed the proc with "no deprecated shim per
+    # project house style; all ~49 call sites updated" -- but the call sites
+    # in THIS repo were not among them, and nothing noticed because CI here
+    # compiled nothing at all. Dropping the calls is the same migration
+    # isonim-examples applied to its own tests (see
+    # isonim-examples/tests/test_tui_leaves_end_to_end.nim: "there is no
+    # per-action `rerender(vm)` call").
     vm.addTask("First")
     vm.addTask("Second")
-    rerender(vm)
     check vm.totalCount == 2
 
     # Toggle the first task and check the visible list reflects it.
     let firstId = vm.tasks.val[0].id
     vm.toggleTask(firstId)
-    rerender(vm)
     check vm.completedCount == 1
 
     # Filter to active and verify the projection.
     vm.setFilter(fmActive)
-    rerender(vm)
     let visible = vm.visibleTasks
     check visible.len == 1
     check visible[0].name == "Second"
 
     # Filter to completed.
     vm.setFilter(fmCompleted)
-    rerender(vm)
     let comp = vm.visibleTasks
     check comp.len == 1
     check comp[0].name == "First"
 
     # Clearing completed empties the completed view.
     vm.clearCompleted()
-    rerender(vm)
     check vm.totalCount == 1
     check vm.visibleTasks.len == 0  # filter is still Completed
 
     vm.setFilter(fmAll)
-    rerender(vm)
     check vm.visibleTasks.len == 1
     check vm.visibleTasks[0].name == "Second"
 
