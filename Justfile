@@ -66,20 +66,58 @@ tests := "tests/test_renderer_concept_conformance.nim tests/test_threadvar_id_is
 # Idempotent: skips the (slow, minutes-scale) generate when parser.c is
 # already there, so local iteration pays it once. tree-sitter-aiken
 # commits its parser.c, so only the Nim grammar is generated here.
+#
+# It also ARCHIVES the two grammars into a single static library, which is
+# what `treesitter_ffi.nim` links. It used to `{.compile.}` the C sources
+# directly, and that does not scale: the generated `tree-sitter-nim`
+# `parser.c` is a 42 MB single translation unit that takes 34 s to compile
+# at -O0 on a 32-core host, and Nim's nimcache is per-project, so every one
+# of the 147 binaries in `tests` recompiled it from scratch. That is ~88
+# minutes of grammar compilation per full-suite job, and this repo's `ci.yml`
+# runs 87 such checks -- roughly 128 CPU-hours per CI run, for a byte-identical
+# object file each time. Compiling it once per checkout and linking the
+# archive makes it 34 s per job.
+#
+# Archive freshness is keyed on the grammar sources, so a re-clone or a
+# grammar bump rebuilds it and nothing else does.
 grammars:
     #!/usr/bin/env bash
     set -euo pipefail
-    grammar_dir="$(cd "$(dirname "{{justfile()}}")/../tree-sitter-nim" 2>/dev/null && pwd || true)"
-    if [ -z "$grammar_dir" ]; then
-      echo "missing sibling ../tree-sitter-nim (declared in .github/sibling-repos)" >&2
+    repo_root="$(cd "$(dirname "{{justfile()}}")" && pwd)"
+    nim_dir="$(cd "$repo_root/../tree-sitter-nim" 2>/dev/null && pwd || true)"
+    aiken_dir="$(cd "$repo_root/../tree-sitter-aiken" 2>/dev/null && pwd || true)"
+    if [ -z "$nim_dir" ] || [ -z "$aiken_dir" ]; then
+      echo "missing sibling ../tree-sitter-nim or ../tree-sitter-aiken (declared in .github/sibling-repos)" >&2
       exit 1
     fi
-    if [ -f "$grammar_dir/src/parser.c" ]; then
-      echo "[grammars] $grammar_dir/src/parser.c present; nothing to do"
+
+    # 1. Generate tree-sitter-nim's parser.c (gitignored; produced from grammar.js).
+    if [ -f "$nim_dir/src/parser.c" ]; then
+      echo "[grammars] $nim_dir/src/parser.c present; skipping generate"
+    else
+      echo "[grammars] tree-sitter generate in $nim_dir"
+      ( cd "$nim_dir" && tree-sitter generate )
+    fi
+
+    # 2. Archive both grammars once. `-O0` deliberately: this is generated
+    #    table-driven C with no hot loops of its own, and -O1/-O2 measured
+    #    58 s / 37 s against -O0's 34 s for no runtime benefit that shows up
+    #    in `just bench`.
+    out_dir="$repo_root/build/grammars"
+    archive="$out_dir/libisonim_tui_grammars.a"
+    mkdir -p "$out_dir"
+    srcs="$nim_dir/src/parser.c $nim_dir/src/scanner.c $aiken_dir/src/parser.c"
+    if [ -f "$archive" ] && [ -z "$(find $srcs -newer "$archive" 2>/dev/null)" ]; then
+      echo "[grammars] $archive is up to date"
       exit 0
     fi
-    echo "[grammars] tree-sitter generate in $grammar_dir"
-    cd "$grammar_dir" && tree-sitter generate
+    echo "[grammars] building $archive"
+    rm -f "$archive"
+    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src"   "$nim_dir/src/parser.c"   -o "$out_dir/ts_nim_parser.o"
+    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src"   "$nim_dir/src/scanner.c"  -o "$out_dir/ts_nim_scanner.o"
+    "${CC:-cc}" -c -O0 -fPIC -I"$aiken_dir/src" "$aiken_dir/src/parser.c" -o "$out_dir/ts_aiken_parser.o"
+    "${AR:-ar}" rcs "$archive" "$out_dir/ts_nim_parser.o" "$out_dir/ts_nim_scanner.o" "$out_dir/ts_aiken_parser.o"
+    echo "[grammars] $archive: $(stat -c%s "$archive") bytes"
 
 # Build: compile every test file as a sanity check (no run).
 build: grammars
@@ -138,7 +176,13 @@ test-cross-emulator: grammars
 # Lint: nim check + nixfmt --check + markdownlint + shellcheck/shfmt on scripts.
 lint: lint-nim lint-nix lint-markdown lint-shell
 
-lint-nim: grammars
+# No `grammars` dependency: this recipe only runs `nim check`, which never
+# links, and `treesitter_ffi.nim` no longer `{.compile.}`s the grammar C
+# sources -- so there is nothing here for the grammars to resolve. Lint
+# therefore skips both `tree-sitter generate` (minutes on a fresh clone) and
+# the archive build. Verified: `nim check` on `treesitter_ffi.nim` succeeds
+# with `build/grammars/` absent entirely.
+lint-nim:
     @mkdir -p test-logs
     nim check {{nim-flags}} {{src-paths}} --mm:orc src/isonim_tui.nim 2>&1 | tee test-logs/lint-nim.log
     @for t in {{tests}}; do \
@@ -348,7 +392,9 @@ bench-quick:
 # absolute paths that get mangled by the Windows path-separator pass).
 # That covers the M10 surface; the Windows tests themselves run on the
 # real `windows-latest` lane below.
-check-windows-cross: grammars
+# `nim check` only -- see the note on `lint-nim` for why `grammars` is not
+# a dependency here.
+check-windows-cross:
     @mkdir -p test-logs
     nim check {{nim-flags}} {{src-paths}} --os:windows --mm:orc \
       src/isonim_tui/drivers/windows_driver.nim 2>&1 | \

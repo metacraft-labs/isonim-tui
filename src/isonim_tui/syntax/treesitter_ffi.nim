@@ -41,39 +41,37 @@ const
   # codetracer is simply another consumer of them. Point at them
   # directly and declare them in `.github/sibling-repos`, where they are
   # pinned to the same revisions codetracer's submodules record.
-  workspaceRoot =
-    currentSourcePath().parentDir().parentDir().parentDir().parentDir().parentDir()
-  nimGrammarSrcDir = workspaceRoot / "tree-sitter-nim/src"
-  aikenGrammarSrcDir = workspaceRoot / "tree-sitter-aiken/src"
+  repoRoot =
+    currentSourcePath().parentDir().parentDir().parentDir().parentDir()
+  grammarArchive = repoRoot / "build/grammars/libisonim_tui_grammars.a"
 
-# Link against the system tree-sitter runtime. The runtime ships in the
-# nix dev-shell (see flake.nix) and is also available as a vendored
-# `libtree-sitter` on most distros.
-{.passl: "-ltree-sitter".}
-
-# Tell the compiler where to find each grammar's bundled `tree_sitter`
-# headers. The two `parser.h` headers are byte-identical (each grammar
-# vendors the same upstream copy), so `-I` for either resolves the
-# `#include <tree_sitter/parser.h>` inside `parser.c`.
-{.passc: "-I" & nimGrammarSrcDir.}
-
-# Compile each grammar's C sources. The `-I` arg makes the
-# grammar-local `tree_sitter/parser.h` header visible during the C
-# compile of `parser.c` / `scanner.c`.
+# Link the pre-built grammar archive, then the system tree-sitter runtime.
+# The runtime ships in the nix dev-shell (see flake.nix) and is also
+# available as a vendored `libtree-sitter` on most distros. Order matters:
+# the archive references runtime symbols, so it precedes `-ltree-sitter`.
 #
-# NOTE: `tree-sitter-nim/src/parser.c` is NOT in that repository -- it is
-# listed in its `.gitignore` and produced by `tree-sitter generate` from
-# `grammar.js` (codetracer's nix package runs exactly that step before
-# building). A fresh clone therefore has `grammar.json`, `scanner.c` and
-# `tree_sitter/` but no `parser.c`, and `nim check` fails with
-# "cannot find: .../parser.c" before it type-checks anything. The
-# `grammars` recipe in the Justfile runs the generate step; every recipe
-# that invokes nim depends on it. tree-sitter-aiken commits its
-# `parser.c`, so only the Nim grammar needs generating.
-{.compile(nimGrammarSrcDir & "/parser.c", "-I" & nimGrammarSrcDir).}
-{.compile(nimGrammarSrcDir & "/scanner.c", "-I" & nimGrammarSrcDir).}
-
-{.compile(aikenGrammarSrcDir & "/parser.c", "-I" & aikenGrammarSrcDir).}
+# This deliberately does NOT `{.compile.}` the grammars' C sources, which is
+# what it used to do:
+#
+#   {.compile(nimGrammarSrcDir & "/parser.c", ...).}   # + scanner.c, + aiken
+#
+# `tree-sitter-nim/src/parser.c` is a 42 MB generated single translation
+# unit -- it is gitignored, and `tree-sitter generate` produces it from
+# `grammar.js`. Measured on a 32-core host it costs 34 s to compile at -O0
+# (58 s at -O1, 37 s at -O2). Nim's nimcache is keyed per project, so each
+# of the 147 test binaries in the Justfile's `tests` list compiled it again
+# from scratch: ~88 minutes of grammar compilation per full-suite job,
+# across the 87 checks `ci.yml` defines -- about 128 CPU-hours per CI run,
+# producing a byte-identical object file every time.
+#
+# The `grammars` Justfile recipe builds the archive once per checkout (and
+# rebuilds it only when a grammar source is newer). Every nim-invoking
+# recipe depends on `grammars`, which is what guarantees the archive exists
+# by the time anything links. A pleasant side effect: `nim check` no longer
+# needs the grammars on disk at all, because there is no longer a
+# `{.compile.}` path for it to resolve -- so `just lint` stops depending on
+# a multi-minute `tree-sitter generate`.
+{.passl: grammarArchive & " -ltree-sitter".}
 
 # ----------------------------------------------------------------------------
 # Raw C types — opaque structs from `<tree_sitter/api.h>`. The runtime

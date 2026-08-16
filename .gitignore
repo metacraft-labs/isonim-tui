@@ -36,3 +36,7 @@ tests/real_terminal/apps/*
 src/isonim_tui/syntax/highlighter
 src/isonim_tui/syntax/treesitter_ffi
 tests/snapshots/_report.html
+
+# Built by the `grammars` recipe: the two tree-sitter grammars archived
+# into one static library that treesitter_ffi.nim links.
+build/grammars/
