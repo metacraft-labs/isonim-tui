@@ -20,6 +20,14 @@ switch("path", "$config/../isonim/src")
 # resolves via this path.
 switch("path", "$config/../isonim-examples")
 
+# Sibling isonim-render-serve — `isonim-examples/task_app/tui/leaves.nim`
+# does `import isonim_render_serve/element_tree_attrs`, so anything that
+# reaches the shared task-app demo (e.g.
+# `tests/test_task_app_tui_snapshot_five_states.nim`) needs this on the
+# path. Added in isonim-render-serve@d59bbe5; missing here until CI began
+# compiling for real.
+switch("path", "$config/../isonim-render-serve/src")
+
 # Sibling nim-termctl — M4 byte-level input parser.
 switch("path", "$config/../nim-termctl/src")
 

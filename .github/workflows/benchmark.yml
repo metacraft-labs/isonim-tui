@@ -84,18 +84,42 @@ jobs:
     runs-on: [self-hosted, benchmark]
     name: benchmark (isonim-tui, Linux)
     steps:
+      # `just bench` compiles the benchmark binaries against the same sibling
+      # repositories every other lane needs (`src-paths` in the Justfile, plus
+      # the tree-sitter grammars the M19 highlighter `{.compile.}`s). A bare
+      # `actions/checkout` put none of them on disk, so this job could only ever
+      # have measured a build that did not compile -- exactly the defect
+      # `ci.yml` was fixed for. Provision siblings the same single approved way:
+      # `setup-dev-env` resolves `.github/sibling-repos` against the per-commit
+      # workspace lock.
+      #
+      # The manifest repo holding the locks (metacraft-manifests) is private, so
+      # `secrets.GITHUB_TOKEN` cannot read it. Mint an installation token from
+      # the org's CI Token Provider app. The app id is an ORG VARIABLE and only
+      # the private key is a secret -- `secrets.CI_TOKEN_PROVIDER_APP_ID` does
+      # not exist and expands to the empty string.
+      - name: Generate CI token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.CI_TOKEN_PROVIDER_APP_ID }}
+          private-key: ${{ secrets.CI_TOKEN_PROVIDER_PRIVATE_KEY }}
+          owner: metacraft-labs
+
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Nix
-        uses: metacraft-labs/nixos-modules/.github/setup-nix@main
+      - name: Setup dev env (clones .github/sibling-repos at lock revisions)
+        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@main
         with:
-          trusted-public-keys: ${{ vars.TRUSTED_PUBLIC_KEYS }}
+          env-flavor: nix
+          gh-token: ${{ steps.app-token.outputs.token }}
           substituters: ${{ vars.SUBSTITUTERS }}
-          nix-github-token: ${{ secrets.GITHUB_TOKEN }}
+          trusted-public-keys: ${{ vars.TRUSTED_PUBLIC_KEYS }}
+
       - name: Run benchmark suite
         run: |
-          nix develop --command just bench --quick
+          dev-exec just bench --quick
 
       - name: Upload report artifact
         if: always()
@@ -147,14 +171,20 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          nix develop --command bash scripts/check-hard-thresholds.sh \
+          dev-exec bash scripts/check-hard-thresholds.sh \
             bench-results/benchmark_results.json
 
+      # No `|| true`. These two calls previously swallowed their exit codes, so
+      # a profiler that never ran -- or crashed -- looked exactly like one that
+      # produced a flamegraph, and the "Upload flamegraphs" step below would
+      # then find nothing and warn rather than fail. If profiling a regression
+      # is worth doing at all, its failure is worth reporting.
       - name: Profile on regression
         if: failure()
         run: |
-          nix develop --command bash scripts/profile-on-regression.sh latency || true
-          nix develop --command bash scripts/profile-on-regression.sh cold_start || true
+          set -euo pipefail
+          dev-exec bash scripts/profile-on-regression.sh latency
+          dev-exec bash scripts/profile-on-regression.sh cold_start
 
       - name: Upload flamegraphs on regression
         if: failure()

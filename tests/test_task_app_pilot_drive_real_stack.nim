@@ -52,8 +52,18 @@ suite "M22: pilot drives the real task-app stack":
     #       part of the public VM contract Pilot would otherwise drive
     #       through a click. Final state still rides on real keys for
     #       the filter assertion below.
+    # EX-M16 (isonim-examples@0ea4c03) replaced the imperative
+    # `rerender(vm)` with reactive bindings: each leaf builds its tree once
+    # inside a `ui(r):` block and binds through `createRenderEffect` /
+    # `forEachKeyed`, so a VM mutation propagates through the reactive graph
+    # on its own. That commit removed the proc with "no deprecated shim per
+    # project house style; all ~49 call sites updated" -- but the call sites
+    # in THIS repo were not among them, and nothing noticed because CI here
+    # compiled nothing at all. Dropping the calls is the same migration
+    # isonim-examples applied to its own tests (see
+    # isonim-examples/tests/test_tui_leaves_end_to_end.nim: "there is no
+    # per-action `rerender(vm)` call").
     vm.toggleTask(vm.tasks.val[1].id)
-    rerender(vm)
     h.flush()
     check vm.activeCount == 1
     check vm.completedCount == 1

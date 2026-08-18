@@ -19,7 +19,14 @@ alias fmt := format
 # Path lookups - mirrors what `config.nims` exports (kept here so a
 # developer running `just <recipe>` outside direnv still resolves
 # sibling-repo sources).
-src-paths := "--path:src --path:tests --path:../isonim/src --path:../isonim-examples --path:../nim-termctl/src --path:../nim-pty/src --path:../nim-faststreams --path:../nim-stew --path:../nim-everywhere/src"
+# `--path:../isonim-render-serve/src` is required, not optional:
+# `isonim-examples/task_app/tui/leaves.nim` -- which
+# `tests/test_task_app_tui_snapshot_five_states.nim` pulls in through
+# `task_app/main_tui` -- does `import isonim_render_serve/element_tree_attrs`.
+# The module has existed since isonim-render-serve@d59bbe5; the path entry was
+# simply never added here or in `config.nims`, and CI never noticed because it
+# compiled nothing at all.
+src-paths := "--path:src --path:tests --path:../isonim/src --path:../isonim-examples --path:../isonim-render-serve/src --path:../nim-termctl/src --path:../nim-pty/src --path:../nim-faststreams --path:../nim-stew --path:../nim-everywhere/src"
 
 # Extra paths needed for the M29 real-terminal suite (TermAssert lives
 # in sibling repos that aren't on the default isonim-tui path list).
@@ -45,8 +52,75 @@ tests := "tests/test_renderer_concept_conformance.nim tests/test_threadvar_id_is
 
 # --- Default targets (per repo-requirements.md) ---
 
+# Generate the tree-sitter Nim grammar's parser sources.
+#
+# `src/isonim_tui/syntax/treesitter_ffi.nim` has
+# `{.compile: <tree-sitter-nim>/src/parser.c.}`, and that file is NOT in
+# the tree-sitter-nim repository: it is in its `.gitignore` and produced
+# by `tree-sitter generate` from `grammar.js`. codetracer's nix package
+# runs the same step before building. Without it every `nim c` AND every
+# `nim check` in this file dies with "cannot find: .../parser.c" before
+# it type-checks a single line -- which is precisely what CI has been
+# doing, invisibly, on every job.
+#
+# Idempotent: skips the (slow, minutes-scale) generate when parser.c is
+# already there, so local iteration pays it once. tree-sitter-aiken
+# commits its parser.c, so only the Nim grammar is generated here.
+#
+# It also ARCHIVES the two grammars into a single static library, which is
+# what `treesitter_ffi.nim` links. It used to `{.compile.}` the C sources
+# directly, and that does not scale: the generated `tree-sitter-nim`
+# `parser.c` is a 42 MB single translation unit that takes 34 s to compile
+# at -O0 on a 32-core host, and Nim's nimcache is per-project, so every one
+# of the 147 binaries in `tests` recompiled it from scratch. That is ~88
+# minutes of grammar compilation per full-suite job, and this repo's `ci.yml`
+# runs 87 such checks -- roughly 128 CPU-hours per CI run, for a byte-identical
+# object file each time. Compiling it once per checkout and linking the
+# archive makes it 34 s per job.
+#
+# Archive freshness is keyed on the grammar sources, so a re-clone or a
+# grammar bump rebuilds it and nothing else does.
+grammars:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    repo_root="$(cd "$(dirname "{{justfile()}}")" && pwd)"
+    nim_dir="$(cd "$repo_root/../tree-sitter-nim" 2>/dev/null && pwd || true)"
+    aiken_dir="$(cd "$repo_root/../tree-sitter-aiken" 2>/dev/null && pwd || true)"
+    if [ -z "$nim_dir" ] || [ -z "$aiken_dir" ]; then
+      echo "missing sibling ../tree-sitter-nim or ../tree-sitter-aiken (declared in .github/sibling-repos)" >&2
+      exit 1
+    fi
+
+    # 1. Generate tree-sitter-nim's parser.c (gitignored; produced from grammar.js).
+    if [ -f "$nim_dir/src/parser.c" ]; then
+      echo "[grammars] $nim_dir/src/parser.c present; skipping generate"
+    else
+      echo "[grammars] tree-sitter generate in $nim_dir"
+      ( cd "$nim_dir" && tree-sitter generate )
+    fi
+
+    # 2. Archive both grammars once. `-O0` deliberately: this is generated
+    #    table-driven C with no hot loops of its own, and -O1/-O2 measured
+    #    58 s / 37 s against -O0's 34 s for no runtime benefit that shows up
+    #    in `just bench`.
+    out_dir="$repo_root/build/grammars"
+    archive="$out_dir/libisonim_tui_grammars.a"
+    mkdir -p "$out_dir"
+    srcs="$nim_dir/src/parser.c $nim_dir/src/scanner.c $aiken_dir/src/parser.c"
+    if [ -f "$archive" ] && [ -z "$(find $srcs -newer "$archive" 2>/dev/null)" ]; then
+      echo "[grammars] $archive is up to date"
+      exit 0
+    fi
+    echo "[grammars] building $archive"
+    rm -f "$archive"
+    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src"   "$nim_dir/src/parser.c"   -o "$out_dir/ts_nim_parser.o"
+    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src"   "$nim_dir/src/scanner.c"  -o "$out_dir/ts_nim_scanner.o"
+    "${CC:-cc}" -c -O0 -fPIC -I"$aiken_dir/src" "$aiken_dir/src/parser.c" -o "$out_dir/ts_aiken_parser.o"
+    "${AR:-ar}" rcs "$archive" "$out_dir/ts_nim_parser.o" "$out_dir/ts_nim_scanner.o" "$out_dir/ts_aiken_parser.o"
+    echo "[grammars] $archive: $(stat -c%s "$archive") bytes"
+
 # Build: compile every test file as a sanity check (no run).
-build:
+build: grammars
     @mkdir -p test-logs
     @for t in {{tests}}; do \
       echo "Building $t"; \
@@ -64,7 +138,7 @@ test-integration:
     @echo "isonim-tui has no separate integration suite — every test is real-stack."
     @echo "M2 added the TerminalTestHarness suite (driver/pilot/snapshot tests)."
 
-test-snapshots:
+test-snapshots: grammars
     @mkdir -p test-logs
     @for t in tests/test_snapshot_six_formats_recorded.nim tests/test_snapshot_html_report_on_failure.nim tests/test_snapshot_record_mode.nim tests/test_snapshot_stable_across_runs.nim; do \
       echo "[snap] $t"; \
@@ -77,7 +151,7 @@ test-snapshots:
 # apps under TermAssert (real pty + libvterm) and drives them via
 # scripted Pilot-style scenarios. Roughly 10x slower than the headless
 # `test` target — runs on PR but not on every iteration.
-test-real-terminal:
+test-real-terminal: grammars
     @mkdir -p test-logs/real-terminal
     @for t in {{real-terminal-tests}}; do \
       echo "[real-terminal] $t"; \
@@ -92,7 +166,7 @@ test-real-terminal:
 # real-terminal suite onto the same lane. The test itself spawns
 # xvfb-run + xterm / kitty / alacritty + tmux; if any of those tools
 # is absent from PATH, the affected sub-test self-skips.
-test-cross-emulator:
+test-cross-emulator: grammars
     @mkdir -p test-logs/real-terminal
     nim c {{nim-flags}} {{real-terminal-paths}} \
       --mm:orc -d:release --threads:on \
@@ -102,6 +176,12 @@ test-cross-emulator:
 # Lint: nim check + nixfmt --check + markdownlint + shellcheck/shfmt on scripts.
 lint: lint-nim lint-nix lint-markdown lint-shell
 
+# No `grammars` dependency: this recipe only runs `nim check`, which never
+# links, and `treesitter_ffi.nim` no longer `{.compile.}`s the grammar C
+# sources -- so there is nothing here for the grammars to resolve. Lint
+# therefore skips both `tree-sitter generate` (minutes on a fresh clone) and
+# the archive build. Verified: `nim check` on `treesitter_ffi.nim` succeeds
+# with `build/grammars/` absent entirely.
 lint-nim:
     @mkdir -p test-logs
     nim check {{nim-flags}} {{src-paths}} --mm:orc src/isonim_tui.nim 2>&1 | tee test-logs/lint-nim.log
@@ -185,7 +265,7 @@ test-threads-off:
     just _matrix arc release off
 
 # Sanitizers (Linux/amd64 only).
-test-asan:
+test-asan: grammars
     @mkdir -p test-logs
     @for mode in release danger; do \
       for t in {{tests}}; do \
@@ -200,7 +280,7 @@ test-asan:
       done; \
     done
 
-test-ubsan:
+test-ubsan: grammars
     @mkdir -p test-logs
     @for t in {{tests}}; do \
       echo "[ubsan] $t"; \
@@ -212,7 +292,7 @@ test-ubsan:
         -r $t 2>&1 | tee -a test-logs/ubsan.log; \
     done
 
-test-tsan:
+test-tsan: grammars
     @mkdir -p test-logs
     @for t in {{tests}}; do \
       echo "[tsan] $t"; \
@@ -224,7 +304,7 @@ test-tsan:
         -r $t 2>&1 | tee -a test-logs/tsan.log; \
     done
 
-test-lsan:
+test-lsan: grammars
     @mkdir -p test-logs
     @for t in {{tests}}; do \
       echo "[lsan] $t"; \
@@ -236,7 +316,7 @@ test-lsan:
         -r $t 2>&1 | tee -a test-logs/lsan.log; \
     done
 
-test-valgrind:
+test-valgrind: grammars
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p test-logs
@@ -261,7 +341,7 @@ test-all: test-arc test-orc test-refc test-threads-off
     @echo "Charter primary matrix complete."
 
 # Internal: one matrix cell.  $1=mm, $2=mode, $3=threads
-_matrix mm mode threads:
+_matrix mm mode threads: grammars
     @mkdir -p test-logs
     @for t in {{tests}}; do \
       echo "[{{mm}}/{{mode}}/threads:{{threads}}] $t"; \
@@ -312,6 +392,8 @@ bench-quick:
 # absolute paths that get mangled by the Windows path-separator pass).
 # That covers the M10 surface; the Windows tests themselves run on the
 # real `windows-latest` lane below.
+# `nim check` only -- see the note on `lint-nim` for why `grammars` is not
+# a dependency here.
 check-windows-cross:
     @mkdir -p test-logs
     nim check {{nim-flags}} {{src-paths}} --os:windows --mm:orc \
