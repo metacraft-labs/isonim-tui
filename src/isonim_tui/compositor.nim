@@ -648,15 +648,44 @@ proc paintEntryOnto(buf: var ScreenBuffer; strip: Strip; entry: LayoutEntry;
   for i in 0 ..< limit:
     let src = strip.cells[i]
     if src.width == 0:
+      # A ghost arriving on its own would blank a cell the layer underneath
+      # owns, so it is never stamped here. It is stamped by the branch that
+      # stamps its LEADING half, below, which is the only place that knows the
+      # pair is being written together.
       continue
+    var stamped = false
     if entry.fillBackground and i >= spanStart and i < spanEnd:
       row.cells[i] = src
+      stamped = true
     else:
       if src.rune.int32 != 0 and src.rune != Rune(' '.ord):
         row.cells[i] = src
+        stamped = true
       elif src.fg != defaultColor() or src.bg != defaultColor() or
            src.attrs != {}:
         row.cells[i] = src
+        stamped = true
+    if stamped and src.width == 2 and i + 1 < row.cells.len:
+      # A WIDTH-2 GLYPH OWNS TWO COLUMNS, AND THE SECOND ONE HAS TO SAY SO.
+      #
+      # `rawCellsForEntry` already builds the pair — the wide cell followed by
+      # `ghostCell()` (rune 0, width 0), exactly as `cells.nim` documents the
+      # trailing half. Skipping the ghost above without stamping it here left
+      # the freshly-allocated buffer's `spaceCell()` (rune ' ', width 1) in the
+      # trailing column, so the composited `ScreenBuffer` never contained a
+      # ghost at all — and `testing/snapshot/ansi.encodeAnsi`, which skips
+      # width-0 cells and emits everything else, therefore wrote a REAL SPACE
+      # after every wide glyph.
+      #
+      # Measured, by compositing "┌世界─┐" at 20x3 and feeding the emitted
+      # bytes to libvterm: the buffer placed `┐` at column 6 while the terminal
+      # put it at column 8, one column of drift per wide glyph, growing to the
+      # right. No in-process assertion could see it — every one of the six
+      # snapshot formats is derived from this same buffer, so they agreed with
+      # each other about the wrong screen. It took comparing a composited
+      # buffer against a terminal fed the bytes that buffer emitted.
+      # `tests/test_compositor_wide_glyph_ghost_cell.nim` now pins it here.
+      row.cells[i + 1] = ghostCell()
   recomputeCache(row)
   buf.rows[entry.row] = row
 
