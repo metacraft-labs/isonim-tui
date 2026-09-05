@@ -43,7 +43,32 @@ const
   # pinned to the same revisions codetracer's submodules record.
   repoRoot =
     currentSourcePath().parentDir().parentDir().parentDir().parentDir()
-  grammarArchive = repoRoot / "build/grammars/libisonim_tui_grammars.a"
+  defaultGrammarArchive = repoRoot / "build/grammars/libisonim_tui_grammars.a"
+
+  isonimTuiGrammarArchive* {.strdefine.} = defaultGrammarArchive
+    ## The grammar archive this module hands the linker.
+    ##
+    ## Defaults to this repository's own build output, so nothing changes for
+    ## a build that says nothing: `just grammars` writes exactly that path and
+    ## every recipe here depends on it.
+    ##
+    ## It is overridable because the default is an ABSOLUTE path baked in at
+    ## compile time, and that path is a fact about THIS checkout rather than
+    ## about the binary being linked. An embedder that vendors its own
+    ## tree-sitter grammars — codetracer builds one archive from the ten it
+    ## already carries as submodules, a strict superset of the two here — had
+    ## no way to say so, and the only workaround available to it was to plant
+    ## a file at the baked path: a link that this repo's own `just grammars`
+    ## will `rm -f` and overwrite with a two-grammar archive the moment anyone
+    ## builds here, silently degrading the embedder's next link.
+    ##
+    ##   nim c -d:isonimTuiGrammarArchive=/abs/path/to/libgrammars.a ...
+    ##
+    ## The archive must define the `tree_sitter_*` entry points for whichever
+    ## languages the caller then asks `language()` for; the `-ltree-sitter`
+    ## runtime is appended either way.
+
+  grammarArchive = isonimTuiGrammarArchive
 
 # Link the pre-built grammar archive, then the system tree-sitter runtime.
 # The runtime ships in the nix dev-shell (see flake.nix) and is also
