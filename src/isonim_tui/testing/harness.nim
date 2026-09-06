@@ -22,6 +22,7 @@ import ../compositor
 import ../drivers/headless_driver
 import ../animation/animator as animatorMod
 import ../focus/manager as focusMgrMod
+import ../style_engine as styleEngineMod
 import ../worker/manager as workerMgrMod
 import ../worker/worker as workerMod
 import ./introspection
@@ -51,6 +52,13 @@ export workerMgrMod.WorkerManager, workerMgrMod.WorkerHandle,
        workerMgrMod.cancelAll, workerMgrMod.cancelGroup, workerMgrMod.cancelNode,
        workerMgrMod.shutdown, workerMgrMod.reap, workerMgrMod.count,
        workerMgrMod.allWorkers, workerMgrMod.anyRunning, workerMgrMod.anyPending
+export styleEngineMod.StyleEngine, styleEngineMod.newStyleEngine,
+       styleEngineMod.hasStyles, styleEngineMod.materialize,
+       styleEngineMod.ThemeRegistry, styleEngineMod.ThemeContext,
+       styleEngineMod.newThemeContext, styleEngineMod.newThemeRegistry,
+       styleEngineMod.registerTheme, styleEngineMod.activeTheme,
+       styleEngineMod.subscribe, styleEngineMod.themeNames
+
 export workerMod.WorkerState, workerMod.Worker, workerMod.WorkerBase,
        workerMod.WorkerStateChangeProc, workerMod.newWorker, workerMod.start,
        workerMod.complete, workerMod.fail, workerMod.cancel, workerMod.checkCancelled,
@@ -82,6 +90,10 @@ type
     animator*: Animator          ## M7 — owns the active animation set.
     focusManager*: FocusManager  ## M12 — owns focus chain + traps.
     workerManager*: WorkerManager ## M15 — owns the per-harness worker set.
+    styleEngine*: StyleEngine    ## M5/M6 — owns the app stylesheet and
+                                 ## the theme registry, and materialises
+                                 ## cascade output into `node.styles`
+                                 ## ahead of every paint.
     disposed*: bool
 
 # ----------------------------------------------------------------------------
@@ -112,6 +124,7 @@ proc newTerminalTestHarness*(width, height: int): TerminalTestHarness =
     animator: newAnimator(testClock, framesPerSecond = 60),
     focusManager: newFocusManager(),
     workerManager: newWorkerManager(testClock),
+    styleEngine: newStyleEngine(),
     disposed: false)
   h.driver.start()
   resetSnapshotAccumulator()
@@ -162,6 +175,52 @@ proc mountTree*(h: TerminalTestHarness; root: TerminalNode) =
   ## via the DSL). Just sets `h.root` and paints.
   h.root = root
   h.flush()
+
+# ----------------------------------------------------------------------------
+# Stylesheet + theme (M5 / M6)
+# ----------------------------------------------------------------------------
+
+proc addCss*(h: TerminalTestHarness; css: string;
+             sourceName: string = "app.tcss") =
+  ## Register a TCSS source with the harness and repaint. Rules take
+  ## effect on the next paint because `flush` materialises the cascade
+  ## into `node.styles` before handing the tree to the compositor.
+  h.styleEngine.addCss(css, ssUser, sourceName)
+  h.flush()
+
+proc addDefaultCss*(h: TerminalTestHarness; css: string;
+                    sourceName: string = "default.tcss") =
+  ## Same as `addCss` but registered at the user-agent tier, so app
+  ## rules of equal specificity win over it.
+  h.styleEngine.addCss(css, ssDefault, sourceName)
+  h.flush()
+
+proc stylesheet*(h: TerminalTestHarness): Stylesheet {.inline.} =
+  h.styleEngine.sheet
+
+proc themeRegistry*(h: TerminalTestHarness): ThemeRegistry {.inline.} =
+  h.styleEngine.themes
+
+proc activeThemeName*(h: TerminalTestHarness): string {.inline.} =
+  h.styleEngine.themes.activeName
+
+proc setTheme*(h: TerminalTestHarness; name: string): bool {.discardable.} =
+  ## M6 runtime theme swap — the repaint half. Switches the active
+  ## theme, drops the compositor's strip cache (cached strips captured
+  ## the old theme's colours), and repaints. Returns false if `name`
+  ## is not registered, in which case nothing is repainted.
+  if not h.styleEngine.setTheme(name): return false
+  h.compositor.clearStripCache()
+  h.flush()
+  true
+
+proc setTheme*(h: TerminalTestHarness; t: Theme): bool {.discardable.} =
+  ## Register `t` (if new) and activate it. Same repaint contract as
+  ## the by-name overload.
+  if not h.styleEngine.setTheme(t): return false
+  h.compositor.clearStripCache()
+  h.flush()
+  true
 
 # ----------------------------------------------------------------------------
 # Time / virtual clock
