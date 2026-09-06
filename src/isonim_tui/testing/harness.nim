@@ -158,6 +158,11 @@ proc flush*(h: TerminalTestHarness) =
   ## `flush()` after each input event.
   if h.disposed: return
   if h.root == nil: return
+  # Materialise the M5/M6 cascade into `node.styles` before painting.
+  # This is the step `compositor.nim`'s own comment described and that
+  # nothing performed: without it the TCSS engine computes correct
+  # styles that never reach a cell. A no-op when no CSS is registered.
+  h.styleEngine.materialize(h.root, h.focusedId, h.hoveredId)
   h.compositor.paint(h.root, h.driver)
 
 proc mount*(h: TerminalTestHarness;

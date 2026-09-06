@@ -8,10 +8,19 @@
 ##   * `Space` while focused
 ##
 ## The visual treatment is a rounded-corner box with the label
-## centred horizontally. Default + `:focus` + `:hover` + `:disabled`
-## styling drops out of the M5 cascade — the widget sets the
-## necessary attributes (`data-focusable`, `disabled`, etc.) and the
-## CSS engine takes care of the rest.
+## centred horizontally. The widget itself paints no state styling: it
+## sets the attributes the matcher keys off (`data-focusable`,
+## `disabled`, `class="button <variant>"`) and leaves `:focus`,
+## `:hover` and `:disabled` to the stylesheet. `style_engine.nim`
+## materialises the cascade into `node.styles` before every paint, so
+## an app rule like
+##
+##   Button:disabled { color: $foreground-muted; text-style: dim; }
+##
+## reaches the cells. There is deliberately no built-in user-agent
+## stylesheet yet, so a button with no app CSS renders identically in
+## all four states — that is a missing default sheet, not a missing
+## engine. See `tests/test_css_cascade_reaches_compositor.nim`.
 ##
 ## Charter §1: every public type is a value object; the widget handle
 ## itself is a `ref` so callers can mutate `setLabel` after

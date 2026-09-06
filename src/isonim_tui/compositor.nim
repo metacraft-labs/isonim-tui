@@ -175,9 +175,11 @@ proc parseColorOrDefault(s: string): Color =
   ## (emitted by ``ckRgb`` -> ``\x1b[38;2;R;G;Bm`` SGR by
   ## ``ansi.fgParams``); anything else falls back to the terminal
   ## default. (Full CSS colour parsing lives in ``theme/color.nim``;
-  ## the compositor only needs ANSI / default / 24-bit RGB for the
-  ## M8 test surface — the M5/M6 cascade hands the compositor a
-  ## materialised inline value in those styles anyway.)
+  ## the compositor only needs ANSI / default / 24-bit RGB, because
+  ## ``style_engine.materialize`` lowers every cascaded colour into
+  ## exactly that vocabulary before the paint reads ``node.styles``.
+  ## That materialisation step is what makes the M5/M6 cascade reach a
+  ## cell at all: the compositor never runs the cascade itself.)
   ##
   ## M-EVP-14 Wave-T: ``#RRGGBB`` support lets the TUI leaves emit
   ## the IsoNim brand indigo (``#7c7aed``) directly, instead of

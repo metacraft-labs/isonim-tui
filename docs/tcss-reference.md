@@ -47,31 +47,44 @@ The cache invalidation rules are codified in
 (append/remove/setAttribute), focus changes, hover changes, and theme
 swaps each evict matching entries.
 
-## The 12 load-bearing properties
+## What actually reaches a cell
 
-TCSS recognises the full Textual property grammar at the parser level
-but only a curated set of properties are honoured by the M11–M21
-widget tree and the M8 compositor. The following twelve are the
-load-bearing set:
+TCSS recognises the full Textual property grammar at the parser level,
+and the cascade computes a correct `Styles` value for every property in
+the table below. Reaching a *cell* is a separate question, and the
+answer differs by property.
+
+`src/isonim_tui/style_engine.nim` is the only path from cascade output
+to paint. It lowers the following into the `node.styles` table the
+compositor reads:
 
 | Property | Notes |
 | --- | --- |
-| `color` | Foreground colour. Inherited. Resolves theme tokens. |
-| `background` | Cell-background colour. |
-| `text-style` | `bold`, `italic`, `underline`, `strike`, `dim`, `reverse`. Comma-separated. Inherited. |
-| `width` | Cell columns. Accepts integers, `auto`, and Textual's `1fr` flex syntax. |
-| `height` | Cell rows. Same syntax as `width`. |
-| `padding` | 1–4 integer cell tuples (TRBL). |
-| `margin` | 1–4 integer cell tuples. Compositor honours top/bottom for stack flow. |
-| `border` | One of the M11 `BorderStyle` glyph sets (`solid`, `round`, `double`, `heavy`, `dashed`). Plus optional colour. |
-| `align` | Horizontal: `left` / `center` / `right`. |
-| `display` | `block` / `none`. `none` removes the node from layout. |
-| `visibility` | `visible` / `hidden`. `hidden` paints blank cells but keeps layout. |
-| `dock` | `top` / `bottom` / `left` / `right`. M3 docked layout. |
+| `color` | Foreground colour. Inherited by the compositor's tree walk. Resolves theme tokens. |
+| `background` | Cell-background colour. Lowered to `background-color`. |
+| `text-style` | Lowered for `bold`, `dim`, `italic`, `underline`, `reverse`. `strike`, `blink` and `overline` cascade correctly but have no cell representation yet. |
+| `layer` | Numeric layer for the compositor's layered composite. |
 
-Other Textual properties parse cleanly but are intentionally ignored at
-paint time — see the corpus tests for the full list of accepted-but-not-
-applied keywords.
+The remaining properties below parse and cascade, but **nothing routes
+their computed values into layout** — the layout modules take their
+inputs from widget arguments, not from a `Stylesheet`:
+
+| Property | Status |
+| --- | --- |
+| `width`, `height` | Parsed + cascaded. Not read by `layout/`. |
+| `padding`, `margin` | Parsed + cascaded. Not read by `layout/`. |
+| `border` | Parsed + cascaded. Widgets take a `BorderStyle` argument instead. |
+| `align` | Parsed + cascaded. Not read by `layout/`. |
+| `display`, `visibility` | Parsed + cascaded. Not read by the compositor's visibility check. |
+| `dock` | Parsed + cascaded. `layout/dock.nim` is driven directly, not from CSS. |
+
+Wiring those into layout is the natural follow-on to the style engine
+and is not done. Until then, treat the second table as "the grammar is
+there" rather than "the property works".
+
+Other Textual properties parse cleanly but are intentionally ignored —
+see the corpus tests for the full list of accepted-but-not-applied
+keywords.
 
 ## Tailwind compatibility shim
 

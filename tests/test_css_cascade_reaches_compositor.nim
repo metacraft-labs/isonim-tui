@@ -239,8 +239,8 @@ suite "M6: runtime theme switch repaints":
     let h = newTerminalTestHarness(20, 4)
     h.mountButton(disabled = false)
     h.addCss("""
-      @dark  { Button { color: #ff0000; } }
-      @light { Button { color: #00ff00; } }
+      @dark  Button { color: #ff0000; }
+      @light Button { color: #00ff00; }
     """)
     check h.cellAt(labelRow, labelCol).fg.r == 0xFFu8
     check h.setTheme("textual-light")

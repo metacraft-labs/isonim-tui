@@ -43,6 +43,25 @@
 ## immediately without touching a single node. An app that never calls
 ## `addCss` paints exactly the bytes it painted before this module
 ## existed.
+##
+## Not wired: `css/cache.nim`
+## --------------------------
+## `StylesCache` is deliberately *not* used here, and that is a
+## correctness call rather than an oversight:
+##
+##   * its `lookup` computes through `computeStyles`, the theme-agnostic
+##     cascade. A `$primary` colour would come back as an unresolved
+##     `cckVarRef` and be dropped by the lowering below, so caching
+##     would silently disable theme tokens.
+##   * its key is `(nodeId, stylesheetRevision, pseudo)`. Widgets mutate
+##     `class` and other matched attributes at runtime without touching
+##     the stylesheet revision (`ButtonWidget.setLabel` and friends), so
+##     an entry can go stale in a way the key cannot see.
+##
+## Caching this pass wants a themed `lookup` and a key that covers the
+## attributes the matcher reads. Until then a full re-cascade per flush
+## is the honest behaviour, and it costs nothing for the apps that
+## register no CSS.
 
 import std/[strutils, tables]
 
