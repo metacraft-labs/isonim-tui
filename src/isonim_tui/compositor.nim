@@ -194,6 +194,29 @@ proc parseColorOrDefault(s: string): Color =
       return rgbColor(uint8(r), uint8(g), uint8(b))
     except CatchableError:
       return defaultColor()
+  # ``indexed:N`` — the xterm 256-colour palette, emitted by ``ckIndexed`` as
+  # ``\x1b[38;5;Nm`` (``ansi.fgParams``).
+  #
+  # WHY THIS SPELLING EXISTS. ``ckIndexed`` has always been encodable and was
+  # not *expressible*: the inline-style table accepted ``default``, the sixteen
+  # ANSI names and ``#RRGGBB``, so a caller with a 256-colour terminal had to
+  # choose between the sixteen names (throwing the palette away) and truecolor
+  # SGR (which a 256-only terminal does not understand). CodeTracer's TUI
+  # degrades truecolor -> 256 -> 16 -> monochrome, and without this the middle
+  # rung of that ladder could not differ from the one below it.
+  #
+  # Additive by construction: every string reaching this point previously fell
+  # through to ``namedColor``, which answers ``defaultColor()`` for anything it
+  # does not recognise — and ``indexed:`` is not an ANSI palette name.
+  const indexedPrefix = "indexed:"
+  if s.len > indexedPrefix.len and s.startsWith(indexedPrefix):
+    try:
+      let idx = parseInt(s[indexedPrefix.len .. ^1])
+      if idx >= 0 and idx <= 255:
+        return indexedColor(uint8(idx))
+      return defaultColor()
+    except CatchableError:
+      return defaultColor()
   return namedColor(s)
 
 proc layerFromStyle(node: TerminalNode; parentLayer: int): int =
