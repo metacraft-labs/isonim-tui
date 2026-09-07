@@ -53,7 +53,7 @@ const
   VariationSelector15* = 0xFE0E   ## Text presentation selector
   VariationSelector16* = 0xFE0F   ## Emoji presentation selector
 
-proc isZeroWidth(cp: int32): bool {.inline.} =
+func isZeroWidth(cp: int32): bool {.inline.} =
   ## Combining marks, ZWJ, ZWNJ, variation selectors, control formats, etc.
   ## Anything that contributes 0 cells on its own.
   if cp == 0: return true
@@ -68,19 +68,36 @@ proc isZeroWidth(cp: int32): bool {.inline.} =
   if gb == gbT: return true
   return false
 
-proc displayWidth*(r: Rune): int =
-  ## Number of terminal cells a single rune occupies, *out of context*
-  ## (i.e. without considering surrounding combining marks or ZWJ
-  ## sequences). For full-fidelity width of a string, use
-  ## `displayWidth(string)` which iterates by grapheme cluster.
+func displayWidth*(r: Rune; ambiguous: AmbiguousWidth): int =
+  ## Number of terminal cells a single rune occupies under an EXPLICIT
+  ## ambiguous-width policy.
+  ##
+  ## THE `func` OVERLOADS EXIST SO A CALLER CAN BE PURE. The threadvar-reading
+  ## spellings below are unchanged and remain the ergonomic default; these are
+  ## for callers whose own signature promises `{.noSideEffect.}` and therefore
+  ## cannot read a mutable global — CodeTracer's value-presentation pipeline
+  ## (PLAT-2) is the first, and its requirement is not stylistic: a rendering
+  ## whose CELL WIDTH depends on a thread-local set elsewhere is not
+  ## byte-identical across runs, which is the property its snapshot testing and
+  ## cross-tier equivalence rest on. Passing the policy makes width a function
+  ## of its inputs again.
   let cp = int32(r)
   if isZeroWidth(cp): return 0
   case eawClass(cp)
   of eawWide: return 2
   of eawAmbiguous:
-    return (if ambiguousWidth == awWide: 2 else: 1)
+    return (if ambiguous == awWide: 2 else: 1)
   of eawHalf, eawNarrow:
     return 1
+
+proc displayWidth*(r: Rune): int =
+  ## Number of terminal cells a single rune occupies, *out of context*
+  ## (i.e. without considering surrounding combining marks or ZWJ
+  ## sequences). For full-fidelity width of a string, use
+  ## `displayWidth(string)` which iterates by grapheme cluster.
+  ##
+  ## Uses the thread-local policy. See the `func` overload above.
+  displayWidth(r, ambiguousWidth)
 
 # ----------------------------------------------------------------------------
 # Grapheme cluster iterator (UAX #29, Unicode 16)
@@ -228,7 +245,7 @@ iterator graphemeClusters*(runes: openArray[int32]):
 # Display width of a string — grapheme-cluster-aware
 # ----------------------------------------------------------------------------
 
-proc clusterDisplayWidth*(cluster: string): int =
+func clusterDisplayWidth*(cluster: string; ambiguous: AmbiguousWidth): int =
   ## Width of a single grapheme cluster. The cluster's first
   ## Extended_Pictographic / wide-base rune sets the width; combining
   ## marks and ZWJ inside contribute 0; an emoji-presentation variation
@@ -246,7 +263,7 @@ proc clusterDisplayWidth*(cluster: string): int =
   for r in runes(cluster):
     let cp = int32(r)
     if first:
-      width = displayWidth(r)
+      width = displayWidth(r, ambiguous)
       basePictographic = isExtendedPictographic(cp)
       baseExtendedPictographic = basePictographic
       baseRegionalIndicator =
@@ -275,13 +292,23 @@ proc clusterDisplayWidth*(cluster: string): int =
   discard hasVs15
   return width
 
-proc displayWidth*(s: string): int =
-  ## Total cell width of a string. Iterates by grapheme cluster so ZWJ
-  ## families count as one wide glyph (width 2), not as the sum of
-  ## codepoint widths.
+proc clusterDisplayWidth*(cluster: string): int =
+  ## Width of one grapheme cluster under the thread-local ambiguous-width
+  ## policy. See the `func` overload above.
+  clusterDisplayWidth(cluster, ambiguousWidth)
+
+func displayWidth*(s: string; ambiguous: AmbiguousWidth): int =
+  ## Total cell width of a string under an EXPLICIT ambiguous-width policy.
+  ## Iterates by grapheme cluster so ZWJ families count as one wide glyph
+  ## (width 2), not as the sum of codepoint widths.
   result = 0
   for c in graphemeClusters(s):
-    result += clusterDisplayWidth(c.text)
+    result += clusterDisplayWidth(c.text, ambiguous)
+
+proc displayWidth*(s: string): int =
+  ## Total cell width of a string under the thread-local ambiguous-width
+  ## policy. See the `func` overload above.
+  displayWidth(s, ambiguousWidth)
 
 proc graphemeClusterCount*(s: string): int =
   ## Number of grapheme clusters in the string.
