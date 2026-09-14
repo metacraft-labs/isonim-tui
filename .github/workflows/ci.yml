@@ -24,7 +24,7 @@ on:
 
 jobs:
   lint:
-    name: Lint (${{ matrix.runner }})
+    name: Lint (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
@@ -56,12 +56,12 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lint-logs-${{ matrix.runner }}
+          name: lint-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   test:
-    name: Test (orc/release/threads:on) (${{ matrix.runner }})
+    name: Test (orc/release/threads:on) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
@@ -93,12 +93,12 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-logs-${{ matrix.runner }}
+          name: test-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   test-real-terminal:
-    name: Test (real terminal — M29) (${{ matrix.runner }})
+    name: Test (real terminal — M29) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
@@ -130,12 +130,12 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: real-terminal-logs-${{ matrix.runner }}
+          name: real-terminal-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   cross-emulator:
-    name: Test (cross-emulator — M29 follow-up) (${{ matrix.runner }})
+    name: Test (cross-emulator — M29 follow-up) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
@@ -167,12 +167,12 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cross-emulator-logs-${{ matrix.runner }}
+          name: cross-emulator-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   charter-matrix:
-    name: Charter (${{ matrix.mm }}/${{ matrix.mode }}/threads:${{ matrix.threads }}) (${{ matrix.runner }})
+    name: Charter (${{ matrix.mm }}/${{ matrix.mode }}/threads:${{ matrix.threads }}) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
@@ -207,7 +207,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: charter-${{ matrix.mm }}-${{ matrix.mode }}-${{ matrix.threads }}-${{ matrix.runner }}-logs
+          name: charter-${{ matrix.mm }}-${{ matrix.mode }}-${{ matrix.threads }}-${{ join(matrix.runner, '-') }}-logs
           path: test-logs/
           retention-days: 30
 
@@ -321,7 +321,7 @@ jobs:
   # Windows-side regressions early without waiting on the (slower)
   # Windows runner. Mirrors nim-termctl's check-windows-cross lane.
   check-windows-cross:
-    name: Check (Windows cross from Linux) (${{ matrix.runner }})
+    name: Check (Windows cross from Linux) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
@@ -353,12 +353,12 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: check-windows-cross-logs-${{ matrix.runner }}
+          name: check-windows-cross-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   test-windows:
-    name: Test (Windows) (${{ matrix.runner }})
+    name: Test (Windows) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
@@ -377,12 +377,12 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-test-logs-${{ matrix.runner }}
+          name: windows-test-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   nix-build:
-    name: nix build (${{ matrix.runner }})
+    name: nix build (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
