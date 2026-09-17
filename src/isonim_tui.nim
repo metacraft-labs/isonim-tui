@@ -115,6 +115,12 @@ import isonim_tui/command/palette as paletteMod
 import isonim_tui/syntax/treesitter_ffi as tsFfi
 import isonim_tui/syntax/highlighter as tsHighlighter
 
+# NH-M1 surface — the reactive root entry point (`renderTui`). Lives in its
+# own module so consumers that only need the mount seam can import
+# `isonim_tui/reactive_root` without dragging in the tree-sitter grammar
+# archive this aggregate module links.
+import isonim_tui/reactive_root as reactiveRootMod
+
 export cells, events, renderer
 export width, ansi, content
 export driver, headless_driver, compositor
@@ -138,3 +144,4 @@ export focusManagerMod
 export workerMod, workerManagerMod, workerDecoratorMod
 export fuzzyMod, paletteMod
 export tsFfi, tsHighlighter
+export reactiveRootMod
