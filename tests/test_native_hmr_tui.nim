@@ -134,11 +134,27 @@ suite "NH-M2: mountUiHot end-to-end on the TUI renderer":
     # The developer edits the header's ui block. Reprobuild would patch
     # the body and fire the callbacks; the stub fires the same callbacks
     # through the same `rb_hcr_apply_reload` entry point.
-    headerVersion = 2
+    #
+    # The new body is made reachable by the AGENT, at its Phase G step
+    # between the two callback sets — `Patch-Loading-Lifecycle.md` § 3.1.
+    # Writing `headerVersion = 2` here instead would make the new body
+    # reachable at every phase, which is the inverted ordering NH-M2
+    # shipped against; with the swap where it belongs, this case is also
+    # a discriminating one, because a registration pass that ran at
+    # Phase E would read version 1 and paint HEAD1 forever.
+    var headerVersionAtBefore = -1
+    var headerVersionAtAfter = -1
+    root.onBeforeReload = proc(info: HmrReloadInfo) =
+      headerVersionAtBefore = headerVersion
+    root.onAfterReload = proc(info: HmrReloadInfo) =
+      headerVersionAtAfter = headerVersion
     stub.queuePatch(HcrStubPatch(changedFiles: @["tui_demo.nim"],
-                                 changedTypes: @[]))
+                                 changedTypes: @[],
+                                 applyCodeSwap: proc() = headerVersion = 2))
     check rbHcrWantsReload()
     rbHcrApplyReload()
+    check headerVersionAtBefore == 1    # Phase E saw the OLD body
+    check headerVersionAtAfter == 2     # Phase H saw the NEW body
 
     let secondFrame = screenText()
     # The screen buffer changed …
@@ -192,9 +208,9 @@ suite "NH-M2: mountUiHot end-to-end on the TUI renderer":
     let rootNodeBefore = h.root
     let headerBuildsBefore = headerBuilds
 
-    headerVersion = 2
     stub.queuePatch(HcrStubPatch(changedFiles: @["tui_demo.nim"],
-                                 changedTypes: @[]))
+                                 changedTypes: @[],
+                                 applyCodeSwap: proc() = headerVersion = 2))
     rbHcrApplyReload()
 
     # The reload really was attempted …
@@ -209,6 +225,68 @@ suite "NH-M2: mountUiHot end-to-end on the TUI renderer":
     check h.root == rootNodeBefore
     check headerBuilds == headerBuildsBefore
     check contains(screenText(), "HEAD1-0")
+
+    mount.dispose()
+    root.stop()
+    stub.uninstall()
+    h.dispose()
+
+  test "test_native_hmr_tui_late_load_failure_leaves_the_painted_screen_intact":
+    # `Patch-Loading-Lifecycle.md` § 3.3 step 38: `dlopen` fails in
+    # Phase F, AFTER before-reload has already fired, so the agent must
+    # still call after-reload — with zero `changed_types` — so the
+    # application can restore. IsoNim's after-reload therefore runs its
+    # registration pass against bodies that were never replaced.
+    #
+    # Measured on the painted cell grid, which is the strongest available
+    # form of "never blank the surface": the whole ScreenBuffer must be
+    # byte-identical.
+    h = newTerminalTestHarness(40, 8)
+    headerVersion = 1
+    bodyVersion = 1
+    headerBuilds = 0
+    bodyBuilds = 0
+    let stub = installHcrStub()
+    var errors: seq[string] = @[]
+    let root = newHmrRoot(demoEntry,
+                          proc(loc: string; err: ref Exception) =
+                            errors.add(err.msg))
+    root.start()
+    let mount = mountUiHot(proc(): TerminalNode = demoRoot(),
+                           NativeRootMount[TerminalNode](proc(n: TerminalNode) =
+                             h.mountTree(n)))
+    let goodFrame = screenText()
+    check contains(goodFrame, "HEAD1-0")
+    let rootNodeBefore = h.root
+    let rendersBefore = mount.handle.renders
+    let headerBuildsBefore = headerBuilds
+
+    var afterSawTypes = -1
+    root.onAfterReload = proc(info: HmrReloadInfo) =
+      afterSawTypes = info.changedTypes.len
+
+    stub.queuePatch(HcrStubPatch(
+      changedFiles: @["tui_demo.nim"],
+      changedTypes: @[HcrStubTypeChange(typeName: "isonim.UiSlot",
+                                        oldSize: 16, newSize: 24)],
+      applyCodeSwap: proc() = headerVersion = 2,
+      loadFails: true,
+      loadDiagnostic: "undefined symbol: nimUiBlockHeader"))
+    rbHcrApplyReload()
+
+    check stub.lastOutcome.rejection == hsrLoadFailed
+    check not stub.lastOutcome.codeSwapped
+    check root.beforeReloads == 1
+    check root.afterReloads == 1          # step 38: after STILL fires
+    check afterSawTypes == 0              # …with zero changed_types
+    # Nothing moved: identical painted grid, same mounted root object,
+    # no extra body evaluation, no render.
+    check screenText() == goodFrame
+    check h.root == rootNodeBefore
+    check headerBuilds == headerBuildsBefore
+    check mount.handle.renders == rendersBefore
+    check not mount.isDisposed()
+    check errors.len == 0
 
     mount.dispose()
     root.stop()
