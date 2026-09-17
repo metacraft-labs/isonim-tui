@@ -56,6 +56,12 @@ import isonim_tui/css/css as cssEngine
 # M6 surface — theming (Color, ColorSystem, Theme, runtime switching)
 import isonim_tui/theme as themeEngine
 
+# M5/M6 delivery surface — the style engine that materialises cascade
+# output into the inline style table the compositor paints from. Without
+# it the whole TCSS engine above is computable but unreachable: nothing
+# on a painting path ever called it.
+import isonim_tui/style_engine as styleEngineMod
+
 # M7 surface — animation engine (easing curves, animator, scalar/colour blends)
 import isonim_tui/animation/easing as animEasing
 import isonim_tui/animation/animator as animAnimator
@@ -120,6 +126,7 @@ export terminal_layout, vertical, horizontal, grid, stream, dock, arrange
 export inputParser, inputKeymap
 export cssEngine
 export themeEngine
+export styleEngineMod
 export animEasing, animAnimator, animScalar
 when not defined(windows):
   export posixDriverMod

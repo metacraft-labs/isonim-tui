@@ -3,6 +3,14 @@
 ## M6: switching themes at runtime invalidates the per-widget styles
 ## cache and triggers a fresh cascade. The next computed style for any
 ## widget that depends on a theme variable picks up the new colour.
+##
+## Scope: this file tests the *cascade* level only. It calls
+## `computeStylesThemed` directly and never mounts a harness or reads a
+## cell, so on its own it cannot distinguish "the cascade recomputes"
+## from "the recomputed value reaches the screen" — and for a long time
+## only the former was true. The painted-cell half lives in
+## `tests/test_css_cascade_reaches_compositor.nim`, which mounts a
+## harness, calls `h.setTheme`, and asserts `h.cellAt` changed.
 
 import unittest
 import isonim_tui

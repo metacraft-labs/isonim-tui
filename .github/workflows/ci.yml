@@ -24,11 +24,11 @@ on:
 
 jobs:
   lint:
-    name: Lint (${{ matrix.runner }})
+    name: Lint (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
-        runner: [eph-linux-x64, eph-linux-arm64, eph-macos-arm64]
+        runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -56,16 +56,16 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lint-logs-${{ matrix.runner }}
+          name: lint-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   test:
-    name: Test (orc/release/threads:on) (${{ matrix.runner }})
+    name: Test (orc/release/threads:on) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
-        runner: [eph-linux-x64, eph-linux-arm64, eph-macos-arm64]
+        runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -93,16 +93,16 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-logs-${{ matrix.runner }}
+          name: test-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   test-real-terminal:
-    name: Test (real terminal — M29) (${{ matrix.runner }})
+    name: Test (real terminal — M29) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
-        runner: [eph-linux-x64, eph-linux-arm64, eph-macos-arm64]
+        runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -130,16 +130,16 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: real-terminal-logs-${{ matrix.runner }}
+          name: real-terminal-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   cross-emulator:
-    name: Test (cross-emulator — M29 follow-up) (${{ matrix.runner }})
+    name: Test (cross-emulator — M29 follow-up) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
-        runner: [eph-linux-x64, eph-linux-arm64, eph-macos-arm64]
+        runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -167,16 +167,16 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cross-emulator-logs-${{ matrix.runner }}
+          name: cross-emulator-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   charter-matrix:
-    name: Charter (${{ matrix.mm }}/${{ matrix.mode }}/threads:${{ matrix.threads }}) (${{ matrix.runner }})
+    name: Charter (${{ matrix.mm }}/${{ matrix.mode }}/threads:${{ matrix.threads }}) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
-        runner: [eph-linux-x64, eph-linux-arm64, eph-macos-arm64]
+        runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
         mm: [arc, orc, refc]
         mode: [debug, release, danger]
         threads: [on, off]
@@ -207,14 +207,14 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: charter-${{ matrix.mm }}-${{ matrix.mode }}-${{ matrix.threads }}-${{ matrix.runner }}-logs
+          name: charter-${{ matrix.mm }}-${{ matrix.mode }}-${{ matrix.threads }}-${{ join(matrix.runner, '-') }}-logs
           path: test-logs/
           retention-days: 30
 
   sanitizers:
     name: Sanitizer (${{ matrix.kind }})
     # Linux-only (clang sanitizers); mapped to the Linux AMD64 Nix class.
-    runs-on: eph-linux-x64
+    runs-on: [self-hosted, linux, x64]
     strategy:
       fail-fast: false
       matrix:
@@ -252,7 +252,7 @@ jobs:
   valgrind:
     name: Valgrind
     # Linux-only (valgrind); mapped to the Linux AMD64 Nix class.
-    runs-on: eph-linux-x64
+    runs-on: [self-hosted, linux, x64]
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -285,7 +285,7 @@ jobs:
 
   test-macos:
     name: Test (macOS)
-    runs-on: eph-macos-arm64
+    runs-on: [self-hosted, macos, arm64]
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -321,11 +321,11 @@ jobs:
   # Windows-side regressions early without waiting on the (slower)
   # Windows runner. Mirrors nim-termctl's check-windows-cross lane.
   check-windows-cross:
-    name: Check (Windows cross from Linux) (${{ matrix.runner }})
+    name: Check (Windows cross from Linux) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
-        runner: [eph-linux-x64, eph-linux-arm64, eph-macos-arm64]
+        runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -353,16 +353,16 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: check-windows-cross-logs-${{ matrix.runner }}
+          name: check-windows-cross-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   test-windows:
-    name: Test (Windows) (${{ matrix.runner }})
+    name: Test (Windows) (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
-        runner: [eph-win-x64, eph-win-arm64]
+        runner: [[self-hosted, windows, x64], [self-hosted, windows, arm64]]
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -377,16 +377,16 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-test-logs-${{ matrix.runner }}
+          name: windows-test-logs-${{ join(matrix.runner, '-') }}
           path: test-logs/
           retention-days: 30
 
   nix-build:
-    name: nix build (${{ matrix.runner }})
+    name: nix build (${{ join(matrix.runner, '-') }})
     strategy:
       fail-fast: false
       matrix:
-        runner: [eph-linux-x64, eph-linux-arm64, eph-macos-arm64]
+        runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
