@@ -128,8 +128,22 @@ build: grammars
           -o:test-logs/$(basename $t .nim) $t 2>&1 | tee -a test-logs/build.log; \
     done
 
-# Test: run the default matrix point (orc + release + threads:on).
-test: test-orc
+# Test: run the default matrix point (orc + release + threads:on),
+# then the NH-M2 hot-module-reload lane (which needs its own -d flag).
+test: test-orc test-hmr
+
+# NH-M2 — native hot module reload, end-to-end on this renderer.
+#
+# A separate recipe rather than an entry in `tests` because the suite
+# requires `-d:isonimHmr`: without the flag `isonim/native/hmr` has no
+# registry and no agent callbacks, and the file refuses to compile rather
+# than passing vacuously. Run under the same mm/mode/threads as the
+# default matrix point.
+test-hmr: grammars
+    @mkdir -p test-logs
+    nim c {{nim-flags}} {{src-paths}} --mm:orc -d:release --threads:on \
+        -d:isonimHmr -r tests/test_native_hmr_tui.nim 2>&1 | \
+        tee test-logs/hmr.log
 
 # Sub-recipes (verb-noun pattern). Required by §3 of repo-requirements.
 test-unit: test-orc
