@@ -144,6 +144,13 @@ test-hmr: grammars
     nim c {{nim-flags}} {{src-paths}} --mm:orc -d:release --threads:on \
         -d:isonimHmr -r tests/test_native_hmr_tui.nim 2>&1 | \
         tee test-logs/hmr.log
+    # NH-M3: the TUI reconciler instance and its identity gate. Same
+    # flag, same reason — without `-d:isonimHmr` there is no registry,
+    # so the "reload" the gate drives would not happen and every
+    # assertion would be about a tree that was never rebuilt.
+    nim c {{nim-flags}} {{src-paths}} --mm:orc -d:release --threads:on \
+        -d:isonimHmr -r tests/test_tui_reconciler_identity.nim 2>&1 | \
+        tee -a test-logs/hmr.log
 
 # Sub-recipes (verb-noun pattern). Required by §3 of repo-requirements.
 test-unit: test-orc
