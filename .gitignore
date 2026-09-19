@@ -40,3 +40,9 @@ tests/snapshots/_report.html
 # Built by the `grammars` recipe: the two tree-sitter grammars archived
 # into one static library that treesitter_ffi.nim links.
 build/grammars/
+
+# Built by `just test-real-agent-hmr` (NH-M4): the HCR agent libraries, the
+# coordinator, the patchable target binaries, the recompiled patch objects and
+# each arm's logs. All disposable; all rebuilt by the recipe.
+build/nhm4-real-agent/
+build/nimcache/

@@ -152,6 +152,30 @@ test-hmr: grammars
         -d:isonimHmr -r tests/test_tui_reconciler_identity.nim 2>&1 | \
         tee -a test-logs/hmr.log
 
+# NH-M4 — the same renderer against the REAL Reprobuild HCR agent.
+#
+# OPT-IN, and deliberately not part of `test`. It is the only recipe in
+# this repo that reaches outside the checkout: it builds
+# `librepro_hcr_agent.so` and the `hcr_patch_driver` coordinator from the
+# sibling `../reprobuild`, recompiles an edited fixture with `nim`, and
+# drives real patches over a real agent Unix socket. That is a genuine
+# external toolchain dependency, so it gets its own entry point rather
+# than turning the default matrix point red on a machine that has no
+# reprobuild checkout.
+#
+# It does NOT skip when the prerequisite is missing — it fails with the
+# remedy. `linux-x86_64` only, and the source refuses to compile
+# elsewhere rather than compiling to a `skip()` that exits 0.
+#
+# Runtime on a warm cache is dominated by the six agent/target builds,
+# not by the reload cycles themselves; see the per-arm timings the gate
+# prints.
+test-real-agent-hmr: grammars
+    @mkdir -p test-logs
+    nim c {{nim-flags}} {{src-paths}} --mm:orc -d:release --threads:on \
+        -d:isonimHmr -r tests/test_real_agent_tui_hmr_cycle.nim 2>&1 | \
+        tee test-logs/real-agent-hmr.log
+
 # Sub-recipes (verb-noun pattern). Required by §3 of repo-requirements.
 test-unit: test-orc
 

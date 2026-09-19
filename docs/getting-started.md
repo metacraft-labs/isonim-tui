@@ -86,3 +86,5 @@ widget hosting a bundled README.
 - `snapshot-testing.md` — how `TerminalTestHarness` and the six snapshot
   formats fit into your test suite.
 - `debugging.md` — recording, replay, and time-travel introspection.
+- `native-hot-reload.md` — editing a `.nim` file and seeing the running
+  terminal app update in place, through the Reprobuild HCR agent.
