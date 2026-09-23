@@ -180,7 +180,7 @@ proc tokenize*(grammar: GrammarKind; source: string): seq[Token] =
   parser.setLanguage(lang)
   let tree = parser.parseString(source)
   let root = tree.rootNode
-  for leaf in root.walkLeaves:
+  for leaf in root.leafFacts:
     let nt = leaf.nodeType
     let kind = nodeKindFor(grammar, nt)
     if kind == hkPlain: continue

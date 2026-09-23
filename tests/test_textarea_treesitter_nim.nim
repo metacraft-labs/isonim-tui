@@ -6,7 +6,7 @@
 ## links the system `libtree-sitter` runtime. The walk produces real
 ## `Highlight` spans whose byte ranges align with the source text.
 
-import std/strutils
+import std/[strutils, times]
 import unittest
 
 import isonim_tui
@@ -169,3 +169,45 @@ validator foo {
         keywordFound = true
         break
     check keywordFound
+
+suite "leafFacts: the linear, copy-free leaf walk":
+
+  test "leafFacts_yields_exactly_walkLeaves_leaves_in_order":
+    # The same leaves, the same order, the same facts: `leafFacts` is the
+    # cursor walk without the per-node source copy, not a different walk.
+    let src = "proc foo(x: int): int =\n  # a comment\n  result = x * 2 + 1\n" &
+              "let s = \"text\"\n"
+    let parser = newParser()
+    parser.setLanguage(nimLanguage())
+    let tree = parser.parseString(src)
+    var viaNodes: seq[(string, bool, int, int)] = @[]
+    for leaf in tree.rootNode.walkLeaves:
+      viaNodes.add (leaf.nodeType, leaf.isNamed, leaf.startByte, leaf.endByte)
+    var viaFacts: seq[(string, bool, int, int)] = @[]
+    for f in tree.rootNode.leafFacts:
+      viaFacts.add (f.nodeType, f.isNamed, f.startByte, f.endByte)
+    check viaFacts.len > 10
+    check viaFacts == viaNodes
+    # Source order: every leaf starts at or after the previous one's start.
+    for i in 1 ..< viaFacts.len:
+      check viaFacts[i][2] >= viaFacts[i - 1][2]
+
+  test "leafFacts_walks_a_large_file_in_linear_time":
+    # 20,000 top-level procs: one statement list with 20,000 children, the
+    # shape that made index-based child access quadratic and the per-node
+    # source copy cost the file's size per node. Bounded generously — the
+    # old walk took tens of seconds on a file this size.
+    var src = ""
+    for i in 0 ..< 20_000:
+      src.add "proc f" & $i & "(x: int): int = x + " & $i & "\n"
+    let parser = newParser()
+    parser.setLanguage(nimLanguage())
+    let tree = parser.parseString(src)
+    let t0 = epochTime()
+    var leaves = 0
+    for f in tree.rootNode.leafFacts:
+      inc leaves
+    let took = epochTime() - t0
+    checkpoint("leaves: " & $leaves & " in " & $took & " s")
+    check leaves > 20_000 * 8
+    check took < 5.0
