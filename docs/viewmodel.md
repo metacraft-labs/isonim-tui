@@ -33,7 +33,7 @@ signals, GUI-agnostic core, and the SSR story):
 
 The cross-platform architecture spec lives in:
 
-- `metacraft/codetracer-specs/Front-Ends/IsoNim/isonim-cross-platform-architecture.md`
+- `metacraft/isonim-specs/isonim-cross-platform-architecture.md`
 
 ## Reactive primitives
 

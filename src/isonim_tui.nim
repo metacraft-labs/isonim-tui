@@ -5,7 +5,7 @@
 ## driver / compositor / TerminalTestHarness / pilot / introspection
 ## API and the six snapshot encoders.
 ##
-## See `Front-Ends/IsoNim/isonim-tui.milestones.org` in `codetracer-specs`
+## See `isonim-specs/isonim-tui.milestones.org` in `codetracer-specs`
 ## for the full multi-milestone plan.
 
 import isonim_tui/cells

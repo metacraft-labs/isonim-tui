@@ -25,7 +25,7 @@ landing across milestones M0-M27.
 
 Drivers (POSIX / Windows), compositor, layout, CSS engine, animation,
 widgets — every later milestone builds on the M0 surface. See
-`Front-Ends/IsoNim/isonim-tui.milestones.org` in `codetracer-specs`
+`isonim-specs/isonim-tui.milestones.org` in `codetracer-specs`
 for the full plan.
 
 ## Commands
@@ -124,7 +124,7 @@ isonim_tui.nimble                        # single-source-of-truth version
 The authoritative specifications for this library live in the
 `codetracer-specs` repo:
 
-- `Front-Ends/IsoNim/isonim-tui.milestones.org` — the full milestone
+- `isonim-specs/isonim-tui.milestones.org` — the full milestone
   plan (M0 through M29) and the "Memory-safety + testing-rigor
   charter".
 - `metacraft-specs/policies/repo-requirements.md` — repo-level
