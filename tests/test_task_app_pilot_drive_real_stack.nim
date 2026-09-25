@@ -9,8 +9,10 @@
 ##
 ## Final assertion: the VM snapshot matches the expected sequence of
 ## actions byte-for-byte.
+## FakeDb is the demo's own backing service. We drive the real platform event
+## loop, input parser and renderer; no clock or rendering layer is mocked.
 
-import unittest
+import std/[unittest, tables]
 import isonim_tui
 
 # EX-M2: the task-app composition roots and leaves now live in
@@ -18,12 +20,14 @@ import isonim_tui
 # `--path:../isonim-examples` switch in `isonim-tui/Justfile` +
 # `config.nims` resolves the import below.
 import task_app/main_tui
+import task_app_async_support
 
 suite "M22: pilot drives the real task-app stack":
   test "test_task_app_pilot_drive_real_stack":
     let vm = newTaskAppVM()
     let h = newTerminalTestHarness(48, 12)
     discard runTaskApp(h, vm)
+    vm.settleTaskApp()
 
     let p = newPilot(h)
     let s = leavesFor(vm)
@@ -34,6 +38,7 @@ suite "M22: pilot drives the real task-app stack":
     check s.inputWidget.value == "Buy milk"
     check vm.totalCount == 0
     p.press("enter")
+    vm.settleTaskApp()
     # Submission should have added the task and cleared the input.
     check vm.totalCount == 1
     check vm.tasks.val[0].name == "Buy milk"
@@ -43,6 +48,7 @@ suite "M22: pilot drives the real task-app stack":
     # ── 2. Type and submit a second task to give us state to filter.
     p.typeText("Write specs")
     p.press("enter")
+    vm.settleTaskApp()
     check vm.totalCount == 2
     check vm.tasks.val[1].name == "Write specs"
 
@@ -64,6 +70,7 @@ suite "M22: pilot drives the real task-app stack":
     # isonim-examples/tests/test_tui_leaves_end_to_end.nim: "there is no
     # per-action `rerender(vm)` call").
     vm.toggleTask(vm.tasks.val[1].id)
+    vm.settleTaskApp()
     h.flush()
     check vm.activeCount == 1
     check vm.completedCount == 1
@@ -78,7 +85,7 @@ suite "M22: pilot drives the real task-app stack":
     p.press("tab")              # → filter "Active"
     let active = h.focusedNode
     check active != nil
-    check active.id == s.filterButtons[1].node.id
+    check active.attributes.getOrDefault("data-filter-value") == "active"
 
     # ── 5. Activate the focused radio button via Space (the
     #       RadioButton widget treats Space and Enter as activation

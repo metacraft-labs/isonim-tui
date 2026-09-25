@@ -6,6 +6,9 @@
 ## VM through its `MockRenderer` leaves. (A full Playwright run lives
 ## downstream once `isonim-website/` consumes this example.)
 ##
+## MockRenderer isolates the web composition contract without a browser; the
+## shared VM, reactive graph and production demo service run unchanged.
+##
 ## What this guards against:
 ##   - Layer-3 vm.nim accidentally taking a TUI dependency.
 ##   - Layer-2 views.nim diverging in a way that compiles under TUI
@@ -23,12 +26,14 @@ import isonim/core/signals
 # `--path:../isonim-examples` switch in `isonim-tui/Justfile` +
 # `config.nims` resolves the import below.
 import task_app/main_web
+import ./task_app_async_support
 
 suite "M22: web composition root drives the same VM":
   test "test_task_app_web_target_compiles":
     let vm = newTaskAppVM()
     let r = MockRenderer()
     let root = buildTaskApp(r, vm)
+    settleTaskApp(vm)
     check root != nil
     check root.tag == "div"
     check root.attributes.getOrDefault("class") == "task-app"
@@ -48,12 +53,15 @@ suite "M22: web composition root drives the same VM":
     # isonim-examples/tests/test_tui_leaves_end_to_end.nim: "there is no
     # per-action `rerender(vm)` call").
     vm.addTask("First")
+    settleTaskApp(vm)
     vm.addTask("Second")
-    check vm.totalCount == 2
+    settleTaskApp(vm)
+    require vm.totalCount == 2
 
     # Toggle the first task and check the visible list reflects it.
     let firstId = vm.tasks.val[0].id
     vm.toggleTask(firstId)
+    settleTaskApp(vm)
     check vm.completedCount == 1
 
     # Filter to active and verify the projection.
@@ -70,6 +78,7 @@ suite "M22: web composition root drives the same VM":
 
     # Clearing completed empties the completed view.
     vm.clearCompleted()
+    settleTaskApp(vm)
     check vm.totalCount == 1
     check vm.visibleTasks.len == 0  # filter is still Completed
 

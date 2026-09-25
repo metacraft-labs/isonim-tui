@@ -13,7 +13,8 @@
 ##   5. m22_task_app_filter_completed       — same VM, filter=Completed
 ##
 ## All snapshots go through the real harness → real compositor → real
-## headless driver pipeline. No mocks, no rendering shortcuts.
+## headless driver pipeline. FakeDb is the demo's own backing service; the
+## platform event loop and renderer are real, with no mocked clock.
 
 import unittest
 import isonim_tui
@@ -23,16 +24,21 @@ import isonim_tui
 # `--path:../isonim-examples` switch in `isonim-tui/Justfile` +
 # `config.nims` resolves the import below.
 import task_app/main_tui
+import task_app_async_support
 
 suite "M22: task-app TUI snapshot coverage":
   test "test_task_app_tui_snapshot_five_states":
     let vm = newTaskAppVM()
-    let h = newTerminalTestHarness(48, 12)
+    # The shared demo now has an 80-column frame. Include its right border
+    # and the complete three-task state instead of recording a clipped tree.
+    let h = newTerminalTestHarness(100, 14)
     discard runTaskApp(h, vm)
+    defer: h.dispose()
+    vm.settleTaskApp()
 
     # State 1: empty.
     h.flush()
-    discard h.snap("m22_task_app_empty")
+    check h.snap("m22_task_app_empty")
 
     # State 2: three tasks.
     # EX-M16 (isonim-examples@0ea4c03) replaced the imperative
@@ -47,25 +53,29 @@ suite "M22: task-app TUI snapshot coverage":
     # isonim-examples/tests/test_tui_leaves_end_to_end.nim: "there is no
     # per-action `rerender(vm)` call").
     vm.addTask("Buy milk")
+    vm.settleTaskApp()
     vm.addTask("Write specs")
+    vm.settleTaskApp()
     vm.addTask("Review PR")
+    vm.settleTaskApp()
     h.flush()
-    discard h.snap("m22_task_app_three_tasks")
-    check vm.totalCount == 3
+    check h.snap("m22_task_app_three_tasks")
+    require vm.totalCount == 3
     check vm.activeCount == 3
 
     # State 3: complete the first task.
     let firstId = vm.tasks.val[0].id
     vm.toggleTask(firstId)
+    vm.settleTaskApp()
     h.flush()
-    discard h.snap("m22_task_app_one_completed")
+    check h.snap("m22_task_app_one_completed")
     check vm.activeCount == 2
     check vm.completedCount == 1
 
     # State 4: filter to Active — first task hidden.
     vm.setFilter(fmActive)
     h.flush()
-    discard h.snap("m22_task_app_filter_active")
+    check h.snap("m22_task_app_filter_active")
     check vm.visibleTasks.len == 2
     for t in vm.visibleTasks:
       check not t.completed
@@ -73,8 +83,6 @@ suite "M22: task-app TUI snapshot coverage":
     # State 5: filter to Completed — only first task visible.
     vm.setFilter(fmCompleted)
     h.flush()
-    discard h.snap("m22_task_app_filter_completed")
+    check h.snap("m22_task_app_filter_completed")
     check vm.visibleTasks.len == 1
     check vm.visibleTasks[0].completed
-
-    h.dispose()

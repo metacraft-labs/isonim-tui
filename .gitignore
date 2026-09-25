@@ -46,3 +46,6 @@ build/grammars/
 # each arm's logs. All disposable; all rebuilt by the recipe.
 build/nhm4-real-agent/
 build/nimcache/
+
+# Repro development environment cache
+.repro/
