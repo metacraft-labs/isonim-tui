@@ -1,7 +1,7 @@
 ## NH-M1 verification: test_render_native_tui_reactive
 ##
 ## Claim under test (from
-## `codetracer-specs/Front-Ends/IsoNim/Hot-Module-Reload-Native.milestones.org`,
+## `isonim-specs/Hot-Module-Reload-Native.milestones.org`,
 ## NH-M1): "`renderTui` wraps the root in a render-effect; mutating a signal in
 ## the root proc fires the effect and produces a new screen buffer."
 ##

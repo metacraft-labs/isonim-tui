@@ -7,9 +7,9 @@ re-mounting the tree or losing component state.
 
 This page is about the **native** path. The browser target's HMR is a different
 mechanism with the same user-visible behaviour; see
-`codetracer-specs/Front-Ends/IsoNim/Hot-Module-Reload.md`.
+`isonim-specs/Hot-Module-Reload.md`.
 
-Design: `codetracer-specs/Front-Ends/IsoNim/Hot-Module-Reload-Native.md`.
+Design: `isonim-specs/Hot-Module-Reload-Native.md`.
 Milestones: `Hot-Module-Reload-Native.milestones.org` (NH-M0 … NH-M5).
 The transport's normative ordering: `reprobuild-specs/HCR/Patch-Loading-Lifecycle.md`.
 

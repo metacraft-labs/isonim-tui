@@ -1,7 +1,7 @@
 ## isonim_tui/reactive_root.nim — NH-M1 reactive root entry point for the TUI.
 ##
 ## `renderTui` is the TUI's half of the native mount seam described in
-## `codetracer-specs/Front-Ends/IsoNim/Hot-Module-Reload-Native.milestones.org`
+## `isonim-specs/Hot-Module-Reload-Native.milestones.org`
 ## (NH-M1). It routes the root build through `isonim/renderers/native`'s
 ## `renderNative`, which opens a `createRoot` scope and re-runs the accessor
 ## inside a `createRenderEffect`.
