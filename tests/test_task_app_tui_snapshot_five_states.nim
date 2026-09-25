@@ -17,6 +17,8 @@
 ## platform event loop and renderer are real, with no mocked clock.
 
 import unittest
+import std/[sequtils, strutils]
+import isonim_tui/testing/snapshot/plaintext
 import isonim_tui
 
 # EX-M2: the task-app composition roots and leaves now live in
@@ -38,6 +40,12 @@ suite "M22: task-app TUI snapshot coverage":
 
     # State 1: empty.
     h.flush()
+    check vm.totalCount == 0
+    check vm.visibleTasks.len == 0
+    let emptyScreen = encodePlaintext(h.screenBuffer())
+    check "(no tasks yet)" in emptyScreen
+    check "0 of 0 remaining" in emptyScreen
+    check "<All>" in emptyScreen
     check h.snap("m22_task_app_empty")
 
     # State 2: three tasks.
@@ -59,6 +67,11 @@ suite "M22: task-app TUI snapshot coverage":
     vm.addTask("Review PR")
     vm.settleTaskApp()
     h.flush()
+    check vm.visibleTasks.mapIt(it.name) == @["Buy milk", "Write specs", "Review PR"]
+    let threeScreen = encodePlaintext(h.screenBuffer())
+    for title in ["Buy milk", "Write specs", "Review PR"]:
+      check title in threeScreen
+    check "3 of 3 remaining" in threeScreen
     check h.snap("m22_task_app_three_tasks")
     require vm.totalCount == 3
     check vm.activeCount == 3
@@ -68,6 +81,10 @@ suite "M22: task-app TUI snapshot coverage":
     vm.toggleTask(firstId)
     vm.settleTaskApp()
     h.flush()
+    check vm.tasks.val[0].completed
+    check not vm.tasks.val[1].completed
+    check not vm.tasks.val[2].completed
+    check "2 of 3 remaining" in encodePlaintext(h.screenBuffer())
     check h.snap("m22_task_app_one_completed")
     check vm.activeCount == 2
     check vm.completedCount == 1
@@ -75,6 +92,12 @@ suite "M22: task-app TUI snapshot coverage":
     # State 4: filter to Active — first task hidden.
     vm.setFilter(fmActive)
     h.flush()
+    check vm.visibleTasks.mapIt(it.name) == @["Write specs", "Review PR"]
+    let activeScreen = encodePlaintext(h.screenBuffer())
+    check "Buy milk" notin activeScreen
+    check "Write specs" in activeScreen
+    check "Review PR" in activeScreen
+    check "<Active>" in activeScreen
     check h.snap("m22_task_app_filter_active")
     check vm.visibleTasks.len == 2
     for t in vm.visibleTasks:
@@ -83,6 +106,12 @@ suite "M22: task-app TUI snapshot coverage":
     # State 5: filter to Completed — only first task visible.
     vm.setFilter(fmCompleted)
     h.flush()
+    check vm.visibleTasks.mapIt(it.name) == @["Buy milk"]
+    let completedScreen = encodePlaintext(h.screenBuffer())
+    check "Buy milk" in completedScreen
+    check "Write specs" notin completedScreen
+    check "Review PR" notin completedScreen
+    check "<Completed>" in completedScreen
     check h.snap("m22_task_app_filter_completed")
     check vm.visibleTasks.len == 1
     check vm.visibleTasks[0].completed
