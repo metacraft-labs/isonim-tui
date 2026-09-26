@@ -29,6 +29,7 @@ import widgets/collapsible as collapsibleMod
 import widgets/toast as toastMod
 import widgets/loading_indicator as loadingIndicatorMod
 import widgets/select as selectMod
+import widgets/menu as menuMod
 import widgets/image as imageMod
 import widgets/datatable as datatableMod
 import widgets/tree as treeMod
@@ -66,6 +67,7 @@ export collapsibleMod
 export toastMod
 export loadingIndicatorMod
 export selectMod
+export menuMod
 export imageMod
 export datatableMod
 export treeMod
