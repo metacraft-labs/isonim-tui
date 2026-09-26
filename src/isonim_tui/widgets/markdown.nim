@@ -834,6 +834,8 @@ type
   MarkdownWidget* = ref object
     renderer*: TerminalRenderer
     node*: TerminalNode
+    source*: string                    ## The text `document` was parsed
+                                       ## from, as last given.
     document*: MdDocument
     width*: int                        ## Inner cell width.
     border*: BorderStyle
@@ -1121,6 +1123,7 @@ proc newMarkdown*(renderer: TerminalRenderer;
   renderer.setAttribute(node, "class", "markdown")
   let m = MarkdownWidget(
     renderer: renderer, node: node,
+    source: source,
     document: parseMarkdown(source),
     width: actualWidth,
     border: border,
@@ -1137,6 +1140,7 @@ proc newMarkdown*(renderer: TerminalRenderer;
   m
 
 proc setMarkdown*(m: MarkdownWidget; source: string) =
+  m.source = source
   m.document = parseMarkdown(source)
   m.renderTree()
 
