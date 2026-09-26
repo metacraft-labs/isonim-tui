@@ -10,6 +10,13 @@
 ##   * keyboard navigation: Left / Right move the active tab; Home /
 ##     End jump to extremes.
 ##
+## Left on the first tab and Right on the last WRAP by default, which is
+## Textual's behaviour and the WAI-ARIA tabs pattern's. `wraps = false`
+## makes both stop at the ends instead, which is what every other
+## selection widget in this library (ListView, OptionList, Tree,
+## DataTable, RadioSet) does; a host whose tab strip must agree with
+## those passes it.
+##
 ## The visible representation is one row of `─ Tab1 ─ Tab2 ─ Tab3 ─`
 ## with the active tab shown in reverse-video. This matches Textual's
 ## default behaviour closely enough for the load-bearing tests; the
@@ -43,6 +50,7 @@ type
     onChange*: proc(oldIdx, newIdx: int)
     color*: string
     activeColor*: string
+    wraps*: bool                   ## Left/Right wrap at the ends (default).
 
 # ----------------------------------------------------------------------------
 # Forward declarations so the keydown closure resolves.
@@ -100,7 +108,8 @@ proc newTabs*(renderer: TerminalRenderer;
               width: int = 40;
               onChange: proc(oldIdx, newIdx: int) = nil;
               color: string = "";
-              activeColor: string = ""): TabsWidget =
+              activeColor: string = "";
+              wraps: bool = true): TabsWidget =
   let node = renderer.createElement("div")
   renderer.setAttribute(node, "data-widget", "tabs")
   renderer.setAttribute(node, "data-focusable", "true")
@@ -117,7 +126,7 @@ proc newTabs*(renderer: TerminalRenderer;
     tabs: tabList, activeIndex: initialIndex,
     width: max(1, width),
     onChange: onChange,
-    color: color, activeColor: activeColor)
+    color: color, activeColor: activeColor, wraps: wraps)
   renderer.setAttribute(node, "data-active-index", $initialIndex)
   t.renderTree()
 
@@ -160,14 +169,14 @@ proc activeId*(t: TabsWidget): string =
 proc moveLeft*(t: TabsWidget) =
   if t.tabs.len == 0: return
   if t.activeIndex == 0:
-    t.setActive(t.tabs.len - 1)  # wrap
+    if t.wraps: t.setActive(t.tabs.len - 1)  # wrap
   else:
     t.setActive(t.activeIndex - 1)
 
 proc moveRight*(t: TabsWidget) =
   if t.tabs.len == 0: return
   if t.activeIndex == t.tabs.len - 1:
-    t.setActive(0)               # wrap
+    if t.wraps: t.setActive(0)               # wrap
   else:
     t.setActive(t.activeIndex + 1)
 
