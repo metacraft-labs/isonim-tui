@@ -49,3 +49,6 @@ build/nimcache/
 
 # Repro development environment cache
 .repro/
+# Per-checkout nimcache (config.nims): every Nim compile in this checkout
+# keeps its intermediate files here, never in the shared ~/.cache/nim.
+.nimcache/
