@@ -43,6 +43,7 @@
 import std/[hashes, strutils, tables, unicode]
 
 import ./cells
+import ./overlay
 import ./renderer
 import ./drivers/headless_driver
 import ./text/ansi
@@ -75,6 +76,10 @@ type
                            ## the layer below). Set when a node has an
                            ## explicit background-color or when it
                            ## carries a `layer` > 0.
+    isOverlay: bool        ## An `overlay: tint` node (`overlay.nim`): not
+                           ## stamped, APPLIED — the cells of `overlay`'s
+                           ## rectangle composited so far are re-coloured.
+    overlay: OverlaySpec
 
   StyleSnapshot = object
     fg: Color
@@ -402,6 +407,30 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
     let resolved = styleFor(node, parentStyle)
     let nodeLayer = layerFromStyle(node, parentLayer)
     let nodeHasBg = parentHasBg or resolved.hasBg or nodeLayer > parentLayer
+    # OUT OF FLOW, both of them: neither takes a row of the flow layout.
+    if isOverlayNode(node):
+      # An overlay re-colours what is under it (`overlay.nim`).
+      entries.add LayoutEntry(row: 0, col: 0, width: 0, nodeId: node.id,
+                              layer: nodeLayer, isOverlay: true,
+                              overlay: overlaySpecOf(node, nodeLayer))
+      return
+    if node.styles.getOrDefault("position", "") == "absolute":
+      # A label at an absolute cell (`top` / `left`), its own width wide —
+      # a drag's ghost label, a tooltip. Drawn at its layer like any entry,
+      # masking only its own cells.
+      proc intOf(name: string): int =
+        try: parseInt(node.styles.getOrDefault(name, "0"))
+        except ValueError: 0
+      let text = subtreeText(node)
+      var w = 0
+      for rune in runes(text):
+        w.inc(displayWidth(rune))
+      entries.add LayoutEntry(
+        row: intOf("top"), col: intOf("left"), width: w, text: text,
+        nodeId: node.id, layer: nodeLayer,
+        fg: resolved.snap.fg, bg: resolved.snap.bg,
+        attrs: resolved.snap.attrs, fillBackground: true)
+      return
     var allText = node.children.len > 0
     for ch in node.children:
       if ch.kind != tnkText:
@@ -729,6 +758,11 @@ proc render*(c: Compositor; root: TerminalNode): ScreenBuffer =
       entries[j] = tmp
       dec j
   for entry in entries:
+    if entry.isOverlay:
+      # Applied in paint order: over every entry before it (lower layers,
+      # then earlier nodes of its own layer), under every entry after it.
+      applyOverlay(buf, entry.overlay)
+      continue
     if entry.row >= c.rows: continue
     let strip = stripForEntry(c, entry)
     paintEntryOnto(buf, strip, entry, c.cols)
