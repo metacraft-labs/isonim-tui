@@ -20,6 +20,7 @@ import isonim_tui/drivers/driver
 import isonim_tui/drivers/headless_driver
 import isonim_tui/compositor
 import isonim_tui/overlay
+import isonim_tui/caret
 import isonim_tui/testing/introspection
 import isonim_tui/testing/harness
 import isonim_tui/testing/pilot
@@ -124,7 +125,7 @@ import isonim_tui/reactive_root as reactiveRootMod
 
 export cells, events, renderer
 export width, ansi, content
-export driver, headless_driver, compositor, overlay
+export driver, headless_driver, compositor, overlay, caret
 export introspection, harness, pilot
 export snapPlain, snapAnsi, snapCellmap, snapSvg, snapAnnotatedSvg
 export snapTreedump, snapRunner, snapTimeline
