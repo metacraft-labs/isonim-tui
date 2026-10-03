@@ -58,28 +58,48 @@ answer differs by property.
 to paint. It lowers the following into the `node.styles` table the
 compositor reads:
 
-| Property | Notes |
-| --- | --- |
-| `color` | Foreground colour. Inherited by the compositor's tree walk. Resolves theme tokens. |
-| `background` | Cell-background colour. Lowered to `background-color`. |
-| `text-style` | Lowered for `bold`, `dim`, `italic`, `underline`, `reverse`. `strike`, `blink` and `overline` cascade correctly but have no cell representation yet. |
-| `layer` | Numeric layer for the compositor's layered composite. |
+- **Property:** `color`
+  - **Notes:** Foreground colour. Inherited by the compositor's tree walk.
+    Resolves theme tokens.
+
+- **Property:** `background`
+  - **Notes:** Cell-background colour. Lowered to `background-color`.
+
+- **Property:** `text-style`
+  - **Notes:** Lowered for `bold`, `dim`, `italic`, `underline`, `reverse`.
+    `strike`, `blink` and `overline` cascade correctly but have no cell
+    representation yet.
+
+- **Property:** `layer`
+  - **Notes:** Numeric layer for the compositor's layered composite.
 
 The remaining properties below parse and cascade, but **nothing routes
 their computed values into layout** — the layout modules take their
 inputs from widget arguments, not from a `Stylesheet`:
 
-| Property | Status |
-| --- | --- |
-| `width`, `height` | Parsed + cascaded. Not read by `layout/`. |
-| `padding`, `margin` | Parsed + cascaded. Not read by `layout/`. |
-| `border` | Parsed + cascaded. Widgets take a `BorderStyle` argument instead. |
-| `align` | Parsed + cascaded. Not read by `layout/`. |
-| `display`, `visibility` | Parsed + cascaded. Not read by the compositor's visibility check. |
-| `dock` | Parsed + cascaded. `layout/dock.nim` is driven directly, not from CSS. |
+- **Property:** `width`, `height`
+  - **Status:** Parsed + cascaded. Not read by `layout/`.
+
+- **Property:** `padding`, `margin`
+  - **Status:** Parsed + cascaded. Not read by `layout/`.
+
+- **Property:** `border`
+  - **Status:** Parsed + cascaded. Widgets take a `BorderStyle` argument
+    instead.
+
+- **Property:** `align`
+  - **Status:** Parsed + cascaded. Not read by `layout/`.
+
+- **Property:** `display`, `visibility`
+  - **Status:** Parsed + cascaded. Not read by the compositor's visibility
+    check.
+
+- **Property:** `dock`
+  - **Status:** Parsed + cascaded. `layout/dock.nim` is driven directly, not
+    from CSS.
 
 Wiring those into layout is the natural follow-on to the style engine
-and is not done. Until then, treat the second table as "the grammar is
+and is not done. Until then, treat the second list as "the grammar is
 there" rather than "the property works".
 
 Other Textual properties parse cleanly but are intentionally ignored —

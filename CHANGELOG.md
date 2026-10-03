@@ -56,7 +56,9 @@ the TUI target and the web target; the `tui/leaves.nim` and `web/`
 modules pick the platform-specific widgets. Five canonical states ship
 as snapshots in `test_task_app_tui_snapshot_five_states`.
 
-## M21 — Tier-3e widgets: RichLog, Log, ProgressBar, Sparkline, Header, Footer, Welcome
+## M21 — Tier-3e widgets
+
+RichLog, Log, ProgressBar, Sparkline, Header, Footer, Welcome
 
 Wraps up the widget catalogue with output / chrome widgets. RichLog
 adds a configurable ring buffer + auto-follow; ProgressBar threads the

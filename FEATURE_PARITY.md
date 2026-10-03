@@ -9,30 +9,178 @@ and grades the parity. The grading scale:
 - **partial** — core happy path lands; advanced features deferred.
 - **not-yet** — an explicit non-goal or planned for after M27.
 
-| Textual Subsystem | IsoNim-TUI Equivalent | Parity Status | Notes |
-| --- | --- | --- | --- |
-| Reactive core (`reactive`, `Watch`) | `isonim/core/signals` (sibling repo, consumed via path import) | full | The reactive primitives live in `isonim/`, not in this repo. Same Signal/Effect/Memo surface. |
-| App lifecycle (`App`, `mount`, `compose`, `on_*`) | `TerminalTestHarness.mount` + per-app composition root | mostly | The harness covers the test-time lifecycle; production apps wire the same `mount` into `PosixDriver` / `WindowsDriver`. The `compose` decorator pattern is replaced by an explicit Nim builder proc. |
-| Driver layer (`PosixDriver`, `WindowsDriver`, `WebDriver`, `HeadlessDriver`) | `drivers/posix_driver.nim`, `drivers/windows_driver.nim`, `drivers/web_driver.nim`, `drivers/headless_driver.nim` | full | All four drivers implement the same `Driver` concept. Real-pty / Win32 console / WebSocket packet bridge / synchronous in-memory respectively. |
-| Compositor | `compositor.nim` with strip cache, dirty regions, layered overlays | full | Single-pass paint, line diff, idle paths covered by `test_compositor_*` corpus. |
-| TCSS engine (tokenize / parse / match / cascade) | `css/css.nim` + `style_engine.nim` | partial | Selector grammar + cascade + cache + tailwind-compat shim. `style_engine.nim` materialises cascade output into the compositor's style table, so `color`, `background`, `text-style` and `layer` reach cells. The layout properties (`width`, `height`, `padding`, `margin`, `border`, `align`, `display`, `visibility`, `dock`) cascade but are not yet routed into `layout/` — see `docs/tcss-reference.md`. |
-| ColorSystem | `theme/color_system` (in `theme.nim`) | full | Luminosity spread byte-identical with Textual; `test_colorsystem_luminosity_spread.nim`, `test_textual_dark_byte_identical.nim`. |
-| Theming (`textual-dark`, `textual-light`, runtime swap) | `theme.nim` reference themes + `ThemeRegistry.setTheme` + `harness.setTheme` | full | Cache invalidation on swap covered by `test_runtime_theme_switch.nim`; the repaint half (mount, swap, read `cellAt`) by `test_css_cascade_reaches_compositor.nim`. |
-| Animator (33 easings, key cancellation, scalar + colour blend) | `animation/animator.nim`, `animation/easing.nim`, `animation/scalar.nim` | full | Byte-parity with Textual's `_easing.py` corpus (`test_easing_byte_parity.nim`). |
-| Focus Manager (Tab navigation, focus traps) | `focus/manager.nim` | full | Tab order, traps, programmatic focus, blur/focus events (`test_focus_tab_order.nim`, `test_modal_focus_trap_real.nim`). |
-| Tier-1 widgets (Static, Label, Container, Placeholder, Rule, Button, Switch, Checkbox, RadioButton, RadioSet, Input) | `widgets/static.nim`, `label.nim`, `container.nim`, `placeholder.nim`, `rule.nim`, `button.nim`, `switch.nim`, `checkbox.nim`, `radio_button.nim`, `radio_set.nim`, `input.nim` | full | Per-widget snapshot tests cover the activation/hover/focus contract. |
-| Tier-2 widgets (Tabs, TabbedContent, ContentSwitcher, ListView, OptionList, Select, Collapsible, Modal, Toast, LoadingIndicator, Image) | `widgets/tabs.nim`, `tabbed_content.nim`, `content_switcher.nim`, `listview.nim`, `option_list.nim`, `select.nim`, `collapsible.nim`, `modal.nim`, `toast.nim`, `loading_indicator.nim`, `image.nim` | full | Modal focus-trap, animation frames, toast auto-dismiss, image protocol fallback all covered. |
-| Tier-3 widgets (DataTable, Tree, DirectoryTree, TextArea, Markdown, RichLog, Log, ProgressBar, Sparkline, Header, Footer) | `widgets/datatable.nim`, `tree.nim`, `directory_tree.nim`, `textarea.nim`, `markdown.nim`, `markdown_viewer.nim`, `rich_log.nim`, `log.nim`, `progress_bar.nim`, `sparkline.nim`, `header.nim`, `footer.nim` | mostly | DataTable virtualisation, Tree lazy expand, RichLog auto-follow all production-ready. **TextArea syntax highlighting** ships only the stub Python/Nim keyword highlighter (M19 spec deferred tree-sitter integration). |
-| Workers (background tasks) | `worker/worker.nim`, `worker/manager.nim`, `worker/decorator.nim` | full | Cooperative cancellation, per-harness isolation, `{.work.}` decorator. |
-| Command Palette (Provider, fuzzy match) | `command/palette.nim`, `command/fuzzy.nim` | full | Provider system + Sublime-style fuzzy scoring (`test_fuzzy_matcher_corpus.nim`). |
-| Snapshot testing (six formats) | `testing/snapshot/*` + harness `snap()` | full | plaintext / ansi / cellmap / svg / annotated-svg / treedump; HTML mismatch report. |
-| Pilot / HeadlessDriver (test driver) | `testing/pilot.nim`, `drivers/headless_driver.nim` | full | `press`, `type`, `click`, `hover`, `focus`, `paste`, `waitFor`, `waitForAnimation`, virtual-clock advance. |
-| Markdown rendering | `widgets/markdown.nim`, `markdown_viewer.nim` | mostly | CommonMark headings, lists, code blocks, paragraphs, block quotes, links, tables. **Heavyweight extensions** (footnotes, definition lists, task lists with checkbox interaction) are deferred. |
-| TextArea (multi-line code editor) | `widgets/textarea.nim` | partial | Soft-wrap + grapheme-aware cursor + undo/redo + read-only + tab size + maxUndoDepth. **Tree-sitter syntax highlighting deferred** (M19 spec); only the stub Python/Nim keyword highlighter ships. |
-| DataTable | `widgets/datatable.nim` | full | Virtualisation perf gated by `test_datatable_virtualisation_perf.nim`; sortable cols, selection, snapshot coverage. |
-| Image protocols (Kitty, iTerm2, Sixel) | `widgets/image.nim` | mostly | Kitty graphics + protocol fallback (Unicode-block) cover the common cases. **iTerm2 inline-image** + **native Sixel** encoders deferred — the fallback Unicode-block path keeps the widget functional everywhere. |
-| Recording / Replay (M25 — IsoNim-specific extension) | `testing/recorder.nim`, `replayer.nim`, `recording_types.nim`, `assertions.nim` | full | Round-trip serialisation, byte-identical replay, time-travel timeline HTML, layout assertions (`assertNoOverlap`, `assertSinglePassPaint`). |
-| WebDriver (M26 — IsoNim-specific extension) | `drivers/web_driver.nim` + `isonim-tui-serve` repo | mostly | D/M/P packet driver + WebSocket bridge with xterm.js demo. **Live-browser Playwright e2e** explicitly deferred (test_serve_browser_e2e left open) — bridge correctness is gated by the real-subprocess + real-WebSocket round-trip test. |
+- **Textual Subsystem:** Reactive core (`reactive`, `Watch`)
+  - **IsoNim-TUI Equivalent:** `isonim/core/signals` (sibling repo, consumed via
+    path import)
+  - **Parity Status:** full
+  - **Notes:** The reactive primitives live in `isonim/`, not in this repo. Same
+    Signal/Effect/Memo surface.
+
+- **Textual Subsystem:** App lifecycle (`App`, `mount`, `compose`, `on_*`)
+  - **IsoNim-TUI Equivalent:** `TerminalTestHarness.mount` + per-app composition
+    root
+  - **Parity Status:** mostly
+  - **Notes:** The harness covers the test-time lifecycle; production apps wire
+    the same `mount` into `PosixDriver` / `WindowsDriver`. The `compose`
+    decorator pattern is replaced by an explicit Nim builder proc.
+
+- **Textual Subsystem:** Driver layer (`PosixDriver`, `WindowsDriver`,
+  `WebDriver`, `HeadlessDriver`)
+  - **IsoNim-TUI Equivalent:** `drivers/posix_driver.nim`,
+    `drivers/windows_driver.nim`, `drivers/web_driver.nim`,
+    `drivers/headless_driver.nim`
+  - **Parity Status:** full
+  - **Notes:** All four drivers implement the same `Driver` concept. Real-pty /
+    Win32 console / WebSocket packet bridge / synchronous in-memory
+    respectively.
+
+- **Textual Subsystem:** Compositor
+  - **IsoNim-TUI Equivalent:** `compositor.nim` with strip cache, dirty regions,
+    layered overlays
+  - **Parity Status:** full
+  - **Notes:** Single-pass paint, line diff, idle paths covered by
+    `test_compositor_*` corpus.
+
+- **Textual Subsystem:** TCSS engine (tokenize / parse / match / cascade)
+  - **IsoNim-TUI Equivalent:** `css/css.nim` + `style_engine.nim`
+  - **Parity Status:** partial
+  - **Notes:** Selector grammar + cascade + cache + tailwind-compat shim.
+    `style_engine.nim` materialises cascade output into the compositor's style
+    table, so `color`, `background`, `text-style` and `layer` reach cells. The
+    layout properties (`width`, `height`, `padding`, `margin`, `border`,
+    `align`, `display`, `visibility`, `dock`) cascade but are not yet routed
+    into `layout/` — see `docs/tcss-reference.md`.
+
+- **Textual Subsystem:** ColorSystem
+  - **IsoNim-TUI Equivalent:** `theme/color_system` (in `theme.nim`)
+  - **Parity Status:** full
+  - **Notes:** Luminosity spread byte-identical with Textual;
+    `test_colorsystem_luminosity_spread.nim`,
+    `test_textual_dark_byte_identical.nim`.
+
+- **Textual Subsystem:** Theming (`textual-dark`, `textual-light`, runtime swap)
+  - **IsoNim-TUI Equivalent:** `theme.nim` reference themes +
+    `ThemeRegistry.setTheme` + `harness.setTheme`
+  - **Parity Status:** full
+  - **Notes:** Cache invalidation on swap covered by
+    `test_runtime_theme_switch.nim`; the repaint half (mount, swap, read
+    `cellAt`) by `test_css_cascade_reaches_compositor.nim`.
+
+- **Textual Subsystem:** Animator (33 easings, key cancellation, scalar + colour
+  blend)
+  - **IsoNim-TUI Equivalent:** `animation/animator.nim`, `animation/easing.nim`,
+    `animation/scalar.nim`
+  - **Parity Status:** full
+  - **Notes:** Byte-parity with Textual's `_easing.py` corpus
+    (`test_easing_byte_parity.nim`).
+
+- **Textual Subsystem:** Focus Manager (Tab navigation, focus traps)
+  - **IsoNim-TUI Equivalent:** `focus/manager.nim`
+  - **Parity Status:** full
+  - **Notes:** Tab order, traps, programmatic focus, blur/focus events
+    (`test_focus_tab_order.nim`, `test_modal_focus_trap_real.nim`).
+
+- **Textual Subsystem:** Tier-1 widgets (Static, Label, Container, Placeholder,
+  Rule, Button, Switch, Checkbox, RadioButton, RadioSet, Input)
+  - **IsoNim-TUI Equivalent:** `widgets/static.nim`, `label.nim`,
+    `container.nim`, `placeholder.nim`, `rule.nim`, `button.nim`, `switch.nim`,
+    `checkbox.nim`, `radio_button.nim`, `radio_set.nim`, `input.nim`
+  - **Parity Status:** full
+  - **Notes:** Per-widget snapshot tests cover the activation/hover/focus
+    contract.
+
+- **Textual Subsystem:** Tier-2 widgets (Tabs, TabbedContent, ContentSwitcher,
+  ListView, OptionList, Select, Collapsible, Modal, Toast, LoadingIndicator,
+  Image)
+  - **IsoNim-TUI Equivalent:** `widgets/tabs.nim`, `tabbed_content.nim`,
+    `content_switcher.nim`, `listview.nim`, `option_list.nim`, `select.nim`,
+    `collapsible.nim`, `modal.nim`, `toast.nim`, `loading_indicator.nim`,
+    `image.nim`
+  - **Parity Status:** full
+  - **Notes:** Modal focus-trap, animation frames, toast auto-dismiss, image
+    protocol fallback all covered.
+
+- **Textual Subsystem:** Tier-3 widgets (DataTable, Tree, DirectoryTree,
+  TextArea, Markdown, RichLog, Log, ProgressBar, Sparkline, Header, Footer)
+  - **IsoNim-TUI Equivalent:** `widgets/datatable.nim`, `tree.nim`,
+    `directory_tree.nim`, `textarea.nim`, `markdown.nim`, `markdown_viewer.nim`,
+    `rich_log.nim`, `log.nim`, `progress_bar.nim`, `sparkline.nim`,
+    `header.nim`, `footer.nim`
+  - **Parity Status:** mostly
+  - **Notes:** DataTable virtualisation, Tree lazy expand, RichLog auto-follow
+    all production-ready. **TextArea syntax highlighting** ships only the stub
+    Python/Nim keyword highlighter (M19 spec deferred tree-sitter integration).
+
+- **Textual Subsystem:** Workers (background tasks)
+  - **IsoNim-TUI Equivalent:** `worker/worker.nim`, `worker/manager.nim`,
+    `worker/decorator.nim`
+  - **Parity Status:** full
+  - **Notes:** Cooperative cancellation, per-harness isolation, `{.work.}`
+    decorator.
+
+- **Textual Subsystem:** Command Palette (Provider, fuzzy match)
+  - **IsoNim-TUI Equivalent:** `command/palette.nim`, `command/fuzzy.nim`
+  - **Parity Status:** full
+  - **Notes:** Provider system + Sublime-style fuzzy scoring
+    (`test_fuzzy_matcher_corpus.nim`).
+
+- **Textual Subsystem:** Snapshot testing (six formats)
+  - **IsoNim-TUI Equivalent:** `testing/snapshot/*` + harness `snap()`
+  - **Parity Status:** full
+  - **Notes:** plaintext / ansi / cellmap / svg / annotated-svg / treedump; HTML
+    mismatch report.
+
+- **Textual Subsystem:** Pilot / HeadlessDriver (test driver)
+  - **IsoNim-TUI Equivalent:** `testing/pilot.nim`,
+    `drivers/headless_driver.nim`
+  - **Parity Status:** full
+  - **Notes:** `press`, `type`, `click`, `hover`, `focus`, `paste`, `waitFor`,
+    `waitForAnimation`, virtual-clock advance.
+
+- **Textual Subsystem:** Markdown rendering
+  - **IsoNim-TUI Equivalent:** `widgets/markdown.nim`, `markdown_viewer.nim`
+  - **Parity Status:** mostly
+  - **Notes:** CommonMark headings, lists, code blocks, paragraphs, block
+    quotes, links, tables. **Heavyweight extensions** (footnotes, definition
+    lists, task lists with checkbox interaction) are deferred.
+
+- **Textual Subsystem:** TextArea (multi-line code editor)
+  - **IsoNim-TUI Equivalent:** `widgets/textarea.nim`
+  - **Parity Status:** partial
+  - **Notes:** Soft-wrap + grapheme-aware cursor + undo/redo + read-only + tab
+    size + maxUndoDepth. **Tree-sitter syntax highlighting deferred** (M19
+    spec); only the stub Python/Nim keyword highlighter ships.
+
+- **Textual Subsystem:** DataTable
+  - **IsoNim-TUI Equivalent:** `widgets/datatable.nim`
+  - **Parity Status:** full
+  - **Notes:** Virtualisation perf gated by
+    `test_datatable_virtualisation_perf.nim`; sortable cols, selection, snapshot
+    coverage.
+
+- **Textual Subsystem:** Image protocols (Kitty, iTerm2, Sixel)
+  - **IsoNim-TUI Equivalent:** `widgets/image.nim`
+  - **Parity Status:** mostly
+  - **Notes:** Kitty graphics + protocol fallback (Unicode-block) cover the
+    common cases. **iTerm2 inline-image** + **native Sixel** encoders deferred —
+    the fallback Unicode-block path keeps the widget functional everywhere.
+
+- **Textual Subsystem:** Recording / Replay (M25 — IsoNim-specific extension)
+  - **IsoNim-TUI Equivalent:** `testing/recorder.nim`, `replayer.nim`,
+    `recording_types.nim`, `assertions.nim`
+  - **Parity Status:** full
+  - **Notes:** Round-trip serialisation, byte-identical replay, time-travel
+    timeline HTML, layout assertions (`assertNoOverlap`,
+    `assertSinglePassPaint`).
+
+- **Textual Subsystem:** WebDriver (M26 — IsoNim-specific extension)
+  - **IsoNim-TUI Equivalent:** `drivers/web_driver.nim` + `isonim-tui-serve`
+    repo
+  - **Parity Status:** mostly
+  - **Notes:** D/M/P packet driver + WebSocket bridge with xterm.js demo.
+    **Live-browser Playwright e2e** explicitly deferred (test_serve_browser_e2e
+    left open) — bridge correctness is gated by the real-subprocess +
+    real-WebSocket round-trip test.
 
 ## Honest gaps
 

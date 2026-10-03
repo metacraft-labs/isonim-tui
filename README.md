@@ -1,6 +1,7 @@
 # isonim-tui
 
-Production terminal renderer for [IsoNim](https://github.com/metacraft-labs/isonim).
+Production terminal renderer for
+[IsoNim](https://github.com/metacraft-labs/isonim).
 Cell-grid primitives, RendererBackend conformance, and (in later
 milestones) a full Textual-equivalent TUI runtime built on top of
 `nim-pty`, `nim-libvterm`, and `nim-termctl`.

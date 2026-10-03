@@ -11,14 +11,19 @@ mechanism with the same user-visible behaviour; see
 
 Design: `isonim-specs/Hot-Module-Reload-Native.md`.
 Milestones: `Hot-Module-Reload-Native.milestones.org` (NH-M0 … NH-M5).
-The transport's normative ordering: `reprobuild-specs/HCR/Patch-Loading-Lifecycle.md`.
+The transport's normative ordering:
+`reprobuild-specs/HCR/Patch-Loading-Lifecycle.md`.
 
 ## The two flags
 
-| Flag | What it turns on |
-|---|---|
-| `-d:isonimHmr` | the IsoNim runtime: `HmrRoot`, the ui-slot registry, `mountUiHot`, `hmrSignal`, and the two agent callbacks |
-| `-d:reprobuildHcr` | the FFI bindings in `isonim/native/hcr.nim`, so the ten `rb_hcr_*` calls resolve into `librepro_hcr_agent` instead of no-op fallbacks |
+* **Flag:** `-d:isonimHmr`
+  * **What it turns on:** the IsoNim runtime: `HmrRoot`, the ui-slot registry,
+    `mountUiHot`, `hmrSignal`, and the two agent callbacks
+
+* **Flag:** `-d:reprobuildHcr`
+  * **What it turns on:** the FFI bindings in `isonim/native/hcr.nim`, so the
+    ten `rb_hcr_*` calls resolve into `librepro_hcr_agent` instead of no-op
+    fallbacks
 
 They are orthogonal. With neither, the binary is the one you ship: `mountUiHot`
 is a build-once mount, `hmrSignal` is `createSignal`, and no `rb_hcr_*` symbol
@@ -38,7 +43,8 @@ proc entry() =
   hmrRegisterFactory(SlotHeader, headerHash(), makeHeader())
 
 let root = newHmrRoot(entry)
-root.start()                      # installs rb_hcr_before_reload / _after_reload
+root.start()
+  # installs rb_hcr_before_reload / _after_reload
 
 let mount = mountUiHot(proc(): TerminalNode = buildRoot(),
                        NativeRootMount[TerminalNode](sink))
@@ -60,7 +66,7 @@ Two rules the framework cannot enforce for you:
 
 ## What happens on a reload, and in what order
 
-```
+```text
 Phase E  rb_hcr_before_reload   OLD code is the only code in the process.
                                 IsoNim flips the generation, opens the staging
                                 window, and runs your `onBeforeReload` hook —
@@ -135,7 +141,8 @@ The same three pieces are what you need to hot-reload your own app by hand:
    ```sh
    nim c --noLinking:on --nimcache:/tmp/nc --stackTrace:off --lineTrace:off \
        --checks:off --opt:speed myhotmodule.nim
-   printf '{"patchObject":"%s","patchSymbol":"my_hot_function","patchId":"e1"}' \
+   printf '{"patchObject":"%s",'\
+   '"patchSymbol":"my_hot_function","patchId":"e1"}' \
        "$(grep -l . /tmp/nc/*.o | head -1)" > /tmp/hcr-session/req-1.json.tmp
    mv /tmp/hcr-session/req-1.json.tmp /tmp/hcr-session/req-1.json
    ```
