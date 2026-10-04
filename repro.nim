@@ -1,3 +1,12 @@
+## Complete TUI corpus: all157 existing Justfile native files are modeled.
+## Historical rollout notes below describe the earlier143 subset and its now
+## corrected exclusions; they are not current acceptance exceptions.
+## Current source/runtime binding is specified in owning
+## Tui-CI-Source-Closure-and-Corpus-Restoration.md and
+## Tui-Baseline-Runtime-Graph-Binding.md. All existing actions/flags/platform
+## guards remain; the fourteen missing cases are restored, with real runtime
+## inputs and uncached mutable Git baseline execution.
+##
 ## Reprobuild project file for isonim-tui.
 ##
 ## **Typed-Cross-Project-Deps rollout — the IsoNim TERMINAL renderer, a
@@ -275,24 +284,21 @@ type
     stem: string
     realPty: bool
     extraPaths: seq[string]
+    runtimeInputs: seq[string]
+    mutableGitState: bool
+    compilerLocality: bool
 
 proc spec(stem: string; realPty = false;
-          extraPaths: seq[string] = @[]): TuiTestSpec =
-  TuiTestSpec(stem: stem, realPty: realPty, extraPaths: extraPaths)
+          extraPaths: seq[string] = @[];
+          runtimeInputs: seq[string] = @[];
+          mutableGitState = false;
+          compilerLocality = false): TuiTestSpec =
+  TuiTestSpec(stem: stem, realPty: realPty, extraPaths: extraPaths,
+    runtimeInputs: runtimeInputs, mutableGitState: mutableGitState,
+    compilerLocality: compilerLocality)
 
-# The HEADLESS native corpus — the ``Justfile`` ``tests`` list (148 files)
-# MINUS the one repo-state-dependent test
-# (``test_m24_gh_pages_branch_exists``, see the module docstring) MINUS the one
-# pre-existing-red ``test_textual_compat`` (documented below) MINUS the THREE
-# PASS-2 ``task_app`` tests still deferred on the removed synchronous demo API
-# (EX-M17; see the module docstring) = 143 modelled files. This INCLUDES the
-# one PASS-2 ``task_app`` test now green
-# (``test_task_app_shared_vm_byte_identical``). Every entry compiles + runs to
-# exit 0 under ``nim c`` on
-# this Linux host with the default matrix flags (``--mm:orc -d:release
-# --threads:on``); the six ``windows_driver`` / ``widget_set_snapshot_windows``
-# tests self-``skip()`` at runtime via their ``when defined(windows)`` guards
-# (verified exit 0).
+# Complete original 157-file Justfile corpus, including genuine repo-state
+# baseline failure until an authorized real measured dev baseline is published.
 const tuiTestSpecs: seq[TuiTestSpec] = @[
   # ---- M0 renderer / cell primitives ----
   spec("test_renderer_concept_conformance"),
@@ -454,27 +460,22 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_progress_bar_animates"),
   spec("test_sparkline_renders"),
   spec("test_header_footer_welcome"),
-  # ---- M22 cross-platform task_app (PASS-2: isonim-examples landed) ----
-  # Only the byte-identity test is modelled here — it reads
-  # ``../../isonim-examples/task_app/*`` at RUNTIME (no removed-API compile
-  # import) and passes green. ``../isonim-examples`` is threaded via
-  # ``extraPaths`` (NOT a ``uses:`` edge — see the "Why ``paths:``" note in the
-  # module docstring). The other three task_app tests stay DEFERRED on the
-  # removed synchronous ``rerender`` / ``newTaskAppVM()`` demo API (EX-M17;
-  # see the per-test status list in the module docstring).
+  # ---- M22 real task_app source/runtime boundaries ----
+  spec("test_task_app_tui_snapshot_five_states",
+       extraPaths = @["../isonim-examples", "../isonim-render-serve/src"],
+       runtimeInputs = @["../isonim-examples/task_app", "../isonim-render-serve/src"]),
   spec("test_task_app_shared_vm_byte_identical",
-       extraPaths = @["../isonim-examples"]),
-  # ---- Textual-compat batches ----
-  # NOTE: ``test_textual_compat`` is EXCLUDED — its
-  # ``test_compat_progress_gradient`` sub-test snapshot-mismatches the
-  # committed ``m23_progress_gradient`` golden across all four formats
-  # (ansi/cellmap/svg/annotated). The port renders a real colour gradient
-  # (``Gradient.from_colors("#881177", ...)``; HEAD's ANSI emits truecolor
-  # ``38;2;153;221;85``), but golden and render disagree; reconciling needs
-  # the intended colour output confirmed against the Textual reference in a
-  # canonical colour environment + a re-record. Out of scope for the recipe
-  # rollout — we ship NO golden change and defer this one edge (not weakened,
-  # not disabled in the repo). ``batch2`` / ``batch3`` ARE modelled + green.
+       extraPaths = @["../isonim-examples"],
+       runtimeInputs = @["../isonim-examples"]),
+  spec("test_task_app_pilot_drive_real_stack",
+       extraPaths = @["../isonim-examples", "../isonim-render-serve/src"],
+       runtimeInputs = @["../isonim-examples/task_app", "../isonim-render-serve/src"]),
+  spec("test_task_app_web_target_compiles",
+       extraPaths = @["../isonim-examples", "../isonim-render-serve/src"],
+       runtimeInputs = @["../isonim-examples/task_app", "../isonim-render-serve/src"]),
+  # ---- Original strict committed Textual golden parity ----
+  spec("test_textual_compat",
+       runtimeInputs = @["tests/snapshots", "examples/ports"]),
   spec("test_textual_compat_batch2"),
   spec("test_textual_compat_batch3"),
   # ---- bench / record-replay / timeline / assertions ----
@@ -489,10 +490,20 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_web_driver_packet_roundtrip"),
   # ---- demos ----
   spec("test_demos_compile_and_run"),
-  # NOTE: ``test_m24_gh_pages_branch_exists`` is PRE-EXISTING RED at HEAD
-  # (requires a ``perf/bench/`` tree on the ``gh-pages`` branch that CI
-  # populates on its first ``main`` benchmark run); excluded + documented
-  # in the module docstring.
+  # Nine additional original Justfile cases missing from the old143 graph.
+  spec("test_caret_shape"),
+  spec("test_compositor_tint_overlay"),
+  spec("test_compositor_wide_glyph_ghost_cell"),
+  spec("test_css_cascade_reaches_compositor"),
+  spec("test_display_width_explicit_policy"),
+  spec("test_menu_keyboard"),
+  spec("test_render_native_tui_reactive"),
+  spec("test_tabs_wrap_option"),
+  spec("test_nimcache_is_worktree_local", compilerLocality = true,
+       runtimeInputs = @["src", "tests", "config.nims", "isonim_tui.nimble"]),
+  # Runtime Git admin state is monitored and never cached as Nim source.
+  spec("test_m24_gh_pages_branch_exists", mutableGitState = true,
+       runtimeInputs = @[".git", ".github/workflows/benchmark.yml"]),
 ]
 
 package isonim_tui:
@@ -512,6 +523,7 @@ package isonim_tui:
     # resolver under ``nix develop``.
     "nim >=2.0"
     "gcc >=12"
+    "git >=2"
 
     # The four landed sibling Nim-library producers this repo consumes from
     # source (SC-11 develop-mode). Naming each workspace project here makes
@@ -577,9 +589,13 @@ package isonim_tui:
         mm = "orc",
         extraPassL = extraPassL,
         actionId = "isonim-tui.test_build." & s.stem,
+        cacheable = not s.compilerLocality,
+        dependencyPolicy = (if s.compilerLocality: automaticMonitorPolicy()
+                            else: defaultDependencyPolicy()),
         # ``src`` + the nimble file are declared inputs so the monitor tracks
         # the transitively imported ``src/isonim_tui/**`` module tree.
-        extraInputs = @["src", "isonim_tui.nimble"])
+        extraInputs = @["src", "tests", "config.nims", "isonim_tui.nimble"] &
+          (if s.mutableGitState: @[] else: s.runtimeInputs))
       testBuildActions.add(edge.action)
 
       # ``registerImplicitName = false``: the BUILD edge already owns the
@@ -591,11 +607,18 @@ package isonim_tui:
           edge.testBinary.run(
             actionId = "isonim-tui.test_execute." & s.stem,
             pool = serialPool,
+            extraInputs = s.runtimeInputs,
             registerImplicitName = false)
         else:
           edge.testBinary.run(
             actionId = "isonim-tui.test_execute." & s.stem,
+            extraInputs = s.runtimeInputs,
+            cacheable = not (s.mutableGitState or s.compilerLocality),
             registerImplicitName = false)
+      if s.mutableGitState:
+        appendRegisteredActionToolIdentityRefs(executeEdge.id, @["git"])
+      if s.compilerLocality:
+        appendRegisteredActionToolIdentityRefs(executeEdge.id, @["nim"])
       testExecuteActions.add(executeEdge)
 
     discard collect("test", testExecuteActions)

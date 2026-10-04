@@ -1,10 +1,10 @@
 # CI Benchmark Tracking for isonim-tui (M24).
 #
-# Runs the benchmark suite on every PR and every push to main, then
+# Runs the benchmark suite on PRs and configured branches, then
 # publishes results to gh-pages for historical trend tracking via
 # github-action-benchmark.
 #
-# - On push to main: updates the baseline on gh-pages
+# - On eligible dev source: updates both baseline channels on gh-pages
 # - On pull_request: compares against baseline, posts PR comment, does
 #   NOT update baseline
 #
@@ -18,6 +18,15 @@ on:
   pull_request:
     branches-ignore: [agents]
   workflow_dispatch:
+    inputs:
+      bootstrap-dev-baseline:
+        description: Explicitly measure the current immutable dev source and publish its baseline
+        type: boolean
+        default: false
+      baseline-source-sha:
+        description: Required current dev full40 SHA for explicit baseline bootstrap
+        type: string
+        default: ''
 
 concurrency:
   group: benchmark-execution-${{ github.event_name }}-${{ github.head_ref || github.ref }}
@@ -30,7 +39,7 @@ permissions:
 jobs:
   benchmark-baseline-store:
     # Orchestration leg (gh-pages baseline prep) on a general Linux
-    # ephemeral class; the measurement job stays on [self-hosted, benchmark].
+    # ephemeral class; measurement retains the dedicated native Linux capability.
     runs-on: [self-hosted, linux, x64]
     name: prepare benchmark baseline store
     steps:
@@ -82,7 +91,7 @@ jobs:
 
   benchmark-linux:
     needs: benchmark-baseline-store
-    runs-on: [self-hosted, benchmark]
+    runs-on: [self-hosted, linux, x64, benchmark]
     name: benchmark (isonim-tui, Linux)
     steps:
       # `just bench` compiles the benchmark binaries against the same sibling
@@ -107,8 +116,23 @@ jobs:
           private-key: ${{ secrets.CI_TOKEN_PROVIDER_PRIVATE_KEY }}
           owner: metacraft-labs
 
+      - name: Validate explicit dev-source baseline request
+        if: github.event_name == 'workflow_dispatch' && inputs.bootstrap-dev-baseline
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REQUESTED_SHA: ${{ inputs.baseline-source-sha }}
+        run: |
+          set -euo pipefail
+          [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          jq -e ' .head_commit == null and .pull_request == null ' "$GITHUB_EVENT_PATH"
+          current=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" --jq .object.sha)
+          test "$current" = "$REQUESTED_SHA"
+          printf 'BASELINE_DATA_SOURCE_SHA=%s\n' "$REQUESTED_SHA" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ env.BASELINE_DATA_SOURCE_SHA || github.sha }}
 
       - name: Setup dev env (clones .github/sibling-repos at lock revisions)
         uses: metacraft-labs/metacraft-github-actions/setup-dev-env@dev
@@ -118,25 +142,70 @@ jobs:
           substituters: ${{ vars.SUBSTITUTERS }}
           trusted-public-keys: ${{ vars.TRUSTED_PUBLIC_KEYS }}
 
+      - name: Verify dedicated native Linux measurement source
+        env:
+          WORKFLOW_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = x86_64
+          test "$(git rev-parse HEAD)" = "${BASELINE_DATA_SOURCE_SHA:-$GITHUB_SHA}"
+          test -z "$(git status --porcelain)"
+          mkdir -p bench-results
+          {
+            printf 'workflow-source=%s\n' "$WORKFLOW_SOURCE_SHA"
+            printf 'data-source=%s\n' "$(git rev-parse HEAD)"
+            printf 'runner=%s\n' "$RUNNER_NAME"
+            uname -a
+            dev-exec nim --version
+          } > bench-results/measurement-source.txt
+
       - name: Run benchmark suite
         run: |
+          dev-exec just grammars
           dev-exec just bench --quick
 
-      - name: Upload report artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-report
-          path: bench-results/
-          retention-days: 30
+      - name: Package all twenty measured directions with immutable workflow descriptors
+        env:
+          WORKFLOW_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${BASELINE_DATA_SOURCE_SHA:-$GITHUB_SHA}"
+          git fetch --no-tags origin "$WORKFLOW_SOURCE_SHA"
+          descriptor_dir="$RUNNER_TEMP/tui-benchmark-descriptors-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir "$descriptor_dir"
+          git show "$WORKFLOW_SOURCE_SHA:benchmarks/metric-directions.json" > "$descriptor_dir/metric-directions.json"
+          git show "$WORKFLOW_SOURCE_SHA:tools/package-benchmark-directions.mjs" > "$descriptor_dir/package-benchmark-directions.mjs"
+          git show "$WORKFLOW_SOURCE_SHA:tools/verify-benchmark-publication.mjs" > "$descriptor_dir/verify-benchmark-publication.mjs"
+          git show "$WORKFLOW_SOURCE_SHA:tools/test-benchmark-directions.mjs" > "$descriptor_dir/test-benchmark-directions.mjs"
+          printf 'BENCH_DESCRIPTOR_DIR=%s\n' "$descriptor_dir" >> "$GITHUB_ENV"
+          bridge=()
+          if [ "${{ github.event_name }}" = workflow_dispatch ] && [ "${{ inputs.bootstrap-dev-baseline }}" = true ]; then
+            bridge=(--allow-legacy-source)
+          fi
+          dev-exec node "$descriptor_dir/package-benchmark-directions.mjs" \
+            --descriptors "$descriptor_dir/metric-directions.json" \
+            --input bench-results/benchmark_results.json \
+            --smaller bench-results/benchmark-smaller.json \
+            --bigger bench-results/benchmark-bigger.json \
+            --descriptor-source-sha "$WORKFLOW_SOURCE_SHA" \
+            --data-source-sha "$(git rev-parse HEAD)" "${bridge[@]}"
 
-      - name: Compare benchmarks (PR)
+      - name: Verify permanent twenty-metric packaging and publication contracts
+        run: |
+          set -euo pipefail
+          dev-exec node --version
+          dev-exec node "$BENCH_DESCRIPTOR_DIR/test-benchmark-directions.mjs" \
+            bench-results/benchmark_results.json \
+            "$BENCH_DESCRIPTOR_DIR/metric-directions.json" "$(git rev-parse HEAD)"
+
+      - name: Compare smaller benchmarks (PR)
         if: github.event_name == 'pull_request'
-        uses: benchmark-action/github-action-benchmark@v1
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
         with:
           name: "isonim-tui Performance (Linux)"
           tool: customSmallerIsBetter
-          output-file-path: bench-results/benchmark_results.json
+          output-file-path: bench-results/benchmark-smaller.json
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: perf/bench
           alert-threshold: "120%"
@@ -146,23 +215,20 @@ jobs:
           auto-push: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update baseline (dev)
-        if: github.ref == 'refs/heads/dev'
-        uses: benchmark-action/github-action-benchmark@v1
-        env:
-          GIT_CONFIG_COUNT: "1"
-          GIT_CONFIG_KEY_0: commit.gpgsign
-          GIT_CONFIG_VALUE_0: "false"
+      - name: Compare bigger benchmarks (PR)
+        if: github.event_name == 'pull_request'
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
         with:
           name: "isonim-tui Performance (Linux)"
-          tool: customSmallerIsBetter
-          output-file-path: bench-results/benchmark_results.json
+          tool: customBiggerIsBetter
+          output-file-path: bench-results/benchmark-bigger.json
           gh-pages-branch: gh-pages
-          benchmark-data-dir-path: perf/bench
+          benchmark-data-dir-path: perf/bench-bigger
           alert-threshold: "120%"
+          comment-always: true
           comment-on-alert: true
-          fail-on-alert: false
-          auto-push: true
+          save-data-file: false
+          auto-push: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Hard-failure gate: stricter than the 120% warning band.
@@ -174,6 +240,144 @@ jobs:
           set -euo pipefail
           dev-exec bash scripts/check-hard-thresholds.sh \
             bench-results/benchmark_results.json
+
+      - name: Prove eligible dev measurement and fresh publication parent
+        if: success() && (github.ref == 'refs/heads/dev' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap-dev-baseline))
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          data_source="$(git rev-parse HEAD)"
+          current=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" --jq .object.sha)
+          test "$current" = "$data_source"
+          if [ "${{ github.event_name }}" = workflow_dispatch ] && [ "${{ inputs.bootstrap-dev-baseline }}" = true ]; then
+            test "$data_source" = "$BASELINE_DATA_SOURCE_SHA"
+            jq -e '.head_commit == null and .pull_request == null' "$GITHUB_EVENT_PATH"
+          fi
+          test -z "$(git status --porcelain)"
+          parent=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/gh-pages" --jq .object.sha)
+          printf 'BENCH_DATA_SOURCE_SHA=%s\nBENCH_PAGES_PARENT=%s\n' "$data_source" "$parent" >> "$GITHUB_ENV"
+
+      - name: Generate measured smaller baseline commit without pushing
+        if: success() && (github.ref == 'refs/heads/dev' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap-dev-baseline))
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: commit.gpgsign
+          GIT_CONFIG_VALUE_0: "false"
+        with:
+          name: "isonim-tui Performance (Linux)"
+          tool: customSmallerIsBetter
+          output-file-path: bench-results/benchmark-smaller.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: perf/bench
+          alert-threshold: "120%"
+          comment-on-alert: true
+          fail-on-alert: false
+          auto-push: false
+          ref: ${{ env.BENCH_DATA_SOURCE_SHA }}
+          gh-repository: github.com/${{ github.repository }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Preserve owned smaller generated baseline clone
+        if: success() && (github.ref == 'refs/heads/dev' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap-dev-baseline))
+        run: |
+          set -euo pipefail
+          test "$(git -C benchmark-data-repository rev-parse HEAD^)" = "$BENCH_PAGES_PARENT"
+          test -z "$(git -C benchmark-data-repository status --porcelain)"
+          mv benchmark-data-repository "benchmark-data-smaller"
+
+      - name: Generate measured bigger baseline commit without pushing
+        if: success() && (github.ref == 'refs/heads/dev' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap-dev-baseline))
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: commit.gpgsign
+          GIT_CONFIG_VALUE_0: "false"
+        with:
+          name: "isonim-tui Performance (Linux)"
+          tool: customBiggerIsBetter
+          output-file-path: bench-results/benchmark-bigger.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: perf/bench-bigger
+          alert-threshold: "120%"
+          comment-on-alert: true
+          fail-on-alert: false
+          auto-push: false
+          ref: ${{ env.BENCH_DATA_SOURCE_SHA }}
+          gh-repository: github.com/${{ github.repository }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Preserve owned bigger generated baseline clone
+        if: success() && (github.ref == 'refs/heads/dev' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap-dev-baseline))
+        run: |
+          set -euo pipefail
+          test "$(git -C benchmark-data-repository rev-parse HEAD^)" = "$BENCH_PAGES_PARENT"
+          test -z "$(git -C benchmark-data-repository status --porcelain)"
+          mv benchmark-data-repository "benchmark-data-bigger"
+
+      - name: Combine both genuine channels and publish once without retries
+        if: success() && (github.ref == 'refs/heads/dev' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap-dev-baseline))
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          smaller=benchmark-data-smaller
+          bigger=benchmark-data-bigger
+          small_commit=$(git -C "$smaller" rev-parse HEAD)
+          big_commit=$(git -C "$bigger" rev-parse HEAD)
+          test "$(git -C "$smaller" rev-parse HEAD^)" = "$BENCH_PAGES_PARENT"
+          test "$(git -C "$bigger" rev-parse HEAD^)" = "$BENCH_PAGES_PARENT"
+          test "$(git -C "$smaller" branch --show-current)" = gh-pages
+          test "$(git -C "$bigger" branch --show-current)" = gh-pages
+          test -z "$(git -C "$smaller" status --porcelain)"
+          test -z "$(git -C "$bigger" status --porcelain)"
+          git -C "$smaller" fetch "../$bigger" gh-pages
+          git -C "$smaller" -c user.name=github-action-benchmark \
+            -c user.email=github@users.noreply.github.com -c commit.gpgsign=false \
+            merge --no-ff --no-edit "$big_commit"
+          git -C "$smaller" merge-base --is-ancestor "$BENCH_PAGES_PARENT" HEAD
+          git -C "$smaller" merge-base --is-ancestor "$small_commit" HEAD
+          git -C "$smaller" merge-base --is-ancestor "$big_commit" HEAD
+          test -z "$(git -C "$smaller" status --porcelain)"
+          # Both genuine generated commits retain ancestry; both disjoint
+          # channel trees must exactly match their generated source commits.
+          test "$(git -C "$smaller" rev-parse HEAD:perf/bench-bigger)" = "$(git -C "$bigger" rev-parse HEAD:perf/bench-bigger)"
+          test "$(git -C "$smaller" rev-parse HEAD:perf/bench)" = "$(git -C "$smaller" rev-parse "$small_commit:perf/bench")"
+          dev-exec node "$BENCH_DESCRIPTOR_DIR/verify-benchmark-publication.mjs" \
+            "$smaller" "$BENCH_DATA_SOURCE_SHA" "$BENCH_PAGES_PARENT" \
+            bench-results/benchmark-smaller.json bench-results/benchmark-bigger.json
+          current=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" --jq .object.sha)
+          test "$current" = "$BENCH_DATA_SOURCE_SHA"
+          remote=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/gh-pages" --jq .object.sha)
+          test "$remote" = "$BENCH_PAGES_PARENT"
+          test "$(git rev-parse HEAD)" = "$BENCH_DATA_SOURCE_SHA"
+          git -C "$smaller" push origin gh-pages:gh-pages
+
+      - name: Remove all owned baseline-clone credentials
+        if: always()
+        run: |
+          set -euo pipefail
+          cleanup_status=0
+          for generated in benchmark-data-repository benchmark-data-smaller benchmark-data-bigger; do
+            if [ -d "$generated/.git" ]; then
+              if ! git -C "$generated" remote set-url origin "https://github.com/$GITHUB_REPOSITORY.git"; then
+                cleanup_status=1
+              fi
+              if ! test "$(git -C "$generated" remote get-url origin)" = "https://github.com/$GITHUB_REPOSITORY.git"; then
+                cleanup_status=1
+              fi
+            fi
+            # Always remove all owned clones, even if URL redaction failed.
+            # Their configs and reflogs must never enter uploaded evidence.
+            if ! rm -rf -- "$generated"; then
+              cleanup_status=1
+            fi
+            if [ -e "$generated" ] || [ -L "$generated" ]; then
+              cleanup_status=1
+            fi
+          done
+          exit "$cleanup_status"
 
       # No `|| true`. These two calls previously swallowed their exit codes, so
       # a profiler that never ran -- or crashed -- looked exactly like one that
@@ -193,6 +397,14 @@ jobs:
         with:
           name: benchmark-flamegraphs
           path: bench-results/flamegraph-*.svg
+          retention-days: 30
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-report
+          path: bench-results/
           retention-days: 30
 
       - name: Cleanup binaries

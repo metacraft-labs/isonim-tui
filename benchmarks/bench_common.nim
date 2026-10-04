@@ -42,14 +42,35 @@ proc parseBenchOptions*(): BenchOptions =
     elif arg.startsWith("--fragment="):
       result.fragmentName = arg["--fragment=".len .. ^1]
 
+const metricDirectionsSource = staticRead(currentSourcePath().parentDir / "metric-directions.json")
+let metricDirections = parseJson(metricDirectionsSource)
+
+proc directionToken(e: BenchEntry): string =
+  ## The complete M24 producer descriptor corpus owns the direction. Unknown
+  ## names/units fail instead of silently acquiring a comparison direction.
+  var matches = 0
+  for descriptor in metricDirections:
+    if descriptor["name"].getStr == e.name:
+      inc matches
+      if descriptor["unit"].getStr != e.unit:
+        raise newException(ValueError, "benchmark unit disagrees with descriptor: " & e.name)
+      case descriptor["direction"].getStr
+      of "smaller": result = "target<="
+      of "bigger": result = "target>="
+      else: raise newException(ValueError, "unknown benchmark comparison direction")
+  if matches != 1:
+    raise newException(ValueError, "benchmark must have exactly one descriptor: " & e.name)
+  if "target<=" in e.extra or "target>=" in e.extra:
+    raise newException(ValueError, "benchmark extra already contains comparison metadata")
+
 proc toJsonNode*(e: BenchEntry): JsonNode =
   result = %*{
     "name": e.name,
     "unit": e.unit,
     "value": e.value
   }
-  if e.extra.len > 0:
-    result["extra"] = %e.extra
+  let token = directionToken(e)
+  result["extra"] = %(if e.extra.len > 0: e.extra & "; " & token else: token)
 
 proc writeBenchFragment*(opts: BenchOptions; entries: openArray[BenchEntry]) =
   ## Serialise `entries` as a JSON array under

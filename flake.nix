@@ -71,45 +71,47 @@
         {
           checks.pre-commit = preCommit;
           devShells.default = pkgs.mkShell {
-            packages = with pkgs; [
-              nim
-              nimble
-              just
-              nixfmt-rfc-style
-              # Sanitizer-augmented Nim builds need clang on Linux.
-              clang
-              # Valgrind for the secondary leak-budget check.
-              valgrind
-              # Markdown / shell linting.
-              markdownlint-cli2
-              shellcheck
-              shfmt
-              # M19: tree-sitter runtime for the TextArea syntax
-              # highlighter. Vendored grammars (parser.c + scanner.c)
-              # are compiled in via {.compile.}; the runtime library
-              # itself is linked from this dev-shell package.
-              tree-sitter
-              # `tree-sitter generate` (the `grammars` Justfile recipe) loads
-              # the grammar's `grammar.js` through node; without it the CLI
-              # fails with "Failed to run `node`". codetracer's nix package
-              # runs the same generate step with nodejs on PATH.
-              nodejs
-              pkg-config
-              # M29 cross-emulator suite. xvfb-run hosts a virtual X
-              # display so xterm can run headless; tmux acts as the
-              # in-emulator capture surface (each emulator launches
-              # `tmux new-session` and the test reads back the pane via
-              # a shared tmux socket). kitty + alacritty are listed for
-              # completeness but require GPU/Wayland paths that aren't
-              # reliable under Xvfb in CI — the test driver detects
-              # missing emulators and reports them as deferred rather
-              # than failing.
-              xvfb-run
-              xterm
-              tmux
-              kitty
-              alacritty
-            ];
+            packages =
+              with pkgs;
+              [
+                nim
+                nimble
+                just
+                nixfmt-rfc-style
+                # Sanitizer-augmented Nim builds need clang on Linux.
+                clang
+                # Markdown / shell linting.
+                markdownlint-cli2
+                shellcheck
+                shfmt
+                # M19: tree-sitter runtime for the TextArea syntax
+                # highlighter. Vendored grammars (parser.c + scanner.c)
+                # are compiled in via {.compile.}; the runtime library
+                # itself is linked from this dev-shell package.
+                tree-sitter
+                # `tree-sitter generate` (the `grammars` Justfile recipe) loads
+                # the grammar's `grammar.js` through node; without it the CLI
+                # fails with "Failed to run `node`". codetracer's nix package
+                # runs the same generate step with nodejs on PATH.
+                nodejs
+                pkg-config
+                # M29 cross-emulator suite. xvfb-run hosts a virtual X
+                # display so xterm can run headless; tmux acts as the
+                # in-emulator capture surface (each emulator launches
+                # `tmux new-session` and the test reads back the pane via
+                # a shared tmux socket). kitty + alacritty are listed for
+                # completeness but require GPU/Wayland paths that aren't
+                # reliable under Xvfb in CI — the test driver detects
+                # missing emulators and reports them as deferred rather
+                # than failing.
+                xvfb-run
+                xterm
+                tmux
+                kitty
+                alacritty
+              ]
+              # Valgrind supports the existing Linux leak-budget check.
+              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.valgrind ];
             shellHook = ''
               ${ownRepoOnly preCommit.shellHook}
               echo "isonim-tui dev shell - nim $(nim --version 2>&1 | head -1)"

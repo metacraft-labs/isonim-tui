@@ -422,7 +422,7 @@ clean:
 # Both recipes accept an optional argument: pass "--quick" to run the
 # abbreviated CI variant.
 
-bench *FLAGS:
+bench *FLAGS: grammars
     @mkdir -p bench-results
     bash scripts/collect-benchmark-metrics.sh {{FLAGS}}
     bash scripts/render-bench-report.sh
@@ -479,3 +479,8 @@ test-windows:
 # Runs `nix develop`, so it is not part of the in-shell test recipes.
 test-dev-shell:
     bash tests/test_dev_shell_writes_nothing_elsewhere.sh
+
+# Consume real owning benchmark output; run `just bench --quick` first.
+# These refusal fixtures never measure or publish a reference baseline.
+bench-tools-test:
+    node tools/test-benchmark-directions.mjs bench-results/benchmark_results.json benchmarks/metric-directions.json "$(git rev-parse HEAD)"
