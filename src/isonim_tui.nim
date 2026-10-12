@@ -11,6 +11,7 @@
 import isonim_tui/cells
 import isonim_tui/events
 import isonim_tui/renderer
+import isonim_tui/event_dispatch
 import isonim_tui/text/width
 import isonim_tui/text/ansi
 import isonim_tui/text/content
@@ -123,7 +124,7 @@ import isonim_tui/syntax/highlighter as tsHighlighter
 # archive this aggregate module links.
 import isonim_tui/reactive_root as reactiveRootMod
 
-export cells, events, renderer
+export cells, events, renderer, event_dispatch
 export width, ansi, content
 export driver, headless_driver, compositor, overlay, caret
 export introspection, harness, pilot

@@ -22,19 +22,30 @@ import std/[strutils, tables]
 
 import ../renderer
 import ../events
+import ../event_dispatch
 
 # ----------------------------------------------------------------------------
 # Types
 # ----------------------------------------------------------------------------
 
 type
+  TrapToken* = distinct int
+    ## What `pushTrap` answers and `popTrap` takes: a trap is identified
+    ## by its token, never by its position on the stack, so a layer can
+    ## only remove the trap it installed.
+
+  Trap* = object
+    token*: TrapToken
+    rootId*: int
+
   FocusManager* = ref object
     ## Cross-cutting focus state. Holds the current focused node id
     ## (mirrors `harness.focusedId` so both can be queried), and the
     ## stack of trap roots installed by modal layers.
     focusedId*: int                  ## 0 = no focus.
-    trapStack*: seq[int]             ## Top of stack = current trap root id;
+    traps*: seq[Trap]                ## Top of stack = the active trap;
                                      ## empty = no trap (whole tree).
+    nextToken: int
 
   FocusChange* = object
     ## Result of a navigation step. `oldId` and `newId` may be 0.
@@ -50,7 +61,7 @@ type
 # ----------------------------------------------------------------------------
 
 proc newFocusManager*(): FocusManager =
-  FocusManager(focusedId: 0, trapStack: @[])
+  FocusManager(focusedId: 0, traps: @[], nextToken: 1)
 
 # ----------------------------------------------------------------------------
 # Focusable predicate
@@ -72,8 +83,8 @@ proc trapRootOf(fm: FocusManager; root: TerminalNode): TerminalNode =
   ## Resolve the active trap root: top of the stack if non-empty,
   ## otherwise the supplied tree root. Walks the tree to find the
   ## node by id.
-  if fm.trapStack.len == 0 or root == nil: return root
-  let trapId = fm.trapStack[^1]
+  if fm.traps.len == 0 or root == nil: return root
+  let trapId = fm.traps[^1].rootId
   proc walk(n: TerminalNode): TerminalNode =
     if n == nil: return nil
     if n.id == trapId: return n
@@ -112,31 +123,53 @@ proc nodeById(root: TerminalNode; id: int): TerminalNode =
     if m != nil: return m
   return nil
 
-proc fireFocusEvent(node: TerminalNode; name: string) =
-  ## Dispatch a synthetic `focus` / `blur` event on the target. The
-  ## DSL picks up listeners via the standard `addEventListener` calls
-  ## (no-arg or event-arg overload).
+proc fireFocusEvent(node: TerminalNode; name: string; related: int) =
+  ## Dispatch a `focus` / `blur` (not bubbling, as in the DOM: only the
+  ## capture phase and the target see it) or a `focusin` / `focusout`
+  ## (bubbling, so an ancestor learns that focus entered or left its
+  ## subtree). `related` is the node focus came from or goes to.
   if node == nil: return
   var ev = TerminalEvent(
-    kind: (if name == "focus": ekFocus else: ekBlur),
-    `type`: name, targetId: node.id, currentTargetId: node.id)
-  fireEventWith(node, name, ev)
+    kind: (if name in ["focus", "focusin"]: ekFocus else: ekBlur),
+    `type`: name, targetId: node.id, currentTargetId: node.id,
+    relatedTargetId: related)
+  discard dispatchEvent(node, ev, bubbles = name in ["focusin", "focusout"])
+
+proc focusPath*(fm: FocusManager; root: TerminalNode): seq[int] =
+  ## The ids from `root` down to the focused node, OUTERMOST FIRST — the
+  ## focused node's ancestors and itself (what `:focus-within` matches).
+  ## Empty when nothing is focused or the focused node is not under
+  ## `root`.
+  result = @[]
+  if root == nil or fm.focusedId == 0: return
+  proc walk(n: TerminalNode; acc: var seq[int]): bool =
+    acc.add n.id
+    if n.id == fm.focusedId: return true
+    for c in n.children:
+      if walk(c, acc): return true
+    acc.setLen(acc.len - 1)
+    false
+  discard walk(root, result)
 
 # ----------------------------------------------------------------------------
 # Setting focus
 # ----------------------------------------------------------------------------
 
 proc setFocus*(fm: FocusManager; root: TerminalNode; nodeId: int): FocusChange =
-  ## Move focus to the node with id `nodeId` (or 0 to clear). Fires
-  ## `blur` on the previously-focused node and `focus` on the new
-  ## one. No-ops when the target is already focused.
+  ## Move focus to the node with id `nodeId` (or 0 to clear). Fires, in
+  ## the DOM's order, `blur` and `focusout` on the previously-focused
+  ## node, then `focus` and `focusin` on the new one. No-ops when the
+  ## target is already focused.
   result = FocusChange(oldId: fm.focusedId, newId: nodeId, wrapped: false)
   if fm.focusedId == nodeId: return
-  let oldNode = nodeById(root, fm.focusedId)
-  fireFocusEvent(oldNode, "blur")
+  let oldId = fm.focusedId
+  let oldNode = nodeById(root, oldId)
+  fireFocusEvent(oldNode, "blur", nodeId)
+  fireFocusEvent(oldNode, "focusout", nodeId)
   fm.focusedId = nodeId
   let newNode = nodeById(root, nodeId)
-  fireFocusEvent(newNode, "focus")
+  fireFocusEvent(newNode, "focus", oldId)
+  fireFocusEvent(newNode, "focusin", oldId)
 
 proc clearFocus*(fm: FocusManager; root: TerminalNode) =
   discard fm.setFocus(root, 0)
@@ -195,19 +228,30 @@ proc focusPrev*(fm: FocusManager; root: TerminalNode): FocusChange =
 # Focus trap (modals, M14)
 # ----------------------------------------------------------------------------
 
-proc pushTrap*(fm: FocusManager; rootId: int) =
+proc `==`*(a, b: TrapToken): bool {.borrow.}
+
+proc pushTrap*(fm: FocusManager; rootId: int): TrapToken =
   ## Constrain navigation to the subtree rooted at `rootId`. Only
   ## focusable descendants of that node participate in the chain.
-  ## Modal widgets (M14) call this on open; they pop on close.
-  fm.trapStack.add rootId
+  ## Modal widgets (M14) call this on open and pop THEIR token on close.
+  result = TrapToken(fm.nextToken)
+  inc fm.nextToken
+  fm.traps.add Trap(token: result, rootId: rootId)
 
-proc popTrap*(fm: FocusManager) =
-  if fm.trapStack.len > 0:
-    fm.trapStack.setLen(fm.trapStack.len - 1)
+proc popTrap*(fm: FocusManager; token: TrapToken): bool =
+  ## Remove the trap `token` names — only when it is the top one. A token
+  ## that is not on top (another layer pushed after it and has not popped)
+  ## or not on the stack at all is refused: the stack is left exactly as
+  ## it was and the answer is false. Popping whatever is on top would
+  ## remove another layer's trap on its behalf.
+  if fm.traps.len == 0 or fm.traps[^1].token != token:
+    return false
+  fm.traps.setLen(fm.traps.len - 1)
+  true
 
 proc currentTrap*(fm: FocusManager): int =
-  if fm.trapStack.len == 0: 0
-  else: fm.trapStack[^1]
+  if fm.traps.len == 0: 0
+  else: fm.traps[^1].rootId
 
 # ----------------------------------------------------------------------------
 # Convenience: handle a Tab/Shift-Tab event

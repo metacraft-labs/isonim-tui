@@ -45,6 +45,8 @@ export focusMgrMod.FocusManager, focusMgrMod.FocusChange,
        focusMgrMod.focusChain, focusMgrMod.setFocus, focusMgrMod.clearFocus,
        focusMgrMod.setFocusByNode, focusMgrMod.focusNext, focusMgrMod.focusPrev,
        focusMgrMod.pushTrap, focusMgrMod.popTrap, focusMgrMod.currentTrap,
+       focusMgrMod.TrapToken, focusMgrMod.Trap, focusMgrMod.`==`,
+       focusMgrMod.focusPath,
        focusMgrMod.handleKey
 
 export workerMgrMod.WorkerManager, workerMgrMod.WorkerHandle,

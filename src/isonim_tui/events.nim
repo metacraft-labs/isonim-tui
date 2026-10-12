@@ -68,6 +68,15 @@ type
     ekBlur
     ekPaste
 
+  EventPhase* = enum
+    ## Where a propagating event is on its way (the DOM's `eventPhase`).
+    ## `epNone` for an event that is not being dispatched — what
+    ## `fireEvent` hands a single node's listeners.
+    epNone = "none"
+    epCapturing = "capturing"
+    epAtTarget = "at-target"
+    epBubbling = "bubbling"
+
   KeyEvent* = object
     ## Decoded key event. `rune` is 0 for non-character keys.
     kind*: KeyKind
@@ -105,10 +114,21 @@ type
     currentTargetId*: int
     defaultPrevented*: bool
     propagationStopped*: bool
+    phase*: EventPhase
+      ## Set by `event_dispatch.dispatchEvent` before each listener runs.
+    relatedTargetId*: int
+      ## `focusin` / `focusout`: the node focus came from or goes to (0 =
+      ## none), the DOM's `relatedTarget`.
     key*: KeyEvent
     mouse*: MouseEvent
     resize*: ResizeEvent
     paste*: PasteEvent
+
+  PropagatingHandler* = proc(ev: var TerminalEvent) {.closure.}
+    ## A listener that takes part in propagation: it receives the event
+    ## itself, so it can call `stopPropagation` / `preventDefault` and the
+    ## dispatcher sees it. Registered with
+    ## `renderer.addEventListener(…, capture)`.
 
 # ----------------------------------------------------------------------------
 # Construction helpers

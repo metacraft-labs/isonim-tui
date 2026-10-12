@@ -53,6 +53,18 @@ type
     parent*: TerminalNode
     eventListeners*: Table[string, seq[proc()]]
     eventHandlers*: Table[string, seq[proc(ev: TerminalEvent)]]
+    listeners*: Table[string, seq[RegisteredListener]]
+      ## Listeners that take part in propagation
+      ## (`event_dispatch.dispatchEvent`), in registration order. The two
+      ## tables above are the DSL's overloads; they are called at the target
+      ## and in the bubble phase but receive a copy, so they cannot stop an
+      ## event.
+
+  RegisteredListener* = object
+    capture*: bool
+      ## Called in the capture phase (on an ancestor of the target) rather
+      ## than the bubble phase. At the target both kinds run, capture first.
+    handler*: PropagatingHandler
 
   TerminalRenderer* = object
     ## Renderer backend. Empty value type: per-thread node-id state lives
@@ -186,6 +198,14 @@ proc addEventListener*(r: TerminalRenderer; node: TerminalNode; event: string;
     node.eventHandlers[event] = @[]
   node.eventHandlers[event].add(handler)
 
+proc addEventListener*(r: TerminalRenderer; node: TerminalNode; event: string;
+                       handler: PropagatingHandler; capture: bool) =
+  ## A propagating listener — the DOM's `addEventListener(type, listener,
+  ## {capture})`. It receives the event itself, so `stopPropagation` and
+  ## `preventDefault` reach `event_dispatch.dispatchEvent`.
+  node.listeners.mgetOrPut(event, @[]).add RegisteredListener(
+    capture: capture, handler: handler)
+
 proc firstChild*(r: TerminalRenderer; node: TerminalNode): TerminalNode =
   if node == nil or node.children.len == 0: nil
   else: node.children[0]
@@ -212,6 +232,7 @@ proc clearEventListeners*(r: TerminalRenderer; node: TerminalNode) =
   ## `MockRenderer.clearEventListeners`.
   node.eventListeners.clear()
   node.eventHandlers.clear()
+  node.listeners.clear()
 
 # ----------------------------------------------------------------------------
 # Event firing helpers (for tests; production input lands in M2/M9/M10)
