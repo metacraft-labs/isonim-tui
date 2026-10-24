@@ -126,16 +126,24 @@ type
     stripCache: Table[int, StripCacheEntry]
     cacheHits: int
     cacheMisses: int
+    ambiguous*: AmbiguousWidth
+      ## How many cells an East Asian Width `A` character takes in THIS
+      ## compositor's layout — an explicit input, so a frame's cell layout
+      ## is a function of what it was handed and never of the thread-local
+      ## `setAmbiguousWidth`. A front-end that measured its terminal drawing
+      ## them wide passes `awWide`, and its own layout and this one agree.
 
 # ----------------------------------------------------------------------------
 # Construction
 # ----------------------------------------------------------------------------
 
-proc newCompositor*(cols, rows: int): Compositor =
+proc newCompositor*(cols, rows: int;
+                    ambiguous = awNarrow): Compositor =
   ## Construct a fresh compositor of the given dimensions. The strip
-  ## cache starts empty; counters start at zero.
+  ## cache starts empty; counters start at zero. `ambiguous` is the width
+  ## policy for East Asian Width `A` characters (`Compositor.ambiguous`).
   Compositor(
-    cols: cols, rows: rows,
+    cols: cols, rows: rows, ambiguous: ambiguous,
     lastBuffer: newScreenBuffer(cols, rows),
     lastDirty: @[],
     initialPainted: false,
@@ -384,7 +392,8 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
                     parentStyle: StyleSnapshot;
                     parentLayer: int;
                     parentHasBg: bool;
-                    entries: var seq[LayoutEntry]) =
+                    entries: var seq[LayoutEntry];
+                    ambiguous = awNarrow) =
   ## Recursive tree walk. Mirrors M2's flatten-to-rows model but
   ## propagates inherited foreground / background / attribute style and
   ## the active layer. Boxes whose children are all text collapse to a
@@ -424,7 +433,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
       let text = subtreeText(node)
       var w = 0
       for rune in runes(text):
-        w.inc(displayWidth(rune))
+        w.inc(displayWidth(rune, ambiguous))
       entries.add LayoutEntry(
         row: intOf("top"), col: intOf("left"), width: w, text: text,
         nodeId: node.id, layer: nodeLayer,
@@ -456,7 +465,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
           let chResolved = styleFor(ch, resolved.snap)
           var w = 0
           for rune in runes(ch.text):
-            w.inc(displayWidth(rune))
+            w.inc(displayWidth(rune, ambiguous))
           let remaining = max(0, cols - segCol)
           let segWidth = min(w, remaining)
           entries.add LayoutEntry(
@@ -588,9 +597,10 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
           return
       for ch in node.children:
         walkLayoutImpl(ch, row, cols, resolved.snap, nodeLayer,
-                       nodeHasBg, entries)
+                       nodeHasBg, entries, ambiguous)
 
-proc walkLayoutClean(node: TerminalNode; cols: int): seq[LayoutEntry] =
+proc walkLayoutClean(node: TerminalNode; cols: int;
+                     ambiguous = awNarrow): seq[LayoutEntry] =
   ## Convenience wrapper; the recursion uses `var` row + accumulator
   ## so the public surface stays a plain seq.
   result = @[]
@@ -598,13 +608,14 @@ proc walkLayoutClean(node: TerminalNode; cols: int): seq[LayoutEntry] =
   var row = 0
   let parentStyle = StyleSnapshot(
     fg: defaultColor(), bg: defaultColor(), attrs: {})
-  walkLayoutImpl(node, row, cols, parentStyle, 0, false, result)
+  walkLayoutImpl(node, row, cols, parentStyle, 0, false, result, ambiguous)
 
 # ----------------------------------------------------------------------------
 # Strip construction (cache-aware)
 # ----------------------------------------------------------------------------
 
-proc rawCellsForEntry(entry: LayoutEntry; cols: int): seq[Cell] =
+proc rawCellsForEntry(entry: LayoutEntry; cols: int;
+                      ambiguous = awNarrow): seq[Cell] =
   ## Project a layout entry into cells *before* the cache lookup. The
   ## entry's text is laid out at column zero; the trailing background
   ## (if `fillBackground` is set) is painted with the entry's bg.
@@ -616,7 +627,7 @@ proc rawCellsForEntry(entry: LayoutEntry; cols: int): seq[Cell] =
     inc col
   for r in runes(entry.text):
     if col >= limit: break
-    let w = displayWidth(r)
+    let w = displayWidth(r, ambiguous)
     if w == 0:
       continue
     if w >= 2:
@@ -640,7 +651,8 @@ proc rawCellsForEntry(entry: LayoutEntry; cols: int): seq[Cell] =
     result.add spaceCell()
     inc col
 
-proc inputHashForEntry(entry: LayoutEntry; cols: int): uint64 =
+proc inputHashForEntry(entry: LayoutEntry; cols: int;
+                       ambiguous = awNarrow): uint64 =
   ## Hash the *inputs* that determine the entry's cells: text, fg, bg,
   ## attrs, layer, fill flag, and the destination width. Matches in
   ## the cache mean the cells will be byte-identical so we can skip
@@ -658,20 +670,21 @@ proc inputHashForEntry(entry: LayoutEntry; cols: int): uint64 =
   h = h !& hash(entry.col)
   h = h !& hash(entry.width)
   h = h !& hash(cols)
+  h = h !& hash(ord(ambiguous))
   cast[uint64](!$h)
 
 proc stripForEntry(c: Compositor; entry: LayoutEntry): Strip =
   ## Cache-aware strip construction. Returns a cached Strip on hit;
   ## reconstructs and stores on miss.
   let key = entry.nodeId
-  let want = inputHashForEntry(entry, c.cols)
+  let want = inputHashForEntry(entry, c.cols, c.ambiguous)
   if key in c.stripCache:
     let cached = c.stripCache[key]
     if cached.inputHash == want and cached.width == c.cols:
       inc c.cacheHits
       return cached.strip
   inc c.cacheMisses
-  let cells = rawCellsForEntry(entry, c.cols)
+  let cells = rawCellsForEntry(entry, c.cols, c.ambiguous)
   let strip = newStrip(cells)
   c.stripCache[key] = StripCacheEntry(
     inputHash: want, width: c.cols, strip: strip)
@@ -749,7 +762,7 @@ proc render*(c: Compositor; root: TerminalNode): ScreenBuffer =
   ## absorbs the per-entry cell construction on hits.
   var buf = newScreenBuffer(c.cols, c.rows)
   if root == nil: return buf
-  var entries = walkLayoutClean(root, c.cols)
+  var entries = walkLayoutClean(root, c.cols, c.ambiguous)
   for i in 1 ..< entries.len:
     var j = i
     while j > 0 and entries[j - 1].layer > entries[j].layer:
@@ -908,7 +921,7 @@ proc layoutRegionFor*(c: Compositor; root: TerminalNode; nodeId: int):
   ## outer node doesn't emit a layout entry directly.
   result = (row: 0, col: 0, width: 0, height: 0)
   if root == nil: return
-  let entries = walkLayoutClean(root, c.cols)
+  let entries = walkLayoutClean(root, c.cols, c.ambiguous)
   for entry in entries:
     if entry.nodeId == nodeId:
       result = (row: entry.row, col: entry.col,
