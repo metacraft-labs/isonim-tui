@@ -117,10 +117,7 @@ proc emitCellPayload(d: HeadlessDriver; cell: Cell) =
   if sgr.len > 0:
     d.bytesEmitted.add(sgr)
     d.currentStyle = target
-  if cell.rune.int32 != 0:
-    d.bytesEmitted.add(toUTF8(cell.rune))
-  else:
-    d.bytesEmitted.add(' ')
+  d.bytesEmitted.add(cellText(cell))
 
 proc write*(d: HeadlessDriver; strip: Strip) =
   ## Compositor entry point. The strip's row position is implicit —

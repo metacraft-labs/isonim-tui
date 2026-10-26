@@ -68,6 +68,19 @@ func isZeroWidth(cp: int32): bool {.inline.} =
   if gb == gbT: return true
   return false
 
+func isClusterContinuation*(r: Rune): bool =
+  ## A rune that takes no cell of its own and BELONGS TO THE ONE BEFORE IT —
+  ## a combining mark, a joiner (ZWJ), a variation selector, a spacing mark,
+  ## a Hangul trailing jamo: what a cell carries after its base so the
+  ## glyph the program printed is the glyph drawn. A control character is
+  ## not one: it is never written into a cell.
+  let cp = int32(r)
+  if cp < 0x20 or cp == 0x7F or (cp >= 0x80 and cp <= 0x9F):
+    return false
+  case graphemeBreakKind(cp)
+  of gbExtend, gbZWJ, gbSpacingMark, gbT: true
+  else: false
+
 func displayWidth*(r: Rune; ambiguous: AmbiguousWidth): int =
   ## Number of terminal cells a single rune occupies under an EXPLICIT
   ## ambiguous-width policy.

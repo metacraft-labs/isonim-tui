@@ -94,6 +94,11 @@ type
     bg*: Color
     attrs*: set[Attr]
     width*: int8       ## 1 for narrow, 2 for wide, 0 for ghost trailing-half
+    extra*: string
+      ## The runes that belong to `rune`'s grapheme and take no cell of their
+      ## own — combining marks, a ZWJ, a variation selector — in UTF-8,
+      ## written right after `rune` (`cellText`). Empty for almost every
+      ## cell, so a plain cell costs no allocation.
 
 # ----------------------------------------------------------------------------
 # Color construction helpers
@@ -168,7 +173,15 @@ proc newCell*(c: char; fg: Color = defaultColor(); bg: Color = defaultColor();
 
 proc `==`*(a, b: Cell): bool {.inline.} =
   a.rune == b.rune and a.fg == b.fg and a.bg == b.bg and
-    a.attrs == b.attrs and a.width == b.width
+    a.attrs == b.attrs and a.width == b.width and a.extra == b.extra
+
+proc cellText*(c: Cell): string =
+  ## What a terminal is sent for `c`: its rune (a space for the empty rune)
+  ## and the runes of its grapheme that follow it. Nothing for a ghost.
+  if c.width == 0 and c.rune.int32 == 0:
+    return ""
+  result = if c.rune.int32 == 0: " " else: toUTF8(c.rune)
+  result.add c.extra
 
 # ----------------------------------------------------------------------------
 # Strip
@@ -205,6 +218,8 @@ proc recomputeCache*(s: var Strip) =
       a = a or (1 shl ord(at))
     h = h !& hash(a)
     h = h !& hash(cell.width.int)
+    if cell.extra.len > 0:
+      h = h !& hash(cell.extra)
     w += cell.width.int
   h = !$h
   s.contentHash = cast[uint64](h.int64)

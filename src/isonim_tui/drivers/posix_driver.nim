@@ -453,10 +453,7 @@ proc emitCellPayload(d: PosixDriver; cell: Cell) =
   if sgr.len > 0:
     d.writeBuf.add(sgr)
     d.currentStyle = target
-  if cell.rune.int32 != 0:
-    d.writeBuf.add(toUTF8(cell.rune))
-  else:
-    d.writeBuf.add(' ')
+  d.writeBuf.add(cellText(cell))
 
 proc write*(d: PosixDriver; strip: Strip) =
   ## Compositor entry point. Encode every cell in the strip as a byte

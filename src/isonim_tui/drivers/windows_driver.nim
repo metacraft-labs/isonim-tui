@@ -762,10 +762,7 @@ proc emitCellPayload(d: WindowsDriver; cell: Cell) =
   if sgr.len > 0:
     d.writeBuf.add(sgr)
     d.currentStyle = target
-  if cell.rune.int32 != 0:
-    d.writeBuf.add(toUTF8(cell.rune))
-  else:
-    d.writeBuf.add(' ')
+  d.writeBuf.add(cellText(cell))
 
 proc write*(d: WindowsDriver; strip: Strip) =
   ## Compositor entry point. Mirrors PosixDriver.write.

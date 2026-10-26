@@ -48,6 +48,8 @@ import ./renderer
 import ./drivers/headless_driver
 import ./text/ansi
 import ./text/width
+import ./text/fences
+export fences
 
 # ----------------------------------------------------------------------------
 # Layered layout entry
@@ -132,6 +134,10 @@ type
       ## is a function of what it was handed and never of the thread-local
       ## `setAmbiguousWidth`. A front-end that measured its terminal drawing
       ## them wide passes `awWide`, and its own layout and this one agree.
+    fences*: WidthFences
+      ## The width questions this terminal left unanswered: the cells
+      ## `text/fences` says may be drawn at another width are followed by an
+      ## absolute move (Terminal-Adaptation §6.5). The zero value fences none.
 
 # ----------------------------------------------------------------------------
 # Construction
@@ -626,10 +632,18 @@ proc rawCellsForEntry(entry: LayoutEntry; cols: int;
     result.add spaceCell()
     inc col
   for r in runes(entry.text):
-    if col >= limit: break
     let w = displayWidth(r, ambiguous)
     if w == 0:
+      # A combining mark, a joiner, a variation selector: no cell of its own
+      # — it goes with the rune before it, so the glyph the text holds is
+      # the glyph drawn. A control character goes nowhere.
+      if isClusterContinuation(r) and result.len > min(entry.col, limit):
+        var k = result.high
+        if result[k].width == 0 and k > 0: dec k
+        if result[k].width > 0:
+          result[k].extra.add toUTF8(r)
       continue
+    if col >= limit: break
     if w >= 2:
       if col + 1 >= limit: break
       result.add Cell(rune: r, fg: entry.fg, bg: entry.bg,
@@ -815,7 +829,8 @@ proc diffRegions*(a, b: ScreenBuffer): seq[CellRegion] =
 proc cellStyle(cell: Cell): Style {.inline.} =
   newStyle(cell.fg, cell.bg, cell.attrs)
 
-proc emitRegion*(prev: Style; region: CellRegion):
+proc emitRegion*(prev: Style; region: CellRegion;
+                 fences = WidthFences()):
                 tuple[bytes: string; trailing: Style] =
   ## Encode one dirty region as a minimal SGR-aware byte run. The
   ## output is `cursorTo(row, col)` followed by:
@@ -829,7 +844,7 @@ proc emitRegion*(prev: Style; region: CellRegion):
   ## regions on the same row can keep emitting minimal transitions.
   result.bytes = cursorTo(region.row, region.col)
   result.trailing = prev
-  for cell in region.cells:
+  for i, cell in region.cells:
     if cell.width == 0:
       continue
     let target = cellStyle(cell)
@@ -837,12 +852,14 @@ proc emitRegion*(prev: Style; region: CellRegion):
     if sgr.len > 0:
       result.bytes.add sgr
       result.trailing = target
-    if cell.rune.int32 != 0:
-      result.bytes.add toUTF8(cell.rune)
-    else:
-      result.bytes.add ' '
+    result.bytes.add cellText(cell)
+    # A cell whose width this terminal may not draw as counted: the next
+    # cell is placed absolutely (`text/fences`).
+    if cell.needsFence(fences) and i + int(cell.width) < region.cells.len:
+      result.bytes.add fenceAfter(region.col + i, cell)
 
-proc emitRow*(prev: Style; regions: seq[CellRegion]):
+proc emitRow*(prev: Style; regions: seq[CellRegion];
+              fences = WidthFences()):
              tuple[bytes: string; trailing: Style] =
   ## Encode every region in `regions` (assumed to be on the same row,
   ## col-ascending) using `emitRegion` and concatenate the byte runs.
@@ -851,7 +868,7 @@ proc emitRow*(prev: Style; regions: seq[CellRegion]):
   result.bytes = ""
   result.trailing = prev
   for r in regions:
-    let (bytes, after) = emitRegion(result.trailing, r)
+    let (bytes, after) = emitRegion(result.trailing, r, fences)
     result.bytes.add bytes
     result.trailing = after
 
@@ -882,7 +899,7 @@ proc paint*(c: Compositor; root: TerminalNode; driver: HeadlessDriver) =
       while j < regions.len and regions[j].row == row:
         inc j
       let rowRegions = regions[i ..< j]
-      let (bytes, after) = emitRow(prev, rowRegions)
+      let (bytes, after) = emitRow(prev, rowRegions, c.fences)
       driver.writeRaw(bytes)
       prev = after
       i = j
