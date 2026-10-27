@@ -73,12 +73,12 @@ jobs:
           owner: metacraft-labs
 
       - name: Setup dev env (reprobuild flavor)
-        # setup-dev-env clones the siblings listed in .github/sibling-repos
-        # (codetracer-trace-format, codetracer-trace-format-nim) at the
-        # workspace-lock-pinned revisions before materialising the env.
+        # Consume this checkout's complete committed source closure and exact pins.
+        # The shared action reconciles legacy requests against repro.lock.
         uses: metacraft-labs/metacraft-github-actions/setup-dev-env@dev
         with:
           env-flavor: reprobuild
+          sibling-strategy: repro-lock
           gh-token: ${{ steps.ci_token.outputs.token }}
 
       - name: repro build
@@ -101,7 +101,7 @@ jobs:
       - name: just test (cross-check)
         run: dev-exec just test
 
-      # Diagnostics on failure. Three things below are load-bearing:
+      # Diagnostics and ordinary tool identities on every result. Three things below are load-bearing:
       #
       # 1. `include-hidden-files: true`. actions/upload-artifact@v4 defaults this
       #    input to false, and @actions/glob then skips any entry it traverses whose
@@ -120,7 +120,7 @@ jobs:
       #    a build-output tree rather than a log tree, it matches nothing in the Nim
       #    repos, and where it does match it would permanently mask the warning below.
       # 3. `if-no-files-found: warn` (the action's own default). This step only runs
-      #    on failure, so a warning costs nothing -- and it is exactly what would have
+      #    on every result, so a warning exposes a missing record -- it would have
       #    surfaced (1) years ago instead of hiding it behind a green step.
       #
       # Context, 2026-09: no leg of this workflow is green on ANY platform. Census of
@@ -130,14 +130,16 @@ jobs:
       # fails earlier than x64, and x64 fails for an unrelated project-level reason
       # (`cannot open file: results`, codetracer_ct_print.nim(24, 8)). These
       # artifacts are the only way to find out why any of it actually fails.
-      - name: Upload logs on failure
-        if: failure()
+      - name: Upload logs and tool identities
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reprobuild-logs-${{ matrix.os }}-${{ matrix.arch }}
           path: |
             .repro/build/*/build-failure-report.json
             .repro/build/*/build-engine-cache/actions/
+            .repro/dev-env/**/path-only-tool-identities.inspect.json
+            .repro/build/**/path-only-tool-identities.inspect.json
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: warn
