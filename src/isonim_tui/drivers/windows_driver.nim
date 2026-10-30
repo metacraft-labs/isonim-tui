@@ -106,18 +106,18 @@ when defined(windows):
                            header: "<windows.h>", pure, final.} = object
       dwSize: CoordRec
 
+    InputEventPayload {.union, bycopy.} = object
+      keyEvent: KeyEventRec
+      mouseEvent: MouseEventRec
+      windowSizeEvent: WindowBufferSizeRec
+
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
       eventType {.importc: "EventType".}: WORD
-      ## The actual union of the five Event sub-records. We pick the
-      ## widest (KEY_EVENT_RECORD is the largest at 16 bytes on x64,
-      ## MOUSE is 16 too) and reinterpret via `cast`. Since this is
-      ## inside a `when defined(windows)` block targeting a real Win32
-      ## build, sizeof is determined by the actual `<windows.h>`.
-      ## This byte view names the SDK's Event union. Take the union's
-      ## address directly, rather than indexing it as a C byte array.
-      ## 16 bytes covers all variants on both x86 and x64.
-      eventBlob {.importc: "Event".}: array[16, byte]
+      ## Model the SDK Event field as a union, not an array: Nim elides
+      ## address-of for arrays because C arrays decay to pointers. A union
+      ## needs an actual address before casting to its selected record.
+      eventBlob {.importc: "Event".}: InputEventPayload
 
     PHandlerRoutine = proc (ctrlType: DWORD): BOOL {.stdcall.}
 

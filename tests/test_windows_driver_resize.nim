@@ -31,10 +31,19 @@ when defined(windows):
                            header: "<windows.h>", pure, final.} = object
       dwSize: CoordRec
 
+    KeyEventStorage {.importc: "KEY_EVENT_RECORD",
+                       header: "<windows.h>", pure, final.} = object
+    MouseEventStorage {.importc: "MOUSE_EVENT_RECORD",
+                         header: "<windows.h>", pure, final.} = object
+    InputEventPayload {.union, bycopy.} = object
+      keyEvent: KeyEventStorage
+      mouseEvent: MouseEventStorage
+      windowSizeEvent: WindowBufferSizeRec
+
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
       eventType {.importc: "EventType".}: WORD
-      eventBlob {.importc: "Event".}: array[16, byte]
+      eventBlob {.importc: "Event".}: InputEventPayload
 
   const
     STD_INPUT_HANDLE = DWORD(-10'i32)

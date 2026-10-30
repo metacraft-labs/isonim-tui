@@ -54,10 +54,13 @@ when defined(windows):
       uChar {.importc: "uChar.UnicodeChar".}: WCHAR
       dwControlKeyState: DWORD
 
+    InputEventPayload {.union, bycopy.} = object
+      keyEvent: KeyEventRec
+
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
       eventType {.importc: "EventType".}: WORD
-      eventBlob {.importc: "Event".}: array[16, byte]
+      eventBlob {.importc: "Event".}: InputEventPayload
 
   const
     STD_INPUT_HANDLE = DWORD(-10'i32)
