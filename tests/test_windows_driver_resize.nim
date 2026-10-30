@@ -12,19 +12,20 @@ import std/unittest
 
 when defined(windows):
   import std/[os, times]
-  import isonim_tui
+  # These real console tests exercise the driver, independently of layout.
+  import isonim_tui/[events, drivers/driver, drivers/windows_driver]
 
 when defined(windows):
   type
     HANDLE = pointer
-    DWORD = uint32
+    DWORD {.importc: "DWORD", header: "<windows.h>".} = uint32
     BOOL = int32
     WORD = uint16
     SHORT = int16
 
     CoordRec {.importc: "COORD", header: "<windows.h>", pure, final.} = object
-      x: SHORT
-      y: SHORT
+      x {.importc: "X".}: SHORT
+      y {.importc: "Y".}: SHORT
 
     WindowBufferSizeRec {.importc: "WINDOW_BUFFER_SIZE_RECORD",
                            header: "<windows.h>", pure, final.} = object
@@ -32,8 +33,8 @@ when defined(windows):
 
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
-      eventType: WORD
-      eventBlob: array[16, byte]
+      eventType {.importc: "EventType".}: WORD
+      eventBlob {.importc: "Event".}: array[16, byte]
 
   const
     STD_INPUT_HANDLE = DWORD(-10'i32)
@@ -50,7 +51,7 @@ when defined(windows):
   proc makeResizeRec(cols, rows: int): InputRecord =
     var rec: InputRecord
     rec.eventType = WINDOW_BUFFER_SIZE_KIND
-    let wePtr = cast[ptr WindowBufferSizeRec](addr rec.eventBlob[0])
+    let wePtr = cast[ptr WindowBufferSizeRec](addr rec.eventBlob)
     wePtr.dwSize.x = SHORT(cols)
     wePtr.dwSize.y = SHORT(rows)
     result = rec

@@ -34,12 +34,13 @@ import std/unittest
 
 when defined(windows):
   import std/strutils
-  import isonim_tui
+  # These real console tests exercise the driver, independently of layout.
+  import isonim_tui/[events, drivers/driver, drivers/windows_driver]
 
 when defined(windows):
   type
     HANDLE = pointer
-    DWORD = uint32
+    DWORD {.importc: "DWORD", header: "<windows.h>".} = uint32
     BOOL = int32
 
   const

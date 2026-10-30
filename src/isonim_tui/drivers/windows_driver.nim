@@ -73,15 +73,17 @@ when defined(windows):
 when defined(windows):
   type
     HANDLE* = pointer
-    DWORD* = uint32
+    # Use the C typedef as well as its 32-bit Nim representation: the
+    # console APIs take DWORD pointers, which are not unsigned-int pointers.
+    DWORD* {.importc: "DWORD", header: "<windows.h>".} = uint32
     BOOL* = int32
     WORD* = uint16
     SHORT* = int16
     WCHAR* = uint16
 
     CoordRec {.importc: "COORD", header: "<windows.h>", pure, final.} = object
-      x: SHORT
-      y: SHORT
+      x {.importc: "X".}: SHORT
+      y {.importc: "Y".}: SHORT
 
     KeyEventRec {.importc: "KEY_EVENT_RECORD",
                   header: "<windows.h>", pure, final.} = object
@@ -89,9 +91,8 @@ when defined(windows):
       wRepeatCount: WORD
       wVirtualKeyCode: WORD
       wVirtualScanCode: WORD
-      uChar: WCHAR             ## Union member: UnicodeChar (we always read
-                               ## the UTF-16 code unit; the AsciiChar variant
-                               ## is for legacy callers).
+      # The Win32 member is a union; select its UTF-16 arm explicitly.
+      uChar {.importc: "uChar.UnicodeChar".}: WCHAR
       dwControlKeyState: DWORD
 
     MouseEventRec {.importc: "MOUSE_EVENT_RECORD",
@@ -107,15 +108,16 @@ when defined(windows):
 
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
-      eventType: WORD
+      eventType {.importc: "EventType".}: WORD
       ## The actual union of the five Event sub-records. We pick the
       ## widest (KEY_EVENT_RECORD is the largest at 16 bytes on x64,
       ## MOUSE is 16 too) and reinterpret via `cast`. Since this is
       ## inside a `when defined(windows)` block targeting a real Win32
       ## build, sizeof is determined by the actual `<windows.h>`.
-      ## We use a fixed buffer matching `INPUT_RECORD`'s tail size:
+      ## This byte view names the SDK's Event union. Take the union's
+      ## address directly, rather than indexing it as a C byte array.
       ## 16 bytes covers all variants on both x86 and x64.
-      eventBlob: array[16, byte]
+      eventBlob {.importc: "Event".}: array[16, byte]
 
     PHandlerRoutine = proc (ctrlType: DWORD): BOOL {.stdcall.}
 
@@ -542,15 +544,15 @@ when defined(windows):
         case recPtr.eventType
         of KEY_EVENT_KIND:
           # Reinterpret the union member. The actual KEY_EVENT_RECORD is
-          # in the eventBlob; cast through pointer arithmetic.
-          let kePtr = cast[ptr KeyEventRec](addr recPtr.eventBlob[0])
+          # in Event; taking the union's address preserves its SDK alignment.
+          let kePtr = cast[ptr KeyEventRec](addr recPtr.eventBlob)
           if kePtr.bKeyDown != 0:
             args.chan[].pushEvent(translateKeyRecord(kePtr[]))
         of MOUSE_EVENT_KIND:
-          let mePtr = cast[ptr MouseEventRec](addr recPtr.eventBlob[0])
+          let mePtr = cast[ptr MouseEventRec](addr recPtr.eventBlob)
           args.chan[].pushEvent(translateMouseRecord(mePtr[]))
         of WINDOW_BUFFER_SIZE_KIND:
-          let wePtr = cast[ptr WindowBufferSizeRec](addr recPtr.eventBlob[0])
+          let wePtr = cast[ptr WindowBufferSizeRec](addr recPtr.eventBlob)
           args.chan[].pushEvent(translateResizeRecord(wePtr[]))
         of MENU_EVENT_KIND, FOCUS_EVENT_KIND:
           # Menu and focus records aren't surfaced through the renderer
