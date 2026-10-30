@@ -508,13 +508,16 @@ package isonim_tui:
   uses:
     # Toolchain floor — the PATH-resolvable binaries the build needs. ``nim``
     # compiles every test binary (the ``buildNimUnittest.build`` edges below,
-    # matching the nimble file's ``requires "nim >= 2.0.0"``); ``gcc`` is the
-    # C back-end ``nim c`` shells out to and links through (it also compiles
-    # isonim's vendored Yoga C++ + the tree-sitter grammar C sources the
-    # ``{.compile.}`` directives pull in). Sufficient for the path-mode
-    # resolver under ``nix develop``.
+    # matching the nimble file's ``requires "nim >= 2.0.0"``). Native Nim
+    # selects Clang on Darwin and GCC elsewhere; declare that actual backend
+    # so its identity and executable directory reach each compile action.
+    # It also compiles isonim's vendored Yoga C++ sources, so availability
+    # must survive the normal action-scoped tool selection.
     "nim >=2.0"
-    "gcc >=12"
+    when defined(macosx):
+      "clang"
+    else:
+      "gcc >=12"
 
     # The four landed sibling Nim-library producers this repo consumes from
     # source (SC-11 develop-mode). Naming each workspace project here makes
