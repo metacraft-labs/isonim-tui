@@ -139,8 +139,8 @@ jobs:
           path: |
             .repro/build/*/build-failure-report.json
             .repro/build/*/build-engine-cache/actions/
-            .repro/dev-env/**/path-only-tool-identities.inspect.json
-            .repro/build/**/path-only-tool-identities.inspect.json
+            .repro/dev-env/**/*-tool-identities.inspect.json
+            .repro/build/**/*-tool-identities.inspect.json
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: warn
