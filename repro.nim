@@ -500,7 +500,13 @@ package isonim_tui:
     when not defined(windows):
       useFlakeDevShell()
 
-  defaultToolProvisioning "path"
+  # Windows obtains the declared compilers from pinned store realizations,
+  # rather than accepting an unrelated compiler from the runner's PATH.
+  # POSIX keeps the toolchain supplied by the captured Nix development shell.
+  when defined(windows):
+    defaultToolProvisioning "tarball"
+  else:
+    defaultToolProvisioning "path"
 
   uses:
     # Toolchain floor — the PATH-resolvable binaries the build needs. ``nim``
