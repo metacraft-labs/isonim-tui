@@ -503,10 +503,7 @@ package isonim_tui:
   # Windows obtains the declared compilers from pinned store realizations,
   # rather than accepting an unrelated compiler from the runner's PATH.
   # POSIX keeps the toolchain supplied by the captured Nix development shell.
-  when defined(windows):
-    defaultToolProvisioning "tarball"
-  else:
-    defaultToolProvisioning "path"
+  defaultToolProvisioning(when defined(windows): "tarball" else: "path")
 
   uses:
     # Toolchain floor — the PATH-resolvable binaries the build needs. ``nim``
