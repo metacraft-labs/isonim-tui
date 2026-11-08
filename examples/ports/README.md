@@ -1,6 +1,7 @@
 # Textual Compatibility Ports (M23)
 
-This directory contains Nim ports of Textual's `tests/snapshot_tests/snapshot_apps/`
+This directory contains Nim ports of Textual's
+`tests/snapshot_tests/snapshot_apps/`
 applications, used to anchor the Textual Compatibility Suite (M23).
 
 ## Status (32 / 30+ ports landed across three batches)
@@ -81,50 +82,137 @@ Textual originals are noted below.
 
 ### Batch 1 (8 ports — `tests/test_textual_compat.nim`)
 
-| Port                       | Textual source                                             | Widgets exercised                          |
-| -------------------------- | ---------------------------------------------------------- | ------------------------------------------ |
-| `button_outline.nim`       | `snapshot_apps/button_outline.py`                          | Button (M12)                               |
-| `button_widths.nim`        | `snapshot_apps/button_widths.py`                           | Button (M12), Container (M11)              |
-| `placeholder_disabled.nim` | `snapshot_apps/placeholder_disabled.py`                    | Placeholder (M11)                          |
-| `rules.nim`                | `snapshot_apps/rules.py`                                   | Rule (M11), Container (M11)                |
-| `sparkline.nim`            | `snapshot_apps/sparkline.py`                               | Sparkline (M21)                            |
-| `progress_gradient.nim`    | `snapshot_apps/progress_gradient.py`                       | ProgressBar (M21)                          |
-| `listview_index.nim`       | `snapshot_apps/listview_index.py`                          | ListView (M14), Label (M11)                |
-| `data_table_row_labels.nim`| `snapshot_apps/data_table_row_labels.py`                   | DataTable (M17)                            |
+- **Port:** `button_outline.nim`
+  - **Textual source:** `snapshot_apps/button_outline.py`
+  - **Widgets exercised:** Button (M12)
+
+- **Port:** `button_widths.nim`
+  - **Textual source:** `snapshot_apps/button_widths.py`
+  - **Widgets exercised:** Button (M12), Container (M11)
+
+- **Port:** `placeholder_disabled.nim`
+  - **Textual source:** `snapshot_apps/placeholder_disabled.py`
+  - **Widgets exercised:** Placeholder (M11)
+
+- **Port:** `rules.nim`
+  - **Textual source:** `snapshot_apps/rules.py`
+  - **Widgets exercised:** Rule (M11), Container (M11)
+
+- **Port:** `sparkline.nim`
+  - **Textual source:** `snapshot_apps/sparkline.py`
+  - **Widgets exercised:** Sparkline (M21)
+
+- **Port:** `progress_gradient.nim`
+  - **Textual source:** `snapshot_apps/progress_gradient.py`
+  - **Widgets exercised:** ProgressBar (M21)
+
+- **Port:** `listview_index.nim`
+  - **Textual source:** `snapshot_apps/listview_index.py`
+  - **Widgets exercised:** ListView (M14), Label (M11)
+
+- **Port:** `data_table_row_labels.nim`
+  - **Textual source:** `snapshot_apps/data_table_row_labels.py`
+  - **Widgets exercised:** DataTable (M17)
 
 ### Batch 2 (12 ports — `tests/test_textual_compat_batch2.nim`)
 
-| Port                          | Textual source                                          | Widgets exercised                          |
-| ----------------------------- | ------------------------------------------------------- | ------------------------------------------ |
-| `welcome_widget.nim`          | `snapshot_apps/welcome_widget.py`                       | Welcome (M21)                              |
-| `button_multiline_label.nim`  | `snapshot_apps/button_multiline_label.py`               | Button (M12) — multi-line label            |
-| `button_markup.nim`           | `snapshot_apps/button_markup.py`                        | Button (M12) — markup labels, disabled     |
-| `option_list_long.nim`        | `snapshot_apps/option_list_long.py`                     | OptionList (M14)                           |
-| `big_button.nim`              | `snapshot_apps/big_button.py`                           | Button (M12) — custom height intent        |
-| `log_write.nim`               | `snapshot_apps/log_write.py`                            | Log (M21)                                  |
-| `text_log_blank_write.nim`    | `snapshot_apps/text_log_blank_write.py`                 | RichLog (M21)                              |
-| `richlog_max_lines.nim`       | `snapshot_apps/richlog_max_lines.py`                    | RichLog (M21) — `maxLines` cap             |
-| `viewport_units.nim`          | `snapshot_apps/viewport_units.py`                       | Static (M11) — viewport-sized              |
-| `multi_keys.nim`              | `snapshot_apps/multi_keys.py`                           | Footer (M21) — bindings                    |
-| `toggle_style_order.nim`      | `snapshot_apps/toggle_style_order.py`                   | Checkbox (M12), Label (M11)                |
-| `horizontal_auto_width.nim`   | `snapshot_apps/horizontal_auto_width.py`                | Container (M11) horizontal, Static (M11)   |
+- **Port:** `welcome_widget.nim`
+  - **Textual source:** `snapshot_apps/welcome_widget.py`
+  - **Widgets exercised:** Welcome (M21)
+
+- **Port:** `button_multiline_label.nim`
+  - **Textual source:** `snapshot_apps/button_multiline_label.py`
+  - **Widgets exercised:** Button (M12) — multi-line label
+
+- **Port:** `button_markup.nim`
+  - **Textual source:** `snapshot_apps/button_markup.py`
+  - **Widgets exercised:** Button (M12) — markup labels, disabled
+
+- **Port:** `option_list_long.nim`
+  - **Textual source:** `snapshot_apps/option_list_long.py`
+  - **Widgets exercised:** OptionList (M14)
+
+- **Port:** `big_button.nim`
+  - **Textual source:** `snapshot_apps/big_button.py`
+  - **Widgets exercised:** Button (M12) — custom height intent
+
+- **Port:** `log_write.nim`
+  - **Textual source:** `snapshot_apps/log_write.py`
+  - **Widgets exercised:** Log (M21)
+
+- **Port:** `text_log_blank_write.nim`
+  - **Textual source:** `snapshot_apps/text_log_blank_write.py`
+  - **Widgets exercised:** RichLog (M21)
+
+- **Port:** `richlog_max_lines.nim`
+  - **Textual source:** `snapshot_apps/richlog_max_lines.py`
+  - **Widgets exercised:** RichLog (M21) — `maxLines` cap
+
+- **Port:** `viewport_units.nim`
+  - **Textual source:** `snapshot_apps/viewport_units.py`
+  - **Widgets exercised:** Static (M11) — viewport-sized
+
+- **Port:** `multi_keys.nim`
+  - **Textual source:** `snapshot_apps/multi_keys.py`
+  - **Widgets exercised:** Footer (M21) — bindings
+
+- **Port:** `toggle_style_order.nim`
+  - **Textual source:** `snapshot_apps/toggle_style_order.py`
+  - **Widgets exercised:** Checkbox (M12), Label (M11)
+
+- **Port:** `horizontal_auto_width.nim`
+  - **Textual source:** `snapshot_apps/horizontal_auto_width.py`
+  - **Widgets exercised:** Container (M11) horizontal, Static (M11)
 
 ### Batch 3 (12 ports — `tests/test_textual_compat_batch3.nim`)
 
-| Port                              | Inspired by Textual app                          | Widgets exercised                                 |
-| --------------------------------- | ------------------------------------------------ | ------------------------------------------------- |
-| `static_padding.nim`              | `static_padding.py` family                       | Static (M11) — pad widths                         |
-| `multiple_borders.nim`            | `border-styles` snapshot apps                    | Static (M11) — six BorderStyle variants           |
-| `nested_containers.nim`           | composition snapshot apps                        | Container (M11) — vertical-stack composition      |
-| `tabs_basic.nim`                  | `tabs_basic.py`                                  | Tabs (M11), Static (M11)                          |
-| `progress_bar_states.nim`         | progress-bar snapshot apps                       | ProgressBar (M21) — five percentage points        |
-| `loading_indicator_demo.nim`      | `loading_indicator.py`                           | LoadingIndicator (M11) — three labels             |
-| `header_with_title.nim`           | `header_screen.py`                               | Header (M21) — title + subtitle                   |
-| `footer_chips.nim`                | footer-chip snapshot apps                        | Footer (M21) — 4 keyboard bindings                |
-| `horizontal_static_row.nim`       | new — exercises `clHorizontal` default          | Container (M11) horizontal, Static (M11)          |
-| `listview_basic.nim`              | small-list snapshot apps                         | ListView (M14) — 5 entries                        |
-| `checkbox_grid.nim`               | checkbox-set apps                                | Checkbox (M12), Container (M11)                   |
-| `buttons_horizontal_row.nim`      | button-row snapshot apps                         | Button (M12), Container (M11) horizontal          |
+- **Port:** `static_padding.nim`
+  - **Inspired by Textual app:** `static_padding.py` family
+  - **Widgets exercised:** Static (M11) — pad widths
+
+- **Port:** `multiple_borders.nim`
+  - **Inspired by Textual app:** `border-styles` snapshot apps
+  - **Widgets exercised:** Static (M11) — six BorderStyle variants
+
+- **Port:** `nested_containers.nim`
+  - **Inspired by Textual app:** composition snapshot apps
+  - **Widgets exercised:** Container (M11) — vertical-stack composition
+
+- **Port:** `tabs_basic.nim`
+  - **Inspired by Textual app:** `tabs_basic.py`
+  - **Widgets exercised:** Tabs (M11), Static (M11)
+
+- **Port:** `progress_bar_states.nim`
+  - **Inspired by Textual app:** progress-bar snapshot apps
+  - **Widgets exercised:** ProgressBar (M21) — five percentage points
+
+- **Port:** `loading_indicator_demo.nim`
+  - **Inspired by Textual app:** `loading_indicator.py`
+  - **Widgets exercised:** LoadingIndicator (M11) — three labels
+
+- **Port:** `header_with_title.nim`
+  - **Inspired by Textual app:** `header_screen.py`
+  - **Widgets exercised:** Header (M21) — title + subtitle
+
+- **Port:** `footer_chips.nim`
+  - **Inspired by Textual app:** footer-chip snapshot apps
+  - **Widgets exercised:** Footer (M21) — 4 keyboard bindings
+
+- **Port:** `horizontal_static_row.nim`
+  - **Inspired by Textual app:** new — exercises `clHorizontal` default
+  - **Widgets exercised:** Container (M11) horizontal, Static (M11)
+
+- **Port:** `listview_basic.nim`
+  - **Inspired by Textual app:** small-list snapshot apps
+  - **Widgets exercised:** ListView (M14) — 5 entries
+
+- **Port:** `checkbox_grid.nim`
+  - **Inspired by Textual app:** checkbox-set apps
+  - **Widgets exercised:** Checkbox (M12), Container (M11)
+
+- **Port:** `buttons_horizontal_row.nim`
+  - **Inspired by Textual app:** button-row snapshot apps
+  - **Widgets exercised:** Button (M12), Container (M11) horizontal
 
 ## Per-port fidelity notes
 

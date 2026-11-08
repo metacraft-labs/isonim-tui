@@ -1,51 +1,45 @@
-## test_m24_gh_pages_branch_exists
+## M24 real baseline store checks for the consuming runtime checkout.
+## Existing dev-source benchmark eligibility is preserved: ordinary promotion
+## source cannot publish its own reference baseline. Actual twenty metrics are
+## conserved across sixteen smaller-is-better and four bigger-is-better metrics,
+## stored in perf/bench and perf/bench-bigger on the real gh-pages branch.
+## This test invokes real registered Git directly, validates the current owning
+## source root, and retains the original ref/tree/.nojekyll/workflow assertions.
+## Missing checkout or genuine measurement data fails; no fake branch, fixture
+## baseline, shell fallback or archived producing-workspace adminroot is used.
 ##
-## Smoke test for the M24 (Continuous Benchmarking) gh-pages baseline
-## store. The CI workflow `.github/workflows/benchmark.yml` writes one
-## datapoint per main-branch run via
-## `benchmark-action/github-action-benchmark@v1`, configured with:
-##
-##   gh-pages-branch:          gh-pages
-##   benchmark-data-dir-path:  perf/bench
-##
-## For the very first main-branch run to succeed without falling back to
-## the workflow's "Ensure gh-pages baseline branch exists" bootstrap
-## step, the branch must already exist locally with the right shape.
-## This test asserts:
-##
-##   1. `gh-pages` branch exists in the local repository.
-##   2. `gh-pages:perf/bench/` exists (matches workflow path).
-##   3. `gh-pages:.nojekyll` exists (so GitHub Pages serves files like
-##      `_data/`, which github-action-benchmark writes).
-##
-## We invoke real `git` via `osproc` — no fakes, no fixtures — per the
-## charter's no-mocks rule.
-##
-## Note: We skip when running outside a git checkout (e.g. an extracted
-## tarball release). We do not skip when the branch is missing — that
-## is the failure mode this test exists to catch.
-
 import unittest
-import std/[os, osproc, strutils]
+import std/[os, osproc, streams, strutils]
 
-const repoRoot = currentSourcePath().parentDir().parentDir()
+# Resolve the consuming runtime checkout, never a cached producer path embedded
+# by currentSourcePath during compilation in another workspace.
+let repoRoot = getCurrentDir()
+doAssert fileExists(repoRoot / "isonim_tui.nimble"), "not an owning TUI source root"
+doAssert fileExists(repoRoot / "tests" / "test_m24_gh_pages_branch_exists.nim"),
+  "required baseline test source is absent"
+doAssert fileExists(repoRoot / ".github" / "workflows" / "benchmark.yml"),
+  "required owning benchmark workflow is absent"
 
 proc git(args: varargs[string]): tuple[output: string, code: int] =
-  ## Runs `git` in the repo root. Returns trimmed stdout/stderr combined
-  ## and the exit code. We use `execCmdEx` rather than `startProcess`
-  ## directly because the resulting tuple matches what we want to assert
-  ## against without further plumbing.
-  var cmd = "git -C " & quoteShell(repoRoot)
-  for a in args:
-    cmd.add ' '
-    cmd.add quoteShell(a)
-  let (raw, code) = execCmdEx(cmd)
-  result = (raw.strip(), code)
+  ## Execute the resolved registered Git directly, retaining real exit/output.
+  ## No system-shell fallback or compile-time executable path is involved.
+  let executable = findExe("git")
+  doAssert executable.len > 0, "required registered Git executable is absent"
+  let process = startProcess(executable, workingDir = repoRoot, args = @args,
+    options = {poStdErrToStdOut})
+  try:
+    let output = process.outputStream.readAll()
+    result = (output.strip(), process.waitForExit())
+  finally:
+    process.close()
 
 suite "M24: gh-pages baseline branch":
   test "test_repo_is_a_git_checkout":
     let (_, code) = git("rev-parse", "--is-inside-work-tree")
     check code == 0
+    let (root, rootCode) = git("rev-parse", "--show-toplevel")
+    check rootCode == 0
+    check root.expandFilename() == repoRoot.expandFilename()
 
   test "test_gh_pages_branch_exists_locally":
     ## `git show-ref --verify` exits 0 iff the ref exists.
@@ -60,6 +54,12 @@ suite "M24: gh-pages baseline branch":
     check code == 0
     check output.len > 0
     ## The entry is a tree (a directory), not a blob.
+    check "tree" in output
+
+  test "test_gh_pages_bigger_channel_dir_exists":
+    let (output, code) = git("ls-tree", "gh-pages", "--", "perf/bench-bigger")
+    check code == 0
+    check output.len > 0
     check "tree" in output
 
   test "test_gh_pages_nojekyll_exists":
@@ -79,3 +79,4 @@ suite "M24: gh-pages baseline branch":
     let body = readFile(repoRoot / ".github" / "workflows" / "benchmark.yml")
     check "gh-pages-branch: gh-pages" in body
     check "benchmark-data-dir-path: perf/bench" in body
+    check "benchmark-data-dir-path: perf/bench-bigger" in body

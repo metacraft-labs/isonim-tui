@@ -22,7 +22,7 @@ type WorkerManager* = ref object
 
 A `Worker` has five states:
 
-```
+```text
 wsPending → wsRunning → (wsCompleted | wsCancelled | wsFailed)
 ```
 

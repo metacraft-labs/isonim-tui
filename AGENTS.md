@@ -59,21 +59,30 @@ language-specific sub-recipes (`lint-nim`, `lint-nix`, `lint-markdown`,
 
 ## Project structure
 
-```
+```text
 src/
-  isonim_tui.nim                       # public top-level - re-exports cells/events/renderer
+  isonim_tui.nim
+  # public top-level - re-exports cells/events/renderer
   isonim_tui/cells.nim                 # Cell, Strip, ScreenBuffer + diff
-  isonim_tui/events.nim                # TerminalEvent, KeyEvent, MouseEvent (value types)
-  isonim_tui/renderer.nim              # TerminalRenderer (RendererBackend conformance)
+  isonim_tui/events.nim
+  # TerminalEvent, KeyEvent, MouseEvent (value types)
+  isonim_tui/renderer.nim
+  # TerminalRenderer (RendererBackend conformance)
 tests/
-  test_renderer_concept_conformance.nim  # checkRendererBackend + cross-renderer counter
-  test_threadvar_id_isolation.nim        # 4 threads x 100 elements, no id collision
+  test_renderer_concept_conformance.nim
+  # checkRendererBackend + cross-renderer counter
+  test_threadvar_id_isolation.nim
+  # 4 threads x 100 elements, no id collision
   test_strip_diff.nim                    # 1 / 5 / 2-disjoint diff regions
   test_screenbuffer_diff_empty.nim       # buf.diff(buf) == [] for any size
-  test_repo_requirements_*.nim           # flake / Justfile / .envrc / AGENTS.md / CI conformance
-.github/workflows/ci.yml                 # lint, test, charter matrix, sanitizers, valgrind, nix-build
-flake.nix                                # nix devShell + checks (pre-commit via git-hooks.nix)
-Justfile                                 # build/test/lint/format + matrix + sanitizers
+  test_repo_requirements_*.nim
+  # flake / Justfile / .envrc / AGENTS.md / CI conformance
+.github/workflows/ci.yml
+  # lint, test, charter matrix, sanitizers, valgrind, nix-build
+flake.nix
+  # nix devShell + checks (pre-commit via git-hooks.nix)
+Justfile
+  # build/test/lint/format + matrix + sanitizers
 isonim_tui.nimble                        # single-source-of-truth version
 ```
 

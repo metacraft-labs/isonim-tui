@@ -29,7 +29,7 @@ cancel the previous one.
 
 The 33 easing curves are byte-identical with Textual's `_easing.py`:
 
-```
+```text
 linear        in_sine        out_sine        in_out_sine
 in_quad       out_quad       in_out_quad
 in_cubic      out_cubic      in_out_cubic
