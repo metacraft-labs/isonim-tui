@@ -57,6 +57,7 @@ import ../cells
 import ../events
 import ../text/ansi
 import ./driver
+import ./event_channel
 
 when defined(windows):
   import nim_termctl
@@ -209,25 +210,8 @@ when defined(windows):
 # Inter-thread event queue (mirrors PosixDriver).
 # ---------------------------------------------------------------------------
 
-type
-  EventChannel = object
-    chan: Channel[events.TerminalEvent]
-
-proc initEventChannel(ch: var EventChannel) =
-  open(ch.chan)
-
-proc deinitEventChannel(ch: var EventChannel) {.used.} =
-  close(ch.chan)
-
-proc pushEvent(ch: var EventChannel; ev: events.TerminalEvent) {.used.} =
-  ch.chan.send(ev)
-
-proc drainAll(ch: var EventChannel): seq[events.TerminalEvent] =
-  result = @[]
-  while true:
-    let (got, ev) = ch.chan.tryRecv()
-    if not got: break
-    result.add ev
+# `EventChannel` is shared with the other threaded drivers
+# (`./event_channel`); it owns the channel and releases it on destruction.
 
 # ---------------------------------------------------------------------------
 # Stop flag (heap-stable address).
