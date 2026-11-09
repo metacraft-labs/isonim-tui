@@ -58,6 +58,7 @@ import ../events
 import ../text/ansi
 import ./driver
 import ./event_channel
+import ./stop_flag
 
 when defined(windows):
   import nim_termctl
@@ -213,13 +214,9 @@ when defined(windows):
 # `EventChannel` is shared with the other threaded drivers
 # (`./event_channel`); it owns the channel and releases it on destruction.
 
-# ---------------------------------------------------------------------------
-# Stop flag (heap-stable address).
-# ---------------------------------------------------------------------------
-
-type
-  StopFlag = object
-    value: bool
+# The reader thread's exit request is a `StopFlag` (`./stop_flag`, an
+# atomic shared with the other threaded drivers), heap-stable inside the
+# driver's `ref object`.
 
 # ---------------------------------------------------------------------------
 # Reader-thread argument bundle.
@@ -230,7 +227,7 @@ when defined(windows):
     ReaderArgs = object
       inputHandle: HANDLE
       chan: ptr EventChannel
-      stopRequested: ptr bool
+      stopRequested: ptr StopFlag
 else:
   type
     ReaderArgs = object
@@ -238,7 +235,7 @@ else:
       ## has to exist so `Thread[ptr ReaderArgs]` is declarable and the
       ## driver compiles.
       chan: ptr EventChannel
-      stopRequested: ptr bool
+      stopRequested: ptr StopFlag
 
 # ---------------------------------------------------------------------------
 # WindowsDriver
@@ -509,9 +506,9 @@ when defined(windows):
     ## "wait + read non-blocking" pattern is the standard idiom and
     ## what Microsoft's own samples use.
     var buf: array[64, InputRecord]
-    while not args.stopRequested[]:
+    while not args.stopRequested.requested:
       let waitResult = waitForSingleObject(args.inputHandle, DWORD(50))
-      if args.stopRequested[]: break
+      if args.stopRequested.requested: break
       if waitResult == WAIT_TIMEOUT: continue
       if waitResult != WAIT_OBJECT_0:
         # Handle error or abandoned — bail.
@@ -561,7 +558,7 @@ when defined(windows):
 when defined(windows):
   var
     gCtrlHandlerOutputHandle {.threadvar.}: HANDLE
-    gCtrlHandlerStopFlag {.threadvar.}: ptr bool
+    gCtrlHandlerStopFlag {.threadvar.}: ptr StopFlag
     gCtrlHandlerInstalled {.threadvar.}: bool
 
   proc emitLeaveSequencesViaConsole(h: HANDLE) =
@@ -591,7 +588,7 @@ when defined(windows):
     of CTRL_C_EVENT, CTRL_BREAK_EVENT, CTRL_CLOSE_EVENT,
        CTRL_LOGOFF_EVENT, CTRL_SHUTDOWN_EVENT:
       if gCtrlHandlerStopFlag != nil:
-        gCtrlHandlerStopFlag[] = true
+        gCtrlHandlerStopFlag[].request()
       emitLeaveSequencesViaConsole(gCtrlHandlerOutputHandle)
       return BOOL(1)
     else:
@@ -602,7 +599,7 @@ when defined(windows):
     ## remembers the latest start()'s output handle + stop flag. Called
     ## from `start()` after the rest of the lifecycle is in place.
     gCtrlHandlerOutputHandle = d.outputHandle
-    gCtrlHandlerStopFlag = addr d.stopFlag.value
+    gCtrlHandlerStopFlag = addr d.stopFlag
     if not gCtrlHandlerInstalled:
       gCtrlHandlerInstalled =
         setConsoleCtrlHandler(ctrlHandlerRoutine, BOOL(1)) != 0
@@ -663,11 +660,11 @@ proc start*(d: WindowsDriver) =
 
     # Step 6 — reader thread. ReaderArgs lives on the driver so
     # `addr` is heap-stable for the whole lifetime.
-    d.stopFlag.value = false
+    d.stopFlag.clear()
     d.readerArgs = ReaderArgs(
       inputHandle: d.inputHandle,
       chan: addr d.channel,
-      stopRequested: addr d.stopFlag.value)
+      stopRequested: addr d.stopFlag)
     createThread(d.readerThread, readerLoop, addr d.readerArgs)
     d.readerSpawned = true
 
@@ -696,7 +693,7 @@ proc stop*(d: WindowsDriver) =
   when defined(windows):
     # 1) Tell the reader thread to exit.
     if d.readerSpawned:
-      d.stopFlag.value = true
+      d.stopFlag.request()
       joinThread(d.readerThread)
       d.readerSpawned = false
 

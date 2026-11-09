@@ -61,6 +61,7 @@ import ../input/parser as inputParser
 import ../text/ansi
 import ./driver
 import ./event_channel
+import ./stop_flag
 
 # ---------------------------------------------------------------------------
 # Inter-thread event queue
@@ -87,18 +88,9 @@ import ./event_channel
 # `EventChannel` lives in `./event_channel`, shared with the other
 # threaded drivers; it owns the channel and releases it on destruction.
 
-# ---------------------------------------------------------------------------
-# Stop flag (owned at a stable address)
-# ---------------------------------------------------------------------------
-#
-# The reader thread observes a plain `bool` flipped by `stop()`. We
-# wrap it in a tiny object so `addr d.stopFlag.value` is well-defined
-# even after the driver is moved (it isn't moved, since `PosixDriver`
-# is a `ref object`, but the convention is documented).
-
-type
-  StopFlag = object
-    value: bool
+# The reader thread observes a `StopFlag` (`./stop_flag`, an atomic
+# shared with the other threaded drivers) raised by `stop()`. It lives
+# inside the `ref object`, so `addr d.stopFlag` is stable.
 
 # ---------------------------------------------------------------------------
 # ReaderArgs — heap-stable bundle handed to the input thread
@@ -108,7 +100,7 @@ type
   ReaderArgs = object
     inputFd: cint
     chan: ptr EventChannel
-    stopRequested: ptr bool
+    stopRequested: ptr StopFlag
     enableKitty: bool
 
 # ---------------------------------------------------------------------------
@@ -225,7 +217,7 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
   if args.enableKitty:
     termctlParser.enableKittyKeyboard(parser)
   var buf: array[4096, byte]
-  while not args.stopRequested[]:
+  while not args.stopRequested.requested:
     # Drain any partial-sequence resolutions the parser already has.
     while termctlParser.pending(parser) > 0:
       let nxt = termctlParser.pop(parser)
@@ -241,7 +233,7 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
     tv.tv_sec = posix.Time(0)
     tv.tv_usec = posix.Suseconds(50_000)
     let n = posix.select(args.inputFd + 1, addr rs, nil, nil, addr tv)
-    if args.stopRequested[]: break
+    if args.stopRequested.requested: break
     if n == 0:
       # Timeout — give the parser a chance to age-out a bare-Escape.
       termctlParser.tick(parser)
@@ -360,11 +352,11 @@ proc start*(d: PosixDriver) =
     d.pasteOwned = true
 
   # Step 6 — reader thread.
-  d.stopFlag.value = false
+  d.stopFlag.clear()
   d.readerArgs = ReaderArgs(
     inputFd: d.inputFd,
     chan: addr d.channel,
-    stopRequested: addr d.stopFlag.value,
+    stopRequested: addr d.stopFlag,
     enableKitty: d.parserUsesKitty)
   createThread(d.readerThread, readerLoop, addr d.readerArgs)
   d.readerSpawned = true
@@ -383,7 +375,7 @@ proc stop*(d: PosixDriver) =
 
   # 1) Tell the reader thread to exit.
   if d.readerSpawned:
-    d.stopFlag.value = true
+    d.stopFlag.request()
     joinThread(d.readerThread)
     d.readerSpawned = false
 

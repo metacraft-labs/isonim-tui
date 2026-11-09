@@ -46,6 +46,7 @@ import ../events
 import ../text/ansi
 import ./driver
 import ./event_channel
+import ./stop_flag
 
 # ---------------------------------------------------------------------------
 # Wire-format helpers — packet framing
@@ -293,14 +294,13 @@ proc decodeInputPacket*(payload: string): events.TerminalEvent =
 # `EventChannel` is shared with the other threaded drivers
 # (`./event_channel`); it owns the channel and releases it on destruction.
 
-type
-  StopFlag = object
-    value: bool
+# The reader thread's exit request is a `StopFlag` (`./stop_flag`).
 
+type
   ReaderArgs = object
     inputFd: cint
     chan: ptr EventChannel
-    stopRequested: ptr bool
+    stopRequested: ptr StopFlag
 
 # ---------------------------------------------------------------------------
 # WebDriver
@@ -369,7 +369,7 @@ proc newWebDriver*(cols, rows: int;
 proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
   var parser = initPacketParser()
   var buf: array[4096, byte]
-  while not args.stopRequested[]:
+  while not args.stopRequested.requested:
     var rs: TFdSet
     FD_ZERO(rs)
     FD_SET(args.inputFd, rs)
@@ -377,7 +377,7 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
     tv.tv_sec = posix.Time(0)
     tv.tv_usec = posix.Suseconds(50_000)
     let n = posix.select(args.inputFd + 1, addr rs, nil, nil, addr tv)
-    if args.stopRequested[]: break
+    if args.stopRequested.requested: break
     if n <= 0:
       if n == -1:
         let e = osLastError()
@@ -427,11 +427,11 @@ proc start*(d: WebDriver) =
       "WebDriver.start: already started (state=" &
         $d.lifecycleState & ")")
   d.lifecycleState = dsStarting
-  d.stopFlag.value = false
+  d.stopFlag.clear()
   d.readerArgs = ReaderArgs(
     inputFd: d.inputFd,
     chan: addr d.channel,
-    stopRequested: addr d.stopFlag.value)
+    stopRequested: addr d.stopFlag)
   createThread(d.readerThread, readerLoop, addr d.readerArgs)
   d.readerSpawned = true
   d.lifecycleState = dsRunning
@@ -440,7 +440,7 @@ proc stop*(d: WebDriver) =
   if d.lifecycleState == dsStopped: return
   d.lifecycleState = dsStopping
   if d.readerSpawned:
-    d.stopFlag.value = true
+    d.stopFlag.request()
     joinThread(d.readerThread)
     d.readerSpawned = false
   d.lifecycleState = dsStopped
