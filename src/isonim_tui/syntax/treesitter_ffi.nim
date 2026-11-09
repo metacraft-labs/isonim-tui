@@ -271,9 +271,16 @@ proc releaseTree(raw: ptr TSTree) {.inline.} =
 # be proc[T: object](x: var T)"), which broke every refc build that
 # imports this module. See
 # https://nim-lang.org/docs/destructors.html
+#
+# A user-defined hook replaces the generated one, so it must destroy the
+# object's other fields itself: without the `=destroy(t.source)` every
+# parse leaked its copy of the source (LeakSanitizer, test_textarea_*).
+# Under refc the collector owns the string.
 when defined(gcDestructors):
   proc `=destroy`(p: ParserObj) = releaseParser(p.raw)
-  proc `=destroy`(t: TreeObj) = releaseTree(t.raw)
+  proc `=destroy`(t: TreeObj) =
+    releaseTree(t.raw)
+    `=destroy`(t.source)
 else:
   proc `=destroy`(p: var ParserObj) = releaseParser(p.raw)
   proc `=destroy`(t: var TreeObj) = releaseTree(t.raw)
