@@ -448,7 +448,7 @@ proc emitCellPayload(d: PosixDriver; cell: Cell) =
   ## ghost cells (the trailing-half of a width-2 grapheme) are
   ## skipped — the wide rune already occupied both columns.
   if cell.width == 0: return
-  let target = newStyle(cell.fg, cell.bg, cell.attrs)
+  let target = newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
   let sgr = renderSgr(d.currentStyle, target)
   if sgr.len > 0:
     d.writeBuf.add(sgr)

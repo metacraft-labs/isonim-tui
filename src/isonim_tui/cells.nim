@@ -93,6 +93,9 @@ type
     fg*: Color
     bg*: Color
     attrs*: set[Attr]
+    ul*: Color
+      ## The underline's own colour (SGR 58), when `attrUnderline` is drawn
+      ## in another colour than the text; `ckDefault`: the foreground's.
     width*: int8       ## 1 for narrow, 2 for wide, 0 for ghost trailing-half
     extra*: string
       ## The runes that belong to `rune`'s grapheme and take no cell of their
@@ -173,7 +176,8 @@ proc newCell*(c: char; fg: Color = defaultColor(); bg: Color = defaultColor();
 
 proc `==`*(a, b: Cell): bool {.inline.} =
   a.rune == b.rune and a.fg == b.fg and a.bg == b.bg and
-    a.attrs == b.attrs and a.width == b.width and a.extra == b.extra
+    a.attrs == b.attrs and a.ul == b.ul and a.width == b.width and
+    a.extra == b.extra
 
 proc cellText*(c: Cell): string =
   ## What a terminal is sent for `c`: its rune (a space for the empty rune)
@@ -217,6 +221,7 @@ proc recomputeCache*(s: var Strip) =
     for at in cell.attrs:
       a = a or (1 shl ord(at))
     h = h !& hash(a)
+    h = h !& hash(cell.ul)
     h = h !& hash(cell.width.int)
     if cell.extra.len > 0:
       h = h !& hash(cell.extra)

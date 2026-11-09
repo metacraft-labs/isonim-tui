@@ -471,7 +471,7 @@ proc writeRaw*(d: WebDriver; s: string) =
 
 proc emitCellPayload(d: WebDriver; cell: Cell) =
   if cell.width == 0: return
-  let target = newStyle(cell.fg, cell.bg, cell.attrs)
+  let target = newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
   let sgr = renderSgr(d.currentStyle, target)
   if sgr.len > 0:
     d.writeBuf.add(sgr)

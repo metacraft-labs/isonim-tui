@@ -72,6 +72,8 @@ type
     fg: Color
     bg: Color
     attrs: set[Attr]
+    ul: Color              ## The underline's own colour (`underline-color`);
+                           ## default: the foreground's.
     fillBackground: bool   ## When true, the entry's full rectangle is
                            ## filled with `bg` even if it's wider than
                            ## the rendered text (so modals visually mask
@@ -87,6 +89,7 @@ type
     fg: Color
     bg: Color
     attrs: set[Attr]
+    ul: Color
 
   StripCacheStats* = object
     ## Snapshot of the strip cache's hit / miss counters since the
@@ -284,6 +287,11 @@ proc styleFor(node: TerminalNode; inherited: StyleSnapshot):
     result.snap.attrs.incl(attrItalic)
   if "underline" in node.styles and node.styles["underline"] == "true":
     result.snap.attrs.incl(attrUnderline)
+  if "underline-color" in node.styles:
+    # The underline's own colour (CSS `text-decoration-color`), sent as SGR
+    # 58 (`renderSgr`). Inherited like `color`; "default" restores the
+    # foreground's.
+    result.snap.ul = parseColorOrDefault(node.styles["underline-color"])
   if "reverse" in node.styles and node.styles["reverse"] == "true":
     result.snap.attrs.incl(attrReverse)
 
@@ -415,7 +423,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
       row: row, col: 0, width: cols, text: node.text, nodeId: node.id,
       layer: parentLayer,
       fg: resolved.snap.fg, bg: resolved.snap.bg,
-      attrs: resolved.snap.attrs,
+      attrs: resolved.snap.attrs, ul: resolved.snap.ul,
       fillBackground: parentHasBg or resolved.hasBg or parentLayer > 0)
     inc row
   of tnkBox, tnkButton, tnkInput:
@@ -444,7 +452,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
         row: intOf("top"), col: intOf("left"), width: w, text: text,
         nodeId: node.id, layer: nodeLayer,
         fg: resolved.snap.fg, bg: resolved.snap.bg,
-        attrs: resolved.snap.attrs, fillBackground: true)
+        attrs: resolved.snap.attrs, ul: resolved.snap.ul, fillBackground: true)
       return
     var allText = node.children.len > 0
     for ch in node.children:
@@ -480,7 +488,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
             text: ch.text, nodeId: ch.id,
             layer: nodeLayer,
             fg: chResolved.snap.fg, bg: chResolved.snap.bg,
-            attrs: chResolved.snap.attrs,
+            attrs: chResolved.snap.attrs, ul: chResolved.snap.ul,
             fillBackground: nodeHasBg or chResolved.hasBg)
           segCol.inc(segWidth)
           if segCol >= cols: break
@@ -493,7 +501,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
           row: row, col: 0, width: cols, text: s, nodeId: node.id,
           layer: nodeLayer,
           fg: resolved.snap.fg, bg: resolved.snap.bg,
-          attrs: resolved.snap.attrs,
+          attrs: resolved.snap.attrs, ul: resolved.snap.ul,
           fillBackground: nodeHasBg)
         inc row
     else:
@@ -502,7 +510,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
           row: row, col: 0, width: cols, text: "", nodeId: node.id,
           layer: nodeLayer,
           fg: resolved.snap.fg, bg: resolved.snap.bg,
-          attrs: resolved.snap.attrs,
+          attrs: resolved.snap.attrs, ul: resolved.snap.ul,
           fillBackground: nodeHasBg)
         inc row
         return
@@ -569,7 +577,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
             text: renderedLabel, nodeId: node.id,
             layer: nodeLayer,
             fg: resolved.snap.fg, bg: resolved.snap.bg,
-            attrs: resolved.snap.attrs,
+            attrs: resolved.snap.attrs, ul: resolved.snap.ul,
             fillBackground: nodeHasBg)
           # Widget glyph entry — owned by the widget node so cache
           # invalidation on a widget mutation still fires correctly.
@@ -580,7 +588,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
             text: glyph, nodeId: widgetNode.id,
             layer: nodeLayer,
             fg: widgetStyle.snap.fg, bg: widgetStyle.snap.bg,
-            attrs: widgetStyle.snap.attrs,
+            attrs: widgetStyle.snap.attrs, ul: widgetStyle.snap.ul,
             fillBackground: nodeHasBg or widgetStyle.hasBg)
           inc row
           # Each description span renders on its own row, indented
@@ -597,7 +605,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
               text: descText, nodeId: desc.id,
               layer: nodeLayer,
               fg: descStyle.snap.fg, bg: descStyle.snap.bg,
-              attrs: descStyle.snap.attrs,
+              attrs: descStyle.snap.attrs, ul: descStyle.snap.ul,
               fillBackground: nodeHasBg or descStyle.hasBg)
             inc row
           return
@@ -647,17 +655,17 @@ proc rawCellsForEntry(entry: LayoutEntry; cols: int;
     if w >= 2:
       if col + 1 >= limit: break
       result.add Cell(rune: r, fg: entry.fg, bg: entry.bg,
-                      attrs: entry.attrs, width: 2)
+                      attrs: entry.attrs, ul: entry.ul, width: 2)
       result.add ghostCell()
       col += 2
     else:
       result.add Cell(rune: r, fg: entry.fg, bg: entry.bg,
-                      attrs: entry.attrs, width: 1)
+                      attrs: entry.attrs, ul: entry.ul, width: 1)
       col += 1
   while col < limit:
     if entry.fillBackground:
       result.add Cell(rune: Rune(' '.ord), fg: entry.fg, bg: entry.bg,
-                      attrs: entry.attrs, width: 1)
+                      attrs: entry.attrs, ul: entry.ul, width: 1)
     else:
       result.add spaceCell()
     inc col
@@ -679,6 +687,7 @@ proc inputHashForEntry(entry: LayoutEntry; cols: int;
   for at in entry.attrs:
     a = a or (1 shl ord(at))
   h = h !& hash(a)
+  h = h !& hash(entry.ul)
   h = h !& hash(entry.layer)
   h = h !& hash(if entry.fillBackground: 1 else: 0)
   h = h !& hash(entry.col)
@@ -743,7 +752,7 @@ proc paintEntryOnto(buf: var ScreenBuffer; strip: Strip; entry: LayoutEntry;
         row.cells[i] = src
         stamped = true
       elif src.fg != defaultColor() or src.bg != defaultColor() or
-           src.attrs != {}:
+           src.attrs != {} or src.ul != defaultColor():
         row.cells[i] = src
         stamped = true
     if stamped and src.width == 2 and i + 1 < row.cells.len:
@@ -827,7 +836,7 @@ proc diffRegions*(a, b: ScreenBuffer): seq[CellRegion] =
 # ----------------------------------------------------------------------------
 
 proc cellStyle(cell: Cell): Style {.inline.} =
-  newStyle(cell.fg, cell.bg, cell.attrs)
+  newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
 
 proc emitRegion*(prev: Style; region: CellRegion;
                  fences = WidthFences()):
