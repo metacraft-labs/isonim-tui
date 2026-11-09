@@ -105,9 +105,19 @@ const
 # ----------------------------------------------------------------------------
 
 type
-  TSLanguage* {.importc, header: "<tree_sitter/api.h>".} = object
-  TSParser* {.importc, header: "<tree_sitter/api.h>".} = object
-  TSTree* {.importc, header: "<tree_sitter/api.h>".} = object
+  # `TSLanguage`, `TSParser` and `TSTree` are incomplete in the public
+  # header (`typedef struct TSParser TSParser;`); only pointers to them
+  # are ever used. `incompleteStruct` stops Nim from emitting
+  # `sizeof(TSParser)`, which `--mm:refc`'s type-info generation does
+  # for the `ptr` fields of the owning ref objects below, and which a C
+  # compiler rejects for an incomplete type. See
+  # https://nim-lang.org/docs/manual.html#implementation-specific-pragmas-incompletestruct-pragma
+  TSLanguage* {.importc, header: "<tree_sitter/api.h>",
+                incompleteStruct.} = object
+  TSParser* {.importc, header: "<tree_sitter/api.h>",
+              incompleteStruct.} = object
+  TSTree* {.importc, header: "<tree_sitter/api.h>",
+            incompleteStruct.} = object
   TSNode* {.importc, header: "<tree_sitter/api.h>".} = object
 
   TSPoint* {.importc, header: "<tree_sitter/api.h>".} = object
@@ -149,6 +159,13 @@ type
   Node* = object
     raw*: TSNode
     source*: string  ## Keeps the source bytes alive for `text()`.
+    tree: Tree
+      ## Keeps the owning tree alive. A `TSNode` points into memory the
+      ## `TSTree` owns, so a node that outlived its tree read freed memory:
+      ## under `--mm:refc` the collector frees a `Tree` as soon as no
+      ## reference to it remains, even while a walk over its root node is
+      ## still running (`tokenize` returned wrong tokens and crashed), and
+      ## under ARC/ORC a node returned past its tree's scope did the same.
 
   TreeObj = object
     raw: ptr TSTree
@@ -239,13 +256,27 @@ proc ts_tree_cursor_goto_parent(self: ptr TSTreeCursor): bool
 # Destructors for owning handles.
 # ----------------------------------------------------------------------------
 
-proc `=destroy`(p: ParserObj) =
-  if p.raw != nil:
-    ts_parser_delete(p.raw)
+proc releaseParser(raw: ptr TSParser) {.inline.} =
+  if raw != nil:
+    ts_parser_delete(raw)
 
-proc `=destroy`(t: TreeObj) =
-  if t.raw != nil:
-    ts_tree_delete(t.raw)
+proc releaseTree(raw: ptr TSTree) {.inline.} =
+  if raw != nil:
+    ts_tree_delete(raw)
+
+# The hook signature depends on the memory manager. Under ARC/ORC
+# (`gcDestructors`) Nim 2 hooks take the object by value, and the old
+# `var T` form is deprecated. `--mm:refc` still requires the `var T` form
+# and rejects the by-value one outright ("signature for '=destroy' must
+# be proc[T: object](x: var T)"), which broke every refc build that
+# imports this module. See
+# https://nim-lang.org/docs/destructors.html
+when defined(gcDestructors):
+  proc `=destroy`(p: ParserObj) = releaseParser(p.raw)
+  proc `=destroy`(t: TreeObj) = releaseTree(t.raw)
+else:
+  proc `=destroy`(p: var ParserObj) = releaseParser(p.raw)
+  proc `=destroy`(t: var TreeObj) = releaseTree(t.raw)
 
 # ----------------------------------------------------------------------------
 # Language constructors. Returning `Language` (not `ptr TSLanguage`)
@@ -293,7 +324,7 @@ proc parseString*(parser: Parser; source: string): Tree =
 # ----------------------------------------------------------------------------
 
 proc rootNode*(tree: Tree): Node =
-  Node(raw: ts_tree_root_node(tree.raw), source: tree.source)
+  Node(raw: ts_tree_root_node(tree.raw), source: tree.source, tree: tree)
 
 proc nodeType*(node: Node): string =
   $ts_node_type(node.raw)
@@ -346,18 +377,19 @@ proc namedChildCount*(node: Node): int =
   ts_node_named_child_count(node.raw).int
 
 proc child*(node: Node; index: int): Node =
-  Node(raw: ts_node_child(node.raw, index.uint32), source: node.source)
+  Node(raw: ts_node_child(node.raw, index.uint32), source: node.source,
+       tree: node.tree)
 
 proc namedChild*(node: Node; index: int): Node =
   Node(raw: ts_node_named_child(node.raw, index.uint32),
-       source: node.source)
+       source: node.source, tree: node.tree)
 
 proc nextSibling*(node: Node): Option[Node] =
   let s = ts_node_next_sibling(node.raw)
   if ts_node_is_null(s):
     none(Node)
   else:
-    some(Node(raw: s, source: node.source))
+    some(Node(raw: s, source: node.source, tree: node.tree))
 
 iterator children*(node: Node): Node =
   for i in 0 ..< node.childCount:
@@ -428,7 +460,7 @@ iterator walkLeaves*(node: Node): Node =
   ## in the same order without it. The walk itself is the linear cursor
   ## walk `leafFacts` uses.
   for raw in cursorLeaves(node.raw):
-    yield Node(raw: raw, source: node.source)
+    yield Node(raw: raw, source: node.source, tree: node.tree)
 
 proc `$`*(node: Node): string =
   node.nodeType & "[" & $node.startByte & ".." & $node.endByte & "]"
