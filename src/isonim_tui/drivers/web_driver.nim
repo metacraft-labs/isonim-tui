@@ -21,7 +21,10 @@
 ##   * `M` — meta. Emitted *to* the driver by the host server (resize
 ##     announcements, ping/pong, app shutdown). Optional in the
 ##     reference implementation; the driver decodes well-known meta
-##     names and ignores the rest.
+##     names and ignores the rest. One of them is `caps|<json>`: the
+##     browser client's DECLARED capabilities (`declaredCaps` below),
+##     because xterm.js behind the bridge cannot answer an app's start-up
+##     queries itself.
 ##
 ##   * `P` — packetised input event. Emitted *to* the driver by the
 ##     host server, carrying a renderer-facing event shape. Payload is
@@ -39,7 +42,8 @@
 ## No chronos, no stdlib `asyncdispatch`. The driver is a 1:1 packet
 ## bridge.
 
-import std/[locks, oserrors, posix, strutils, unicode]
+import std/[json, locks, monotimes, oserrors, os, posix, strutils, times,
+            unicode]
 
 import ../cells
 import ../events
@@ -59,6 +63,8 @@ const
   PacketTypeDisplay* = 'D'
   PacketTypeMeta* = 'M'
   PacketTypeInput* = 'P'
+  CapsMetaPrefix* = "caps|"
+    ## The `M` payload prefix of the client's capability declaration.
 
 proc encodePacket*(kind: char; payload: string): string =
   ## Build one framed packet: 1-byte type + 4-byte big-endian length +
@@ -310,10 +316,18 @@ type
   StopFlag = object
     value: bool
 
+  CapsSlot = object
+    ## The last `caps|` declaration's JSON body, written by the reader
+    ## thread and read by the app's.
+    lock: Lock
+    body: string
+    seen: bool
+
   ReaderArgs = object
     inputFd: cint
     chan: ptr EventChannel
     stopRequested: ptr bool
+    caps: ptr CapsSlot
 
 # ---------------------------------------------------------------------------
 # WebDriver
@@ -340,6 +354,7 @@ type
     readerArgs: ReaderArgs
     readerThread: Thread[ptr ReaderArgs]
     readerSpawned: bool
+    capsSlot: CapsSlot
     lifecycleState: DriverState
     bytesEmitted*: string    ## The concatenation of every `D` packet
                              ## payload — i.e. the byte stream a
@@ -373,6 +388,7 @@ proc newWebDriver*(cols, rows: int;
     bytesEmitted: "",
     packetsEmitted: "")
   initLock(result.writeBufLock)
+  initLock(result.capsSlot.lock)
   initEventChannel(result.channel)
 
 # ---------------------------------------------------------------------------
@@ -419,6 +435,11 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
           var ev = TerminalEvent(kind: ekResize, `type`: "resize")
           ev.resize = ResizeEvent(cols: cols, rows: rows)
           args.chan[].pushEvent(ev)
+        elif payload.startsWith(CapsMetaPrefix):
+          acquire(args.caps.lock)
+          args.caps.body = payload[CapsMetaPrefix.len .. ^1]
+          args.caps.seen = true
+          release(args.caps.lock)
         elif parts.len >= 1 and parts[0] == "quit":
           # Server requested shutdown — surface as a synthetic ctrl+c.
           let ke = events.KeyEvent(kind: kkNamed, key: "ctrl+c",
@@ -444,7 +465,8 @@ proc start*(d: WebDriver) =
   d.readerArgs = ReaderArgs(
     inputFd: d.inputFd,
     chan: addr d.channel,
-    stopRequested: addr d.stopFlag.value)
+    stopRequested: addr d.stopFlag.value,
+    caps: addr d.capsSlot)
   createThread(d.readerThread, readerLoop, addr d.readerArgs)
   d.readerSpawned = true
   d.lifecycleState = dsRunning
@@ -457,6 +479,63 @@ proc stop*(d: WebDriver) =
     joinThread(d.readerThread)
     d.readerSpawned = false
   d.lifecycleState = dsStopped
+
+# ---------------------------------------------------------------------------
+# The client's declared capabilities (`M caps|<json>`)
+# ---------------------------------------------------------------------------
+
+type
+  DeclaredCaps* = object
+    ## What the browser client declared about itself — the answers a real
+    ## terminal would have given to the start-up queries, which xterm.js
+    ## behind the bridge cannot give (isonim-tui-serve `ClientCaps`).
+    declared*: bool
+      ## False until a well-formed declaration has arrived.
+    xtermJs*: string
+    renderer*: string
+      ## `webgl`, `canvas` or `dom`.
+    customGlyphs*: bool
+      ## xterm.js draws box-drawing and block elements itself.
+    unicodeVersion*: string
+      ## The width table: `6`, or `11` with the Unicode 11 addon.
+    truecolor*: bool
+    sgrMouse*: bool
+
+proc parseDeclaredCaps*(body: string): DeclaredCaps =
+  ## A declaration's JSON body; `declared` stays false for a body that does
+  ## not parse or lacks a field (it is then not believed at all).
+  try:
+    let j = parseJson(body)
+    if j.kind != JObject: return
+    for f in ["xtermJs", "renderer", "unicodeVersion"]:
+      if j{f} == nil or j[f].kind != JString: return
+    for f in ["customGlyphs", "truecolor", "sgrMouse"]:
+      if j{f} == nil or j[f].kind != JBool: return
+    result = DeclaredCaps(declared: true, xtermJs: j["xtermJs"].getStr,
+      renderer: j["renderer"].getStr, customGlyphs: j["customGlyphs"].getBool,
+      unicodeVersion: j["unicodeVersion"].getStr,
+      truecolor: j["truecolor"].getBool, sgrMouse: j["sgrMouse"].getBool)
+  except CatchableError:
+    result = DeclaredCaps()
+
+proc declaredCaps*(d: WebDriver): DeclaredCaps =
+  ## The client's declaration, once its `caps|` packet has been read.
+  acquire(d.capsSlot.lock)
+  let body = d.capsSlot.body
+  let seen = d.capsSlot.seen
+  release(d.capsSlot.lock)
+  if seen: parseDeclaredCaps(body) else: DeclaredCaps()
+
+proc waitForCaps*(d: WebDriver; timeoutMs: int): DeclaredCaps =
+  ## The declaration, waiting up to `timeoutMs` for it: a client sends it as
+  ## its first packet, so an app that waits for it before its first frame
+  ## paints with the client's real capabilities instead of guessing.
+  let deadline = getMonoTime() + initDuration(milliseconds = timeoutMs)
+  while true:
+    result = d.declaredCaps()
+    if result.declared or getMonoTime() >= deadline:
+      return
+    os.sleep(5)
 
 # ---------------------------------------------------------------------------
 # Driver concept implementation — write / flushPending
