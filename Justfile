@@ -315,9 +315,10 @@ test-refc:
     just _matrix refc debug on
     just _matrix refc danger on
 
-test-threads-off:
-    just _matrix orc release off
-    just _matrix arc release off
+# There is no `--threads:off` cell. The drivers are built on a reader
+# thread and `system.Channel`, so isonim-tui requires `--threads:on` by
+# design (not a failure being hidden); `src/isonim_tui.nim` refuses to
+# compile without it.
 
 # Sanitizers (Linux/amd64 only).
 test-asan: grammars
@@ -400,7 +401,7 @@ test-valgrind: grammars
       fi
     done
 
-test-all: test-arc test-orc test-refc test-threads-off
+test-all: test-arc test-orc test-refc
     @echo "Charter primary matrix complete."
 
 # Internal: one matrix cell.  $1=mm, $2=mode, $3=threads

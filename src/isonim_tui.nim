@@ -8,6 +8,13 @@
 ## See `isonim-specs/isonim-tui.milestones.org` in `codetracer-specs`
 ## for the full multi-milestone plan.
 
+# The drivers read input on a dedicated thread and pass events to the
+# application over a `system.Channel`, so the library needs threads by
+# design. Fail here, with a message that says so, instead of in the
+# middle of `system.Channel` or `createThread`.
+when not compileOption("threads"):
+  {.error: "isonim-tui requires --threads:on".}
+
 import isonim_tui/cells
 import isonim_tui/events
 import isonim_tui/renderer

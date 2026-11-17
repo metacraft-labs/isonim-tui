@@ -43,7 +43,6 @@ Charter matrix recipes (CI runs each as a separate matrix cell):
 just test-arc        # arc memory manager, all three modes
 just test-orc        # orc memory manager, all three modes
 just test-refc       # refc memory manager, all three modes
-just test-threads-off
 just test-asan       # AddressSanitizer (Linux/clang)
 just test-ubsan      # UndefinedBehaviorSanitizer
 just test-tsan       # ThreadSanitizer (local diagnostic, not a CI gate)

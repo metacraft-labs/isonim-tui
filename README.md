@@ -25,6 +25,13 @@ r.appendChild(div, txt)
 echo textContent(div)  # "hello"
 ```
 
+## Requirements
+
+isonim-tui requires `--threads:on` (Nim 2's default). Its terminal drivers
+read input on a dedicated thread and hand events to the application over a
+`system.Channel`, so building with `--threads:off` is unsupported and fails
+at compile time with an explicit error.
+
 ## Development
 
 ```sh

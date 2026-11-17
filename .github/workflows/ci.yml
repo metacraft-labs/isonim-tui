@@ -188,7 +188,11 @@ jobs:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
         mm: [arc, orc, refc]
         mode: [debug, release, danger]
-        threads: [on, off]
+        # `on` only. isonim-tui's drivers are built on a reader thread and
+        # `system.Channel`, so `--threads:off` is unsupported by design --
+        # not a failure being hidden -- and `src/isonim_tui.nim` refuses to
+        # compile without threads.
+        threads: [on]
     runs-on: ${{ matrix.runner }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
