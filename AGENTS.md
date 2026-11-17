@@ -46,9 +46,9 @@ just test-refc       # refc memory manager, all three modes
 just test-threads-off
 just test-asan       # AddressSanitizer (Linux/clang)
 just test-ubsan      # UndefinedBehaviorSanitizer
-just test-tsan       # ThreadSanitizer
+just test-tsan       # ThreadSanitizer (local diagnostic, not a CI gate)
 just test-lsan       # LeakSanitizer
-just test-valgrind   # secondary leak verification
+just test-valgrind   # valgrind memcheck (local diagnostic, not a CI gate)
 just test-all        # everything that runs on a Linux runner
 ```
 
@@ -78,7 +78,7 @@ tests/
   test_repo_requirements_*.nim
   # flake / Justfile / .envrc / AGENTS.md / CI conformance
 .github/workflows/ci.yml
-  # lint, test, charter matrix, sanitizers, valgrind, nix-build
+  # lint, test, charter matrix, sanitizers, nix-build
 flake.nix
   # nix devShell + checks (pre-commit via git-hooks.nix)
 Justfile

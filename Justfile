@@ -347,6 +347,10 @@ test-ubsan: grammars
         -r $t 2>&1 | tee -a test-logs/ubsan.log; \
     done
 
+# A local diagnostic, not a CI gate: every threaded test reports the data
+# race and the locked-mutex destroy inside Nim's own `system.Channel`
+# (see the comment above the `sanitizers` job in .github/workflows/ci.yml).
+# Read the reports for frames outside lib/system/channels_builtin.nim.
 test-tsan: grammars
     @mkdir -p test-logs
     @for t in {{tests}}; do \
@@ -371,6 +375,10 @@ test-lsan: grammars
         -r $t 2>&1 | tee -a test-logs/lsan.log; \
     done
 
+# A local diagnostic, not a CI gate: every test fails on the "possibly
+# lost" block that `std/unittest` keeps referenced until exit (see the
+# comment above the `sanitizers` job in .github/workflows/ci.yml). Read the
+# "definitely lost" and invalid-access reports, not the exit status.
 test-valgrind: grammars
     #!/usr/bin/env bash
     set -euo pipefail
