@@ -20,7 +20,7 @@ proc encodeAnsi*(buf: ScreenBuffer; fences = WidthFences()): string =
     for c in 0 ..< buf.cols:
       let cell = buf[r, c]
       if cell.width == 0: continue
-      let curr = newStyle(cell.fg, cell.bg, cell.attrs)
+      let curr = newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
       let trans = renderSgr(prev, curr)
       if trans.len > 0:
         s.add trans

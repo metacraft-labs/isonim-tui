@@ -28,16 +28,19 @@ type
     fg*: Color
     bg*: Color
     attrs*: set[Attr]
+    ul*: Color
+      ## The underline's colour (SGR 58); `ckDefault` draws the underline in
+      ## the foreground's colour, as a terminal does after SGR 59.
 
 proc newStyle*(fg: Color = defaultColor(); bg: Color = defaultColor();
-               attrs: set[Attr] = {}): Style {.inline.} =
-  Style(fg: fg, bg: bg, attrs: attrs)
+               attrs: set[Attr] = {}; ul: Color = defaultColor()): Style {.inline.} =
+  Style(fg: fg, bg: bg, attrs: attrs, ul: ul)
 
 proc defaultStyle*(): Style {.inline.} = Style(
-  fg: defaultColor(), bg: defaultColor(), attrs: {})
+  fg: defaultColor(), bg: defaultColor(), attrs: {}, ul: defaultColor())
 
 proc `==`*(a, b: Style): bool {.inline.} =
-  a.fg == b.fg and a.bg == b.bg and a.attrs == b.attrs
+  a.fg == b.fg and a.bg == b.bg and a.attrs == b.attrs and a.ul == b.ul
 
 # ----------------------------------------------------------------------------
 # Attribute → SGR-on / SGR-off codes
@@ -86,6 +89,23 @@ proc bgParams(c: Color): string =
   of ckIndexed: "48;5;" & $c.indexed
   of ckRgb:     "48;2;" & $c.r & ";" & $c.g & ";" & $c.b
 
+proc ulParams(c: Color): string =
+  ## The underline colour (SGR 58, the extension kitty, VTE, iTerm2, WezTerm
+  ## and xterm-compatible terminals share:
+  ## https://sw.kovidgoyal.net/kitty/underlines/). The 16 ANSI colours have
+  ## no SGR of their own here, so they go as their palette index. 59 resets
+  ## it to the foreground's.
+  ##
+  ## In the colon (ITU T.416 sub-parameter) form, `58:2::R:G:B`: a terminal
+  ## that does not know 58 skips the whole colon group, where it reads the
+  ## semicolon form `58;2;R;G;B` as separate codes (libvterm takes `2` for
+  ## faint and `102` for a bright green background).
+  case c.kind
+  of ckDefault: "59"
+  of ckAnsi:    "58:5:" & $ord(c.ansi)
+  of ckIndexed: "58:5:" & $c.indexed
+  of ckRgb:     "58:2::" & $c.r & ":" & $c.g & ":" & $c.b
+
 # ----------------------------------------------------------------------------
 # SGR transition encoder
 # ----------------------------------------------------------------------------
@@ -117,8 +137,13 @@ proc renderSgr*(prev, curr: Style): string =
     params.add(fgParams(curr.fg))
   if curr.bg != prev.bg:
     params.add(bgParams(curr.bg))
-  if params.len == 0: return ""
-  return "\x1b[" & params.join(";") & "m"
+  # The underline colour goes in a sequence of its own: a terminal parses a
+  # bounded number of parameters per CSI (libvterm 16), and 58's colon group
+  # after a truecolor foreground and background is past that bound, where it
+  # is dropped or misread as other codes.
+  let ul = if curr.ul != prev.ul: "\x1b[" & ulParams(curr.ul) & "m" else: ""
+  if params.len == 0: return ul
+  return "\x1b[" & params.join(";") & "m" & ul
 
 proc reset*(): string {.inline.} =
   ## Hard reset to terminal defaults.

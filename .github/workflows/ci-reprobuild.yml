@@ -78,7 +78,7 @@ jobs:
         uses: metacraft-labs/metacraft-github-actions/setup-dev-env@ecbf1823dd054592b48975e9403a29cc6fac003c
         with:
           env-flavor: reprobuild
-          repro-version: v0.2.18
+          repro-version: v0.2.26
           sibling-strategy: repro-lock
           gh-token: ${{ steps.ci_token.outputs.token }}
 

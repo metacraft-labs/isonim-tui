@@ -112,7 +112,7 @@ proc emitCellPayload(d: HeadlessDriver; cell: Cell) =
   ## ghost cells are skipped (the trailing-half of a width-2 grapheme
   ## doesn't get its own emission).
   if cell.width == 0: return
-  let target = newStyle(cell.fg, cell.bg, cell.attrs)
+  let target = newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
   let sgr = renderSgr(d.currentStyle, target)
   if sgr.len > 0:
     d.bytesEmitted.add(sgr)
