@@ -15,13 +15,12 @@
 ##   * bench_datatable_scroll_meets_target     — bounded
 ##   * bench_strip_cache_hit_rate              — > 95 %
 ##   * bench_memory_at_idle                    — < 30 MB at idle;
-##                                                < 10 KB per added widget
-##                                                (the second figure is
-##                                                an aspirational target;
-##                                                we assert a relaxed
-##                                                bound that current
-##                                                Nim runtime overhead
-##                                                supports — see code)
+##                                                <= 20 KB per added widget
+##                                                (gated by
+##                                                benchmarks/check_thresholds.nim;
+##                                                this suite asserts a
+##                                                looser regression
+##                                                bound — see code)
 ##   * bench_vs_textual_within_targets         — DEFERRED
 ##   * bench_json_format_validates             — schema check
 ##   * bench_html_report_self_contained        — no external resources
@@ -174,7 +173,8 @@ suite "M24: continuous benchmarking":
   test "bench_memory_at_idle":
     let mb = metrics.valueOf("RSS at idle (standard app)")
     check mb < 30.0
-    # Per-widget figure: the milestone target is < 10 KB amortised.
+    # Per-widget figure: the hard-threshold gate is <= 20 KB amortised
+    # (benchmarks/check_thresholds.nim says how that was chosen).
     # The current Nim renderer node uses 4 initTable() allocations per
     # node — runtime overhead dominates and the absolute target lands
     # in M27 (the M24 acceptance budget is "documented and tracked",

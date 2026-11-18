@@ -9,7 +9,7 @@
 #   Input latency p99            < 33 ms
 #   Idle CPU                     < 0.5 %
 #   RSS at idle (standard app)   < 30 MB
-#   RSS per added widget         < 10 KB
+#   RSS per added widget         <= 20 KB (see benchmarks/check_thresholds.nim)
 #   Strip cache hit rate         > 95 %
 #
 # These mirror the absolute targets in the M24 milestone test list
