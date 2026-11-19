@@ -224,25 +224,6 @@
 ## to the effect-driven API. This is a documented deferral, NOT a weakening:
 ## no test is disabled in the repo and no assertion is touched.
 ##
-## ==========================================================================
-## NON-REPRODUCIBLE REPO-STATE precondition — one test excluded (not faked)
-## ==========================================================================
-##
-## ONE ``Justfile`` ``tests`` entry asserts local git-repository state that a
-## hermetic build cannot reproduce and that is NOT carried by any committed
-## file, so it is OMITTED from the modelled corpus (not disabled in the repo,
-## not weakened) and reported as a repo/CI-state precondition:
-##
-##   * ``test_m24_gh_pages_branch_exists.nim`` — asserts the local
-##     ``refs/heads/gh-pages`` branch exists and contains a ``perf/bench/``
-##     tree + ``.nojekyll`` blob (populated by the CI ``benchmark.yml`` run on
-##     the default branch). In a fresh checkout the ``gh-pages`` head is either
-##     absent or seeded with only ``.nojekyll`` + ``README.md``. Satisfying it
-##     depends on out-of-band git-ref state (not on any source file the recipe
-##     builds), so modelling it would make the closure pass or fail on ambient
-##     repository topology rather than on a reproducible artifact — excluded,
-##     not faked.
-##
 ## (A previously-flagged second red — ``test_textual_compat``'s
 ## ``m23_progress_gradient`` snapshot mismatch — was a genuine STALE golden:
 ## the port's ``barColor`` (``#99dd55``) is now correctly threaded through the
@@ -508,9 +489,9 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_tabs_wrap_option"),
   spec("test_nimcache_is_worktree_local", compilerLocality = true,
        runtimeInputs = @["src", "tests", "config.nims", "isonim_tui.nimble"]),
-  # Runtime Git admin state is monitored and never cached as Nim source.
-  spec("test_m24_gh_pages_branch_exists", mutableGitState = true,
-       runtimeInputs = @[".git", ".github/workflows/benchmark.yml"]),
+  # Reads the committed benchmark workflow; no repository state.
+  spec("test_m24_benchmark_publishing_contract",
+       runtimeInputs = @[".github/workflows/benchmark.yml"]),
 ]
 
 package isonim_tui:
@@ -536,8 +517,10 @@ package isonim_tui:
       "clang"
     else:
       "gcc >=12"
-    # ``test_m24_gh_pages_branch_exists`` runs ``git`` against the live
-    # repository state; its execute action records git's tool identity.
+    # A test declared with ``mutableGitState`` runs ``git`` against the live
+    # repository state, and its execute action records git's tool identity.
+    # No test is declared that way at present; the option and this floor
+    # are kept so one can be without touching the toolchain.
     "git >=2"
 
     # The four landed sibling Nim-library producers this repo consumes from

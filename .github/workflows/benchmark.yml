@@ -1,15 +1,25 @@
 # CI Benchmark Tracking for isonim-tui (M24).
 #
-# Runs the benchmark suite on PRs and configured branches, then
-# publishes results to gh-pages for historical trend tracking via
-# github-action-benchmark.
+# Two jobs, split by where a number may come from:
 #
-# - On eligible dev source: updates both baseline channels on gh-pages
-# - On pull_request: compares against baseline, posts PR comment, does
-#   NOT update baseline
+# - `benchmark-isolated` measures on the CPU-isolated, single-tenant
+#   benchmark runner and is the ONLY job that stores or publishes anything:
+#   the PR comparison comment, and on eligible dev source both baseline
+#   channels on gh-pages (perf/bench, perf/bench-bigger).
+# - `benchmark-gate` runs the same suite on a shared runner as a pass/fail
+#   check against the absolute thresholds in benchmarks/check_thresholds.nim.
+#   It compares against no baseline and pushes nothing. A shared runner has
+#   other jobs beside it, so its numbers are good enough to catch a gross
+#   regression and not good enough to keep: a baseline built from them would
+#   make every later comparison wrong.
+#
+# Nothing here creates gh-pages. The branch exists on the remote and holds
+# no measurement until the first isolated dev run publishes one; a publish
+# that finds no gh-pages parent fails instead of creating one.
 #
 # Local equivalent:
 #   just bench --quick
+#   bash scripts/check-hard-thresholds.sh
 
 name: "Benchmark"
 on:
@@ -37,68 +47,59 @@ permissions:
   pull-requests: write
 
 jobs:
-  benchmark-baseline-store:
-    # Orchestration leg (gh-pages baseline prep) on a general Linux
-    # ephemeral class; the measurement job stays on [linux, x64, benchmark].
+  benchmark-gate:
+    # Shared runner: thresholds only. No baseline, no comparison, no push,
+    # and no write permission to make one possible.
     runs-on: [self-hosted, linux, x64]
-    name: prepare benchmark baseline store
+    name: benchmark thresholds (isonim-tui, shared runner)
+    permissions:
+      contents: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      # Same token and sibling provisioning as `benchmark-isolated` below;
+      # see the comments there.
+      - name: Generate CI token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.CI_TOKEN_PROVIDER_APP_ID }}
+          private-key: ${{ secrets.CI_TOKEN_PROVIDER_PRIVATE_KEY }}
+          owner: metacraft-labs
 
-      - name: Ensure gh-pages baseline branch exists
+      - uses: actions/checkout@v5
+
+      - name: Setup dev env (clones .github/sibling-repos at lock revisions)
+        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@dev
+        with:
+          env-flavor: nix
+          gh-token: ${{ steps.app-token.outputs.token }}
+          substituters: ${{ vars.SUBSTITUTERS }}
+          trusted-public-keys: ${{ vars.TRUSTED_PUBLIC_KEYS }}
+
+      - name: Run benchmark suite
         run: |
-          set -euo pipefail
+          dev-exec just grammars
+          dev-exec just bench --quick
 
-          if [ "${GITHUB_REF}" != "refs/heads/dev" ]; then
-            echo "PR benchmark run uses the existing gh-pages baseline branch"
-            exit 0
-          fi
+      - name: Hard-threshold gate
+        run: dev-exec bash scripts/check-hard-thresholds.sh bench-results/benchmark_results.json
 
-          if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
-            echo "gh-pages baseline branch already exists"
-            exit 0
-          fi
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-thresholds-report
+          path: bench-results/
+          retention-days: 30
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git switch --orphan gh-pages
-          if git ls-files --error-unmatch . >/dev/null 2>&1; then
-            git rm -rf -- .
-          else
-            echo "No tracked files to remove from orphan gh-pages branch"
-          fi
-
-          cat > README.md <<'EOF'
-          # Benchmark Baselines
-
-          This branch stores github-action-benchmark history for isonim-tui (M24).
-          EOF
-          touch .nojekyll
-
-          git add README.md .nojekyll
-          git commit -m "Initialize benchmark baseline store"
-
-          if ! git push origin gh-pages; then
-            if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
-              echo "gh-pages baseline branch was created by another workflow"
-            else
-              echo "failed to create gh-pages baseline branch" >&2
-              exit 1
-            fi
-          fi
-
-  benchmark-linux:
-    needs: benchmark-baseline-store
-    # `linux, x64`: `[self-hosted, benchmark]` also matches the macOS
-    # benchmark runner on m3.
-    # NO `self-hosted`. The benchmark runner is being moved to dedicated labels
-    # only (registered without GitHub's default `self-hosted`/OS/arch labels) so
-    # that general `[self-hosted, linux, x64]` jobs can no longer take its single
-    # CPU-isolated slot. `[linux, x64, benchmark]` matches it both before and after
-    # that change, and never matches the macOS benchmark runner.
-    runs-on: [linux, x64, benchmark]
+  benchmark-isolated:
+    # The only job that stores or publishes results. `benchmark-isolated` is
+    # carried only by the CPU-isolated, single-tenant Linux benchmark runner;
+    # the macOS benchmark runner carries `benchmark` but not this label.
+    # NO `self-hosted`: that runner registers without GitHub's default
+    # labels, so a selector naming `self-hosted` could never match it.
+    # `linux, x64` keep the selector on Linux should another host ever carry
+    # the label.
+    runs-on: [linux, x64, benchmark-isolated]
     name: benchmark (isonim-tui, Linux)
     steps:
       # `just bench` compiles the benchmark binaries against the same sibling
