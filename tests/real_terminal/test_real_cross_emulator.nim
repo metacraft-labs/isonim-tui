@@ -89,7 +89,7 @@ proc killProcess(pid: int) =
   # Also clean up any stray Xvfb the xvfb-run wrapper spawned.
   discard execCmdEx("pkill -P " & $pid & " 2>/dev/null")
 
-proc spawnEmulator(emu, app, sock: string): Process =
+proc spawnEmulator(emu, app, sock, logPath: string): Process =
   ## Spawn the emulator under xvfb-run, instructed to run tmux which
   ## hosts the test app. Each emulator's invocation is slightly
   ## different (xterm uses `-e`; kitty / alacritty take a command tail
@@ -117,7 +117,14 @@ proc spawnEmulator(emu, app, sock: string): Process =
         "; sleep 5\"'"
     else:
       raise newException(ValueError, "unknown emulator: " & emu)
-  startProcess("/bin/sh", args = ["-c", cmd], options = {poStdErrToStdOut})
+  # The emulator's stdout and stderr go to `logPath` -- a file rather than
+  # a pipe, because a pipe nobody reads can fill and stall the emulator, and
+  # reading one to EOF would block on any descendant (Xvfb, the tmux
+  # server) still holding it open. `exec` keeps xvfb-run as the spawned
+  # process, so `killProcess` still reaches Xvfb and the emulator as its
+  # children.
+  startProcess("/bin/sh", args = ["-c",
+    "exec " & cmd & " > '" & logPath & "' 2>&1"], options = {})
 
 type
   EmulatorOutcome = enum
@@ -125,10 +132,16 @@ type
 
 proc runEmulatorOnce(emu: string;
                     paneOut: var string;
-                    missingTool: var string): EmulatorOutcome =
+                    missingTool: var string;
+                    logPath: string): EmulatorOutcome =
   ## Run the emulator end-to-end once. The test bodies call this and
   ## then translate the outcome into a `skip()` or a `check` — `skip()`
   ## must run inside the `test` block, not from a helper.
+  ##
+  ## Everything the emulator (and the xvfb-run wrapper around it) writes,
+  ## followed by its exit status, lands in `logPath`, so a failure bundle
+  ## says WHY an emulator produced no session -- for example a GL terminal
+  ## that could not create its window.
   let needed = ["xvfb-run", emu, "tmux"]
   for n in needed:
     if which(n) == "":
@@ -140,13 +153,21 @@ proc runEmulatorOnce(emu: string;
   putEnv("TMUX_TMPDIR", TmuxTmpDir)
   let sock = "isonim-m29-" & emu
   killTmux(sock)
-  let p = spawnEmulator(emu, app, sock)
+  let p = spawnEmulator(emu, app, sock, logPath)
   let pid = processID(p)
   defer:
+    # An emulator that never brought up its session has usually exited on
+    # its own by now; record how, before the teardown below kills anything.
+    let exitNote =
+      if running(p): "[still running at teardown; killed]"
+      else: "[exit status: " & $peekExitCode(p) & "]"
     killTmux(sock)
     killProcess(pid)
     if running(p): discard p.waitForExit(timeout = 2000)
     p.close()
+    let f = open(logPath, fmAppend)
+    f.writeLine(exitNote)
+    f.close()
   let ready = waitForTmuxSession(sock, "app",
                                  initDuration(seconds = 8))
   if not ready:
@@ -163,7 +184,8 @@ proc runEmulatorOnce(emu: string;
 template runEmulatorTest(emu, testName: string) =
   var pane = ""
   var missing = ""
-  let outcome = runEmulatorOnce(emu, pane, missing)
+  let emuLog = bundleDir(testName) / "emulator_output.txt"
+  let outcome = runEmulatorOnce(emu, pane, missing, emuLog)
   case outcome
   of eoMissingTool:
     skip()

@@ -26,6 +26,31 @@
       perSystem =
         { pkgs, system, ... }:
         let
+          # kitty and alacritty draw with OpenGL, and under Xvfb that GL is
+          # provided through Xvfb's GLX extension, which loads mesa's DRI
+          # driver. A Nix-built Xvfb finds that driver through
+          # /run/opengl-driver, which exists only on NixOS, so on the CI
+          # runners (and any non-NixOS host) Xvfb came up without GLX: kitty
+          # failed with "GLX: GLX extension not found ... kitty requires
+          # working OpenGL 3.1 drivers", alacritty with "failed to create
+          # EGLDisplay", and the M29 cross-emulator test saw no session.
+          # xvfb-run is wrapped to hand Xvfb mesa's software (llvmpipe)
+          # drivers; nothing else in the shell sees these variables.
+          withMesaGl =
+            drv: exe:
+            pkgs.symlinkJoin {
+              name = "${drv.name}-mesa-gl";
+              paths = [ drv ];
+              nativeBuildInputs = [ pkgs.makeWrapper ];
+              postBuild = ''
+                wrapProgram $out/bin/${exe} \
+                  --set LIBGL_DRIVERS_PATH ${pkgs.mesa}/lib/dri \
+                  --set __EGL_VENDOR_LIBRARY_FILENAMES ${pkgs.mesa}/share/glvnd/egl_vendor.d/50_mesa.json \
+                  --set __GLX_VENDOR_LIBRARY_NAME mesa \
+                  --set GBM_BACKENDS_PATH ${pkgs.mesa}/lib/gbm \
+                  --prefix LD_LIBRARY_PATH : ${pkgs.mesa}/lib
+              '';
+            };
           # The committed `.pre-commit-config.yaml` is what the pre-commit hook
           # runs, with the flake's pre-commit: the flake provides the tools, the
           # committed config provides the rules. git-hooks.nix's own installer
@@ -130,11 +155,8 @@
                 # display so xterm can run headless; tmux acts as the
                 # in-emulator capture surface (each emulator launches
                 # `tmux new-session` and the test reads back the pane via
-                # a shared tmux socket). kitty + alacritty are listed for
-                # completeness but require GPU/Wayland paths that aren't
-                # reliable under Xvfb in CI — the test driver detects
-                # missing emulators and reports them as deferred rather
-                # than failing.
+                # a shared tmux socket). kitty and alacritty need OpenGL,
+                # which Xvfb provides once it has mesa (`withMesaGl`).
                 xterm
                 tmux
                 kitty
@@ -143,7 +165,7 @@
               # Linux leak checking and the existing Xvfb-backed M29 emulator lane.
               ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
                 pkgs.valgrind
-                pkgs.xvfb-run
+                (withMesaGl pkgs.xvfb-run "xvfb-run")
               ];
             shellHook = ''
               ${ownRepoOnly installGitHooks}
