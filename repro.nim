@@ -541,7 +541,14 @@ package isonim_tui:
     # ``tree-sitter generate`` turns tree-sitter-nim's ``grammar.js`` into
     # ``parser.c`` (it runs ``grammar.js`` under node), the compiler above
     # builds the three grammar sources, and ``ar`` archives them.
-    "tree-sitter"
+    # ``tree-sitter`` has no Windows provisioning in the tool catalogue (it
+    # is provisioned from nixpkgs only), and naming a tool the platform
+    # cannot provision would fail every Windows dev env, including the
+    # Windows test lane that never touches the grammars. The tree-sitter
+    # runtime is not provisioned on Windows either, so the grammar edges
+    # cannot build there yet.
+    when not defined(windows):
+      "tree-sitter"
     "node"
     "ar"
 
