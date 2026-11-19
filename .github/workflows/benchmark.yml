@@ -238,9 +238,9 @@ jobs:
           auto-push: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Hard-failure gate: stricter than the 120% warning band.
-      # See `metacraft-specs/policies/continuous-benchmarking.md` and
-      # the M24 spec § "Hard-failure thresholds" for the table.
+      # Hard-failure gate: stricter than the 120% warning band. The
+      # absolute bounds and the reason for each are in
+      # benchmarks/check_thresholds.nim.
       - name: Hard-threshold gate
         if: always()
         run: |

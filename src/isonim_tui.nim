@@ -4,9 +4,6 @@
 ## event types, the renderer backend, and (with M2) the headless
 ## driver / compositor / TerminalTestHarness / pilot / introspection
 ## API and the six snapshot encoders.
-##
-## See `isonim-specs/isonim-tui.milestones.org` in `codetracer-specs`
-## for the full multi-milestone plan.
 
 # The drivers read input on a dedicated thread and pass events to the
 # application over a `system.Channel`, so the library needs threads by

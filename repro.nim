@@ -73,8 +73,8 @@
 ## edge — both are provisioned by the ``nix develop`` environment the engine
 ## runs under (``defaultToolProvisioning "path"``).
 ##
-## A Mode 1 / Mode 3 hybrid (per
-## ``reprobuild-specs/Three-Mode-Convention-System.md``) modelled on the
+## A Mode 1 / Mode 3 hybrid (a convention-driven package that also declares
+## explicit edges) modelled on the
 ## canonical Nim-consumer recipes ``isonim-freya/repro.nim`` +
 ## ``isonim-gpui/repro.nim`` and the leaf ``nim-libvterm/repro.nim`` /
 ## ``nim-pty/repro.nim`` two-edge test template:
@@ -91,8 +91,8 @@
 ## * Emits, per HEADLESS-runnable test file in the ``Justfile`` ``tests``
 ##   list, a BUILD edge (``buildNimUnittest.build``) that compiles
 ##   ``build/test-bin/<stem>`` and an EXECUTE edge (``edge.testBinary.run``)
-##   that runs it — the two-edge test template from
-##   ``reprobuild-specs/Package-Model.md`` §"The test template". BUILD
+##   that runs it — the two-edge test template: compile once, run as a
+##   separate edge, so a re-run needs no rebuild. BUILD
 ##   halves collect into ``test-builds``; EXECUTE halves into ``test`` so
 ##   ``repro build test`` / ``repro test`` materialise the runnable closure
 ##   (each execute edge transitively depends on its build edge).

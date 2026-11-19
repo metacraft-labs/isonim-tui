@@ -1,9 +1,9 @@
 ## test_repo_requirements_justfile_recipes
 ##
-## Verifies the `Justfile` defines every recipe required by
-## `metacraft-specs/policies/repo-requirements.md` §3:
+## Verifies the `Justfile` defines every recipe the organisation's
+## repository requirements ask of every repo:
 ##   build, test, lint, format (with `fmt` alias), bench, bench --quick.
-## Plus the `t` short alias from §3.
+## Plus the `t` short alias.
 ##
 ## We grep the Justfile directly rather than shelling out to `just
 ## --list`. The check is structural ("the recipe is declared") rather

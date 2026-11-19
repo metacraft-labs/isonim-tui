@@ -24,9 +24,7 @@ landing across milestones M0-M27.
   bodies stay portable.
 
 Drivers (POSIX / Windows), compositor, layout, CSS engine, animation,
-widgets — every later milestone builds on the M0 surface. See
-`isonim-specs/isonim-tui.milestones.org` in `codetracer-specs`
-for the full plan.
+widgets — every later milestone builds on the M0 surface.
 
 ## Commands
 
@@ -129,14 +127,13 @@ isonim_tui.nimble                        # single-source-of-truth version
 
 ## Specs
 
-The authoritative specifications for this library live in the
-`codetracer-specs` repo:
-
-- `isonim-specs/isonim-tui.milestones.org` — the full milestone
-  plan (M0 through M29) and the "Memory-safety + testing-rigor
-  charter".
-- `metacraft-specs/policies/repo-requirements.md` — repo-level
-  conformance (flake, Justfile, .envrc, hooks, CI).
+The specifications and the milestone plan (M0 through M29, with its
+memory-safety and testing-rigor charter) are maintained outside this
+repository. What a contributor needs from them is stated here and in
+the comments of the files concerned: the repo-level conformance rules
+(flake, Justfile, .envrc, hooks, CI) are checked by the
+`tests/test_repo_requirements_*.nim` tests, and the charter's test
+matrix is the `charter-matrix` job in `.github/workflows/ci.yml`.
 
 When user requests change the public API, update the spec in the same
 change set.

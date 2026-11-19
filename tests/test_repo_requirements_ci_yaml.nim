@@ -1,10 +1,10 @@
 ## test_repo_requirements_ci_yaml
 ##
 ## Verifies `.github/workflows/ci.yml` declares at minimum the
-## `test`, `lint`, and `nix-build` jobs (per
-## `metacraft-specs/policies/repo-requirements.md` §5), and that no
-## step uses an inline multi-line bash block (per
-## `metacraft-specs/policies/ci-workflow-standards.md`).
+## `test`, `lint`, and `nix-build` jobs, which the organisation's repository
+## requirements ask of every repo, and that no step uses an inline multi-line
+## bash block (logic belongs in a Justfile recipe or a script, where it can be
+## run and reviewed locally).
 ##
 ## We do not rely on `yq` (not always installed in the dev shell);
 ## a structural string-search is precise enough for the gating

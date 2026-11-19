@@ -421,8 +421,7 @@ clean:
 
 # --- Benchmarks ---
 #
-# Per `metacraft-specs/policies/continuous-benchmarking.md`. The M24
-# suite lives under `benchmarks/` (one source per metric), driven by
+# The M24 benchmark suite lives under `benchmarks/` (one source per metric), driven by
 # `scripts/collect-benchmark-metrics.sh` which writes
 # `bench-results/benchmark_results.json` in github-action-benchmark
 # format. `scripts/render-bench-report.sh` produces the

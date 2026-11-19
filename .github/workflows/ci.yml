@@ -12,9 +12,8 @@ name: CI
 #
 # Siblings are cloned by `setup-dev-env`, which delegates to `clone-siblings`
 # and resolves each name in `.github/sibling-repos` against the per-commit
-# workspace lock in the manifest repo. That is the single approved sibling
-# revision source (codetracer-specs/Testing/Cross-Repo-CI-Integration.md); a
-# second hand-pinned `actions/checkout` would be another place for revisions to
+# workspace lock in the manifest repo. That lock is the single source of
+# sibling revisions for CI; a second hand-pinned `actions/checkout` would be another place for revisions to
 # drift away from what the workspace actually builds.
 
 on:
