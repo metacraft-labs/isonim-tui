@@ -91,30 +91,37 @@ grammars:
       exit 1
     fi
 
-    # 1. Generate tree-sitter-nim's parser.c (gitignored; produced from grammar.js).
-    if [ -f "$nim_dir/src/parser.c" ]; then
-      echo "[grammars] $nim_dir/src/parser.c present; skipping generate"
+    # 1. Generate tree-sitter-nim's parser.c (gitignored there; produced
+    #    from grammar.js) into build/grammars/ts-nim, never into the sibling
+    #    checkout. Run from this repository's root, exactly as the typed
+    #    `isonim-tui.grammars.generate_nim` edge in repro.nim runs it, so the
+    #    two paths produce the same parser.c (the CLI reads the grammar's
+    #    tree-sitter.json only from its working directory, so both generate
+    #    at the CLI's default ABI rather than the one that file selects).
+    out_dir="$repo_root/build/grammars"
+    gen_dir="$out_dir/ts-nim"
+    mkdir -p "$out_dir"
+    if [ -f "$gen_dir/parser.c" ] && [ -z "$(find "$nim_dir/grammar.js" -newer "$gen_dir/parser.c" 2>/dev/null)" ]; then
+      echo "[grammars] $gen_dir/parser.c is up to date"
     else
-      echo "[grammars] tree-sitter generate in $nim_dir"
-      ( cd "$nim_dir" && tree-sitter generate )
+      echo "[grammars] tree-sitter generate $nim_dir/grammar.js -> $gen_dir"
+      ( cd "$repo_root" && tree-sitter generate --output "$gen_dir" "$nim_dir/grammar.js" )
     fi
 
     # 2. Archive both grammars once. `-O0` deliberately: this is generated
     #    table-driven C with no hot loops of its own, and -O1/-O2 measured
     #    58 s / 37 s against -O0's 34 s for no runtime benefit that shows up
     #    in `just bench`.
-    out_dir="$repo_root/build/grammars"
     archive="$out_dir/libisonim_tui_grammars.a"
-    mkdir -p "$out_dir"
-    srcs="$nim_dir/src/parser.c $nim_dir/src/scanner.c $aiken_dir/src/parser.c"
+    srcs="$gen_dir/parser.c $nim_dir/src/scanner.c $aiken_dir/src/parser.c"
     if [ -f "$archive" ] && [ -z "$(find $srcs -newer "$archive" 2>/dev/null)" ]; then
       echo "[grammars] $archive is up to date"
       exit 0
     fi
     echo "[grammars] building $archive"
     rm -f "$archive"
-    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src"   "$nim_dir/src/parser.c"   -o "$out_dir/ts_nim_parser.o"
-    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src"   "$nim_dir/src/scanner.c"  -o "$out_dir/ts_nim_scanner.o"
+    "${CC:-cc}" -c -O0 -fPIC -I"$gen_dir" "$gen_dir/parser.c" -o "$out_dir/ts_nim_parser.o"
+    "${CC:-cc}" -c -O0 -fPIC -I"$gen_dir" -I"$nim_dir/src" "$nim_dir/src/scanner.c" -o "$out_dir/ts_nim_scanner.o"
     "${CC:-cc}" -c -O0 -fPIC -I"$aiken_dir/src" "$aiken_dir/src/parser.c" -o "$out_dir/ts_aiken_parser.o"
     "${AR:-ar}" rcs "$archive" "$out_dir/ts_nim_parser.o" "$out_dir/ts_nim_scanner.o" "$out_dir/ts_aiken_parser.o"
     echo "[grammars] $archive: $(stat -c%s "$archive") bytes"

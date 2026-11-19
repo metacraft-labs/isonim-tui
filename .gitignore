@@ -1,4 +1,6 @@
-# Build / test outputs.
+# Build / test outputs. `build/` holds the grammar archive (`just grammars`
+# or `repro build grammars`), repro's test binaries and its nimcache.
+build/
 test-logs/
 nim-cache/
 bench-results/

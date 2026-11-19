@@ -251,6 +251,8 @@ import repro_dsl_stdlib/foreign_env
 # the exit-0 verification this corpus needs — Nim ``unittest`` prints per-suite
 # results and exits non-zero on failure.
 import ct_test_nim_unittest
+# ``ar`` is not among the automatically imported tool wrappers.
+import repro_dsl_stdlib/packages/binutils
 
 # Capacity-1 pool name that serialises the real-pty M9 tests (see the
 # real-pty note in the module docstring).
@@ -534,6 +536,14 @@ package isonim_tui:
     "nim-pty"         # library nim_pty (real-pty driver tests, M9)
     "nim-everywhere"  # library nim_everywhere (isonim's platform seam)
 
+    # The grammar archive producer (``isonim-tui.grammars.*`` below):
+    # ``tree-sitter generate`` turns tree-sitter-nim's ``grammar.js`` into
+    # ``parser.c`` (it runs ``grammar.js`` under node), the compiler above
+    # builds the three grammar sources, and ``ar`` archives them.
+    "tree-sitter"
+    "node"
+    "ar"
+
   # Library declaration — the ``src/`` tree is importable when this package
   # is consumed via ``uses: "isonim-tui"`` (e.g. the isonim-examples
   # ``task_app`` composition roots in PASS 2). The umbrella is
@@ -544,6 +554,69 @@ package isonim_tui:
   build:
     # Serial pool for the M9 real-pty tests (capacity 1 — see docstring).
     discard buildPool(serialPool, 1)
+
+    # ---- The tree-sitter grammar archive ---------------------------------
+    #
+    # ``src/isonim_tui/syntax/treesitter_ffi.nim`` links
+    # ``build/grammars/libisonim_tui_grammars.a`` followed by
+    # ``-ltree-sitter`` (the runtime, from the dev shell). The archive holds
+    # the Nim grammar (tree-sitter-nim: a generated ``parser.c`` plus its
+    # hand-written ``scanner.c``) and the Aiken grammar (tree-sitter-aiken
+    # commits its ``parser.c``). Both grammar repositories are siblings,
+    # declared in ``.github/sibling-repos`` and pinned by ``repro.lock``.
+    #
+    # These are typed edges, not a script, so that a grammar change rebuilds
+    # the archive, every compile that links it depends on it, and each
+    # step's reads are monitored as its own. The ``grammars`` recipe in the
+    # Justfile builds the same file the same way for the ``just`` path;
+    # keep the two in step until that path is retired.
+    #
+    # Everything is written under ``build/grammars``: the generated
+    # ``parser.c`` too, so nothing is ever written into a sibling checkout.
+    # ``-O0 -fPIC`` as in the Justfile: the generated tables have no hot
+    # loops of their own, and -O0 is the fastest to compile.
+    const grammarDir = "build/grammars"
+    const tsNimGenerated = grammarDir & "/ts-nim"
+    let grammarGenerate = tree_sitter.generate(
+      grammar = "../tree-sitter-nim/grammar.js",
+      outputDir = tsNimGenerated,
+      # No ``abi``: the CLI reads the grammar's ``tree-sitter.json`` (which
+      # selects ABI 15) only from its working directory, the recipe root
+      # here, so it generates at its default ABI 14 whatever is asked. The
+      # runtime loads both. The Justfile generates the same way.
+      actionId = "isonim-tui.grammars.generate_nim")
+    let tsNimParser = gcc(
+      source = tsNimGenerated & "/parser.c",
+      output = grammarDir & "/ts_nim_parser.o",
+      compileOnly = true, pic = true, optimization = "0",
+      includeDirs = @[tsNimGenerated],
+      after = @[grammarGenerate],
+      actionId = "isonim-tui.grammars.compile_nim_parser")
+    let tsNimScanner = gcc(
+      source = "../tree-sitter-nim/src/scanner.c",
+      output = grammarDir & "/ts_nim_scanner.o",
+      compileOnly = true, pic = true, optimization = "0",
+      # The generated ``tree_sitter/parser.h`` first, so the scanner sees
+      # the header that matches the parser it is linked with.
+      includeDirs = @[tsNimGenerated, "../tree-sitter-nim/src"],
+      after = @[grammarGenerate],
+      actionId = "isonim-tui.grammars.compile_nim_scanner")
+    let tsAikenParser = gcc(
+      source = "../tree-sitter-aiken/src/parser.c",
+      output = grammarDir & "/ts_aiken_parser.o",
+      compileOnly = true, pic = true, optimization = "0",
+      includeDirs = @["../tree-sitter-aiken/src"],
+      actionId = "isonim-tui.grammars.compile_aiken_parser")
+    let grammarArchive = ar(
+      modifiers = "rcs",
+      archive = grammarDir & "/libisonim_tui_grammars.a",
+      objects = @[tsNimParser.outputs[0], tsNimScanner.outputs[0],
+                  tsAikenParser.outputs[0]],
+      after = @[tsNimParser, tsNimScanner, tsAikenParser],
+      actionId = "isonim-tui.grammars.archive")
+    # ``repro build grammars`` names the archive; a consumer selects it the
+    # same way, or by its action id.
+    discard collect("grammars", @[grammarArchive])
 
     # Two-edge test template (Package-Model.md §"The test template"): one
     # compile BUILD edge + one EXECUTE edge per test file. BUILD halves
@@ -593,7 +666,10 @@ package isonim_tui:
         # ``src`` + the nimble file are declared inputs so the monitor tracks
         # the transitively imported ``src/isonim_tui/**`` module tree.
         extraInputs = @["src", "tests", "config.nims", "isonim_tui.nimble"] &
-          (if s.mutableGitState: @[] else: s.runtimeInputs))
+          (if s.mutableGitState: @[] else: s.runtimeInputs),
+        # Every test links the grammar archive through
+        # ``treesitter_ffi.nim``'s ``{.passl.}``.
+        after = @[grammarArchive])
       testBuildActions.add(edge.action)
 
       # ``registerImplicitName = false``: the BUILD edge already owns the
