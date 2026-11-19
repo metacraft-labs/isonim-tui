@@ -207,9 +207,30 @@ jobs:
             bench-results/benchmark_results.json \
             "$BENCH_DESCRIPTOR_DIR/metric-directions.json" "$(git rev-parse HEAD)"
 
-      - name: Compare smaller benchmarks (PR)
+      # A PR is compared only against a baseline that exists. The baseline is
+      # published by the first isolated run on dev; until then this step says
+      # so (a notice and the job summary) and both comparisons are skipped,
+      # while the hard-threshold gate below still runs. A failure to ASK is an
+      # error, not "no baseline".
+      - name: Check for a published baseline (PR)
+        id: baseline
         if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: bash scripts/bench-baseline-status.sh
+
+      # GIT_CONFIG_COUNT=0 on the steps whose git brings its own credential.
+      # setup-dev-env exports an org-scoped Authorization header to the whole
+      # job through GIT_CONFIG_KEY_0 / GIT_CONFIG_VALUE_0 (by design: every
+      # git process in the job can reach the org's private repos). This
+      # action authenticates its gh-pages fetch itself, so git sent two
+      # Authorization headers and GitHub refused the request ("Duplicate
+      # header: Authorization", HTTP 400). These steps use only their own.
+      - name: Compare smaller benchmarks (PR)
+        if: github.event_name == 'pull_request' && steps.baseline.outputs.smaller == 'true'
         uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
+        env:
+          GIT_CONFIG_COUNT: "0"
         with:
           name: "isonim-tui Performance (Linux)"
           tool: customSmallerIsBetter
@@ -224,8 +245,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compare bigger benchmarks (PR)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.baseline.outputs.bigger == 'true'
         uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
+        env:
+          GIT_CONFIG_COUNT: "0"
         with:
           name: "isonim-tui Performance (Linux)"
           tool: customBiggerIsBetter
@@ -328,6 +351,9 @@ jobs:
         if: success() && (github.ref == 'refs/heads/dev' || (github.event_name == 'workflow_dispatch' && inputs.bootstrap-dev-baseline))
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          # The clones' origin carries the action's own credential; see the
+          # note above the PR comparison.
+          GIT_CONFIG_COUNT: "0"
         run: |
           set -euo pipefail
           smaller=benchmark-data-smaller
