@@ -375,15 +375,40 @@ jobs:
         runner: [[self-hosted, windows, x64], [self-hosted, windows, arm64]]
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: jiro4989/setup-nim-action@v2
+      # The self-hosted Windows images carry no package manager (there is no
+      # `choco`, which is what this job used to call, so it failed before
+      # running a test) and no Nix. Windows lanes provision through
+      # setup-dev-env instead. This is the reprobuild flavour that
+      # ci-reprobuild.yml's Windows legs use, at the same pins: it installs
+      # repro, clones the siblings the Justfile's `src-paths` names at the
+      # revisions repro.lock pins, and makes `dev-exec` run a command inside
+      # the dev env that repro.nim's `uses:` declares (nim and the C
+      # compiler among it). The images provide `bash` (PortableGit), which
+      # the Justfile's recipes run under.
+      - name: Generate CI token
+        id: app-token
+        uses: actions/create-github-app-token@v1
         with:
-          nim-version: '2.2.4'
-      - name: Install just
-        run: choco install just -y
+          app-id: ${{ vars.CI_TOKEN_PROVIDER_APP_ID }}
+          private-key: ${{ secrets.CI_TOKEN_PROVIDER_PRIVATE_KEY }}
+          owner: metacraft-labs
+
+      - uses: actions/checkout@v4
+      - name: Setup dev env (reprobuild flavor, as ci-reprobuild.yml)
+        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@e6974530143f251fbffbf3158b6951c9cc8b8582
+        with:
+          env-flavor: reprobuild
+          repro-version: v0.2.28
+          sibling-strategy: repro-lock
+          gh-token: ${{ steps.app-token.outputs.token }}
+      # `just` the way the CI workflow standard installs it on every leg,
+      # pinned to the version the Linux dev shell carries.
+      - uses: extractions/setup-just@v2
+        with:
+          just-version: '1.49.0'
       - name: Run Windows test lane
-        run: just test-windows
-        shell: cmd
+        run: dev-exec just test-windows
+        shell: bash
       - if: always()
         uses: actions/upload-artifact@v4
         with:
