@@ -141,14 +141,12 @@
                 shellcheck
                 shfmt
                 # M19: tree-sitter runtime for the TextArea syntax
-                # highlighter. Vendored grammars (parser.c + scanner.c)
-                # are compiled in via {.compile.}; the runtime library
-                # itself is linked from this dev-shell package.
+                # highlighter. The grammars' committed C sources are
+                # archived by `just grammars`; the runtime library itself
+                # (libtree-sitter, 0.25.10) is linked from this package.
                 tree-sitter
-                # `tree-sitter generate` (the `grammars` Justfile recipe) loads
-                # the grammar's `grammar.js` through node; without it the CLI
-                # fails with "Failed to run `node`". codetracer's nix package
-                # runs the same generate step with nodejs on PATH.
+                # The benchmark workflow's packaging and publication checks
+                # (tools/*.mjs) run under node.
                 nodejs
                 pkg-config
                 # M29 cross-emulator suite. xvfb-run hosts a virtual X

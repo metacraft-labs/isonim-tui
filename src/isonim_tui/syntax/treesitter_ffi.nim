@@ -70,6 +70,21 @@ const
 
   grammarArchive = isonimTuiGrammarArchive
 
+  isonimTuiTreeSitterRuntime* {.strdefine.} = "system"
+    ## Where the tree-sitter runtime comes from.
+    ##
+    ##   * ``system`` (the default): link ``-ltree-sitter``, the library the
+    ##     dev shell provides (or the platform's own package), with its
+    ##     headers on the system include path.
+    ##   * ``bundled``: the runtime's object is already inside the grammar
+    ##     archive, built from tree-sitter's source (Windows builds through
+    ##     reprobuild do this), so nothing more is linked; the build supplies
+    ##     the headers' include path.
+
+when isonimTuiTreeSitterRuntime notin ["system", "bundled"]:
+  {.error: "isonimTuiTreeSitterRuntime must be \"system\" or \"bundled\", not \"" &
+    isonimTuiTreeSitterRuntime & "\"".}
+
 # Link the pre-built grammar archive, then the system tree-sitter runtime.
 # The runtime ships in the nix dev-shell (see flake.nix) and is also
 # available as a vendored `libtree-sitter` on most distros. Order matters:
@@ -81,8 +96,7 @@ const
 #   {.compile(nimGrammarSrcDir & "/parser.c", ...).}   # + scanner.c, + aiken
 #
 # `tree-sitter-nim/src/parser.c` is a 42 MB generated single translation
-# unit -- it is gitignored, and `tree-sitter generate` produces it from
-# `grammar.js`. Measured on a 32-core host it costs 34 s to compile at -O0
+# unit (the grammar repository commits it). Measured on a 32-core host it costs 34 s to compile at -O0
 # (58 s at -O1, 37 s at -O2). Nim's nimcache is keyed per project, so each
 # of the 147 test binaries in the Justfile's `tests` list compiled it again
 # from scratch: ~88 minutes of grammar compilation per full-suite job,
@@ -94,9 +108,11 @@ const
 # recipe depends on `grammars`, which is what guarantees the archive exists
 # by the time anything links. A pleasant side effect: `nim check` no longer
 # needs the grammars on disk at all, because there is no longer a
-# `{.compile.}` path for it to resolve -- so `just lint` stops depending on
-# a multi-minute `tree-sitter generate`.
-{.passl: grammarArchive & " -ltree-sitter".}
+# `{.compile.}` path for it to resolve.
+when isonimTuiTreeSitterRuntime == "bundled":
+  {.passl: grammarArchive.}
+else:
+  {.passl: grammarArchive & " -ltree-sitter".}
 
 # ----------------------------------------------------------------------------
 # Raw C types — opaque structs from `<tree_sitter/api.h>`. The runtime

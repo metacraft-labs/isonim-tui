@@ -253,7 +253,7 @@ import repro_dsl_stdlib/foreign_env
 import ct_test_nim_unittest
 # ``ar`` is not among the automatically imported tool wrappers.
 import repro_dsl_stdlib/packages/binutils
-import repro_dsl_stdlib/fs as dslfs
+import repro_dsl_stdlib/operations/pinned_fetch
 
 # Capacity-1 pool name that serialises the real-pty M9 tests (see the
 # real-pty note in the module docstring).
@@ -537,19 +537,10 @@ package isonim_tui:
     "nim-pty"         # library nim_pty (real-pty driver tests, M9)
     "nim-everywhere"  # library nim_everywhere (isonim's platform seam)
 
-    # The grammar archive producer (``isonim-tui.grammars.*`` below):
-    # ``tree-sitter generate`` turns tree-sitter-nim's ``grammar.js`` into
-    # ``parser.c`` (it runs ``grammar.js`` under node), the compiler above
-    # builds the three grammar sources, and ``ar`` archives them.
-    # ``tree-sitter`` has no Windows provisioning in the tool catalogue (it
-    # is provisioned from nixpkgs only), and naming a tool the platform
-    # cannot provision would fail every Windows dev env, including the
-    # Windows test lane that never touches the grammars. The tree-sitter
-    # runtime is not provisioned on Windows either, so the grammar edges
-    # cannot build there yet.
-    when not defined(windows):
-      "tree-sitter"
-    "node"
+    # The grammar archive producer (``isonim-tui.grammars.*`` below): the
+    # compiler above builds the grammars' committed C sources and ``ar``
+    # archives them. No grammar is generated, so neither the tree-sitter
+    # CLI nor node is needed on any platform.
     "ar"
 
   # Library declaration — the ``src/`` tree is importable when this package
@@ -566,82 +557,90 @@ package isonim_tui:
     # ---- The tree-sitter grammar archive ---------------------------------
     #
     # ``src/isonim_tui/syntax/treesitter_ffi.nim`` links
-    # ``build/grammars/libisonim_tui_grammars.a`` followed by
-    # ``-ltree-sitter`` (the runtime, from the dev shell). The archive holds
-    # the Nim grammar (tree-sitter-nim: a generated ``parser.c`` plus its
-    # hand-written ``scanner.c``) and the Aiken grammar (tree-sitter-aiken
-    # commits its ``parser.c``). Both grammar repositories are siblings,
-    # declared in ``.github/sibling-repos`` and pinned by ``repro.lock``.
+    # ``build/grammars/libisonim_tui_grammars.a`` and then the tree-sitter
+    # runtime. The archive holds the Nim grammar (tree-sitter-nim's
+    # committed, generated ``src/parser.c`` -- ABI 15 -- and its
+    # hand-written ``src/scanner.c``) and the Aiken grammar
+    # (tree-sitter-aiken's committed ``src/parser.c``, ABI 14). Both grammar
+    # repositories are siblings, declared in ``.github/sibling-repos`` and
+    # pinned by ``repro.lock``; their files are read, never written.
     #
     # These are typed edges, not a script, so that a grammar change rebuilds
     # the archive, every compile that links it depends on it, and each
     # step's reads are monitored as its own. The ``grammars`` recipe in the
-    # Justfile builds the same file the same way for the ``just`` path;
-    # keep the two in step until that path is retired.
+    # Justfile builds the same objects for the ``just`` path; keep the two
+    # in step until that path is retired. ``-O0 -fPIC`` as there: the
+    # generated tables have no hot loops of their own, and -O0 is the
+    # fastest to compile.
     #
-    # Everything is written under ``build/grammars``: the generated
-    # ``parser.c`` too, so nothing is ever written into a sibling checkout.
-    # ``-O0 -fPIC`` as in the Justfile: the generated tables have no hot
-    # loops of their own, and -O0 is the fastest to compile.
+    # The RUNTIME on Linux and macOS is the dev shell's ``libtree-sitter``
+    # (tree-sitter 0.25.10 from nixpkgs), which the ``just`` path and the
+    # nix-flavoured CI legs already link. Windows has no such library to
+    # provision, so there the runtime is built here from tree-sitter's own
+    # 0.25.10 source, pinned by sha256 -- the same version -- and its
+    # object goes into the same archive (see ``tsRuntime*`` below).
     const grammarDir = "build/grammars"
-    const tsNimGenerated = grammarDir & "/ts-nim"
-    # The CLI reads the grammar's ``tree-sitter.json`` only from its working
-    # directory, and without it falls back from ABI 15 to ABI 14 with a
-    # warning (an explicit ``--abi 15`` does not override that). So a copy
-    # of that file is staged in ``build/grammars/ts-nim-config`` and the
-    # generator runs there, reading ``grammar.js`` from the sibling and
-    # writing ``build/grammars/ts-nim``. Every path is relative to this
-    # recipe root or to that directory, so the edge depends neither on what
-    # this checkout is called nor on writing outside it. Declared outputs
-    # resolve against the action's working directory, declared inputs
-    # against the recipe root.
-    const tsNimDir = "../tree-sitter-nim"
-    const tsNimConfigDir = grammarDir & "/ts-nim-config"
-    let grammarConfig = dslfs.copyFile(
-      tsNimDir & "/tree-sitter.json", tsNimConfigDir & "/tree-sitter.json",
-      actionId = "isonim-tui.grammars.stage_nim_config")
-    let grammarGenerate = tree_sitter.generate(
-      # From ``build/grammars/ts-nim-config``: four levels up is the
-      # directory holding this checkout and its siblings.
-      grammar = "../../../" & tsNimDir & "/grammar.js",
-      outputDir = "../ts-nim",
-      abi = 15,
-      extraInputs = @[tsNimDir & "/grammar.js",
-                      tsNimConfigDir & "/tree-sitter.json"],
-      after = @[grammarConfig],
-      actionId = "isonim-tui.grammars.generate_nim")
-    setRegisteredActionCwd(grammarGenerate.id, acwdCustom, tsNimConfigDir)
+    const tsNimSrc = "../tree-sitter-nim/src"
+    const tsAikenSrc = "../tree-sitter-aiken/src"
     let tsNimParser = gcc(
-      source = tsNimGenerated & "/parser.c",
+      source = tsNimSrc & "/parser.c",
       output = grammarDir & "/ts_nim_parser.o",
       compileOnly = true, pic = true, optimization = "0",
-      includeDirs = @[tsNimGenerated],
-      after = @[grammarGenerate],
+      includeDirs = @[tsNimSrc],
       actionId = "isonim-tui.grammars.compile_nim_parser")
     let tsNimScanner = gcc(
-      source = "../tree-sitter-nim/src/scanner.c",
+      source = tsNimSrc & "/scanner.c",
       output = grammarDir & "/ts_nim_scanner.o",
       compileOnly = true, pic = true, optimization = "0",
-      # The generated ``tree_sitter/parser.h`` first, so the scanner sees
-      # the header that matches the parser it is linked with.
-      includeDirs = @[tsNimGenerated, "../tree-sitter-nim/src"],
-      after = @[grammarGenerate],
+      includeDirs = @[tsNimSrc],
       actionId = "isonim-tui.grammars.compile_nim_scanner")
     let tsAikenParser = gcc(
-      source = "../tree-sitter-aiken/src/parser.c",
+      source = tsAikenSrc & "/parser.c",
       output = grammarDir & "/ts_aiken_parser.o",
       compileOnly = true, pic = true, optimization = "0",
-      includeDirs = @["../tree-sitter-aiken/src"],
+      includeDirs = @[tsAikenSrc],
       actionId = "isonim-tui.grammars.compile_aiken_parser")
+    var archiveObjects = @[tsNimParser, tsNimScanner, tsAikenParser]
+    # The tree-sitter runtime from pinned source, on Windows only. Upstream
+    # builds the runtime as the single translation unit ``lib/src/lib.c``
+    # with ``lib/include`` and ``lib/src`` on the include path
+    # (https://github.com/tree-sitter/tree-sitter/blob/v0.25.10/Makefile).
+    # The tag archive is fetched and verified by a typed pinned-fetch edge
+    # into ``build/tree-sitter-runtime``; nothing is taken from PATH.
+    const tsRuntimeDir = "build/tree-sitter-runtime"
+    const tsRuntimeInclude = tsRuntimeDir & "/lib/include"
+    when defined(windows):
+      let tsRuntimeFetch = emitPinnedFetchAction(activeProviderProjectRoot(),
+        "isonim-tui", PinnedArchive(
+          name: "tree-sitter-0.25.10",
+          url: "https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v0.25.10.tar.gz",
+          sha256: "ad5040537537012b16ef6e1210a572b927c7cdc2b99d1ee88d44a7dcdc3ff44c",
+          kind: pakTarball, stripComponents: 1),
+        activeProviderProjectRoot() / tsRuntimeDir)
+      let tsRuntime = gcc(
+        source = tsRuntimeDir & "/lib/src/lib.c",
+        output = grammarDir & "/ts_runtime.o",
+        compileOnly = true, optimization = "2",
+        includeDirs = @[tsRuntimeInclude, tsRuntimeDir & "/lib/src"],
+        after = @[tsRuntimeFetch],
+        actionId = "isonim-tui.grammars.compile_runtime")
+      archiveObjects.add tsRuntime
+    var archiveObjectPaths: seq[string]
+    for o in archiveObjects: archiveObjectPaths.add o.outputs[0]
     let grammarArchive = ar(
       modifiers = "rcs",
       archive = grammarDir & "/libisonim_tui_grammars.a",
-      objects = @[tsNimParser.outputs[0], tsNimScanner.outputs[0],
-                  tsAikenParser.outputs[0]],
-      after = @[tsNimParser, tsNimScanner, tsAikenParser],
+      objects = archiveObjectPaths,
+      after = archiveObjects,
       actionId = "isonim-tui.grammars.archive")
-    # ``repro build grammars`` names the archive; a consumer selects it the
-    # same way, or by its action id.
+    # How every test build links the runtime: the dev shell's library, or on
+    # Windows the object archived above plus its headers.
+    let tsRuntimePassC =
+      when defined(windows): @["-I" & activeProviderProjectRoot() / tsRuntimeInclude]
+      else: newSeq[string]()
+    let tsRuntimeDefines =
+      when defined(windows): @["isonimTuiTreeSitterRuntime=bundled"]
+      else: newSeq[string]()
     discard collect("grammars", @[grammarArchive])
 
     # Two-edge test template (Package-Model.md §"The test template"): one
@@ -681,9 +680,10 @@ package isonim_tui:
       let edge = buildNimUnittest.build(
         source = source,
         binary = binary,
-        defines = @["release"],
+        defines = @["release"] & tsRuntimeDefines,
         paths = paths,
         mm = "orc",
+        extraPassC = tsRuntimePassC,
         extraPassL = extraPassL,
         actionId = "isonim-tui.test_build." & s.stem,
         cacheable = not s.compilerLocality,
