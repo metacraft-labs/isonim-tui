@@ -95,8 +95,10 @@ grammars:
     #    from grammar.js) into build/grammars/ts-nim, never into the sibling
     #    checkout. The CLI reads the grammar's tree-sitter.json (which
     #    selects ABI 15) only from its working directory, so it runs in the
-    #    checkout, which it only reads -- exactly as the typed
-    #    `isonim-tui.grammars.generate_nim` edge in repro.nim runs it.
+    #    checkout, which it only reads, and writes here through an absolute
+    #    --output. (The typed `isonim-tui.grammars.generate_nim` edge in
+    #    repro.nim stages a copy of that file instead; both produce the same
+    #    parser.c.)
     out_dir="$repo_root/build/grammars"
     gen_dir="$out_dir/ts-nim"
     mkdir -p "$out_dir"

@@ -253,6 +253,7 @@ import repro_dsl_stdlib/foreign_env
 import ct_test_nim_unittest
 # ``ar`` is not among the automatically imported tool wrappers.
 import repro_dsl_stdlib/packages/binutils
+import repro_dsl_stdlib/fs as dslfs
 
 # Capacity-1 pool name that serialises the real-pty M9 tests (see the
 # real-pty note in the module docstring).
@@ -579,22 +580,30 @@ package isonim_tui:
     const tsNimGenerated = grammarDir & "/ts-nim"
     # The CLI reads the grammar's ``tree-sitter.json`` only from its working
     # directory, and without it falls back from ABI 15 to ABI 14 with a
-    # warning (an explicit ``--abi 15`` does not override that). So the
-    # action runs IN the tree-sitter-nim checkout, which it only reads, and
-    # writes to this repository's ``build/grammars/ts-nim`` through a path
-    # relative to that directory. Declared outputs resolve against the
-    # action's working directory; inputs resolve against the recipe root,
-    # hence ``extraInputs``. The checkout's own directory name is used so
-    # the path holds whatever this checkout is called.
+    # warning (an explicit ``--abi 15`` does not override that). So a copy
+    # of that file is staged in ``build/grammars/ts-nim-config`` and the
+    # generator runs there, reading ``grammar.js`` from the sibling and
+    # writing ``build/grammars/ts-nim``. Every path is relative to this
+    # recipe root or to that directory, so the edge depends neither on what
+    # this checkout is called nor on writing outside it. Declared outputs
+    # resolve against the action's working directory, declared inputs
+    # against the recipe root.
     const tsNimDir = "../tree-sitter-nim"
-    const selfDirName = currentSourcePath().parentDir().lastPathPart
+    const tsNimConfigDir = grammarDir & "/ts-nim-config"
+    let grammarConfig = dslfs.copyFile(
+      tsNimDir & "/tree-sitter.json", tsNimConfigDir & "/tree-sitter.json",
+      actionId = "isonim-tui.grammars.stage_nim_config")
     let grammarGenerate = tree_sitter.generate(
-      grammar = "grammar.js",
-      outputDir = "../" & selfDirName & "/" & tsNimGenerated,
+      # From ``build/grammars/ts-nim-config``: four levels up is the
+      # directory holding this checkout and its siblings.
+      grammar = "../../../" & tsNimDir & "/grammar.js",
+      outputDir = "../ts-nim",
       abi = 15,
-      extraInputs = @[tsNimDir & "/grammar.js", tsNimDir & "/tree-sitter.json"],
+      extraInputs = @[tsNimDir & "/grammar.js",
+                      tsNimConfigDir & "/tree-sitter.json"],
+      after = @[grammarConfig],
       actionId = "isonim-tui.grammars.generate_nim")
-    setRegisteredActionCwd(grammarGenerate.id, acwdCustom, tsNimDir)
+    setRegisteredActionCwd(grammarGenerate.id, acwdCustom, tsNimConfigDir)
     let tsNimParser = gcc(
       source = tsNimGenerated & "/parser.c",
       output = grammarDir & "/ts_nim_parser.o",
