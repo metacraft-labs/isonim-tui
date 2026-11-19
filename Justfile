@@ -93,19 +93,18 @@ grammars:
 
     # 1. Generate tree-sitter-nim's parser.c (gitignored there; produced
     #    from grammar.js) into build/grammars/ts-nim, never into the sibling
-    #    checkout. Run from this repository's root, exactly as the typed
-    #    `isonim-tui.grammars.generate_nim` edge in repro.nim runs it, so the
-    #    two paths produce the same parser.c (the CLI reads the grammar's
-    #    tree-sitter.json only from its working directory, so both generate
-    #    at the CLI's default ABI rather than the one that file selects).
+    #    checkout. The CLI reads the grammar's tree-sitter.json (which
+    #    selects ABI 15) only from its working directory, so it runs in the
+    #    checkout, which it only reads -- exactly as the typed
+    #    `isonim-tui.grammars.generate_nim` edge in repro.nim runs it.
     out_dir="$repo_root/build/grammars"
     gen_dir="$out_dir/ts-nim"
     mkdir -p "$out_dir"
-    if [ -f "$gen_dir/parser.c" ] && [ -z "$(find "$nim_dir/grammar.js" -newer "$gen_dir/parser.c" 2>/dev/null)" ]; then
+    if [ -f "$gen_dir/parser.c" ] && [ -z "$(find "$nim_dir/grammar.js" "$nim_dir/tree-sitter.json" -newer "$gen_dir/parser.c" 2>/dev/null)" ]; then
       echo "[grammars] $gen_dir/parser.c is up to date"
     else
-      echo "[grammars] tree-sitter generate $nim_dir/grammar.js -> $gen_dir"
-      ( cd "$repo_root" && tree-sitter generate --output "$gen_dir" "$nim_dir/grammar.js" )
+      echo "[grammars] tree-sitter generate in $nim_dir -> $gen_dir"
+      ( cd "$nim_dir" && tree-sitter generate --abi 15 --output "$gen_dir" grammar.js )
     fi
 
     # 2. Archive both grammars once. `-O0` deliberately: this is generated

@@ -577,14 +577,24 @@ package isonim_tui:
     # loops of their own, and -O0 is the fastest to compile.
     const grammarDir = "build/grammars"
     const tsNimGenerated = grammarDir & "/ts-nim"
+    # The CLI reads the grammar's ``tree-sitter.json`` only from its working
+    # directory, and without it falls back from ABI 15 to ABI 14 with a
+    # warning (an explicit ``--abi 15`` does not override that). So the
+    # action runs IN the tree-sitter-nim checkout, which it only reads, and
+    # writes to this repository's ``build/grammars/ts-nim`` through a path
+    # relative to that directory. Declared outputs resolve against the
+    # action's working directory; inputs resolve against the recipe root,
+    # hence ``extraInputs``. The checkout's own directory name is used so
+    # the path holds whatever this checkout is called.
+    const tsNimDir = "../tree-sitter-nim"
+    const selfDirName = currentSourcePath().parentDir().lastPathPart
     let grammarGenerate = tree_sitter.generate(
-      grammar = "../tree-sitter-nim/grammar.js",
-      outputDir = tsNimGenerated,
-      # No ``abi``: the CLI reads the grammar's ``tree-sitter.json`` (which
-      # selects ABI 15) only from its working directory, the recipe root
-      # here, so it generates at its default ABI 14 whatever is asked. The
-      # runtime loads both. The Justfile generates the same way.
+      grammar = "grammar.js",
+      outputDir = "../" & selfDirName & "/" & tsNimGenerated,
+      abi = 15,
+      extraInputs = @[tsNimDir & "/grammar.js", tsNimDir & "/tree-sitter.json"],
       actionId = "isonim-tui.grammars.generate_nim")
+    setRegisteredActionCwd(grammarGenerate.id, acwdCustom, tsNimDir)
     let tsNimParser = gcc(
       source = tsNimGenerated & "/parser.c",
       output = grammarDir & "/ts_nim_parser.o",
