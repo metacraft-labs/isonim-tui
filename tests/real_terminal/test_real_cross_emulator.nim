@@ -50,6 +50,22 @@ import ./test_helpers
 
 const
   Marker = "ISONIM-TUI-M29-CROSS-EMU-OK"
+  # How long to wait for the emulator to bring up its tmux session. The
+  # wait polls every 100 ms and returns as soon as the session exists, so
+  # the budget costs nothing when the emulator is healthy; it only bounds a
+  # failure, which is then explained by emulator_output.txt. It has two
+  # parts:
+  #   * xvfb-run sleeps a fixed 3 s (its STARTWAIT default) before it starts
+  #     the emulator at all, so that time can never count as the emulator's;
+  #   * the emulator's own cold start plus tmux. kitty, a Python
+  #     application, took 4.4 s from its own start to its first line of
+  #     output on a fresh CI runner (cold page cache, software GL); locally
+  #     it takes about 0.6 s, of which building an empty fontconfig cache is
+  #     about 0.3 s. 20 s is several times the slowest start observed.
+  # The previous flat 8 s left kitty about 0.6 s on CI once xvfb-run's 3 s
+  # and kitty's 4.4 s were spent, and it failed there.
+  XvfbRunStartDelay = initDuration(seconds = 3)
+  EmulatorReadyBudget = initDuration(seconds = 20)
   AppStem = "cross_emulator_app"
   TmuxTmpDir = "/tmp/isonim-tui-m29-cross-emu"
 
@@ -107,7 +123,9 @@ proc spawnEmulator(emu, app, sock, logPath: string): Process =
       # kitty under -o allow_remote_control=no avoids needing a kitten
       # control socket. The tail is a bash invocation that hosts tmux.
       "xvfb-run -a --server-args='-screen 0 1024x768x24' " &
-        "kitty -o allow_remote_control=no bash -c " &
+        # `--config NONE`: no kitty.conf from the host or the user's home,
+        # so the run does not depend on the machine it runs on.
+        "kitty --config NONE -o allow_remote_control=no bash -c " &
         "'tmux -L " & sock & " new-session -s app \"" & app &
         "; sleep 5\"'"
     of "alacritty":
@@ -169,7 +187,7 @@ proc runEmulatorOnce(emu: string;
     f.writeLine(exitNote)
     f.close()
   let ready = waitForTmuxSession(sock, "app",
-                                 initDuration(seconds = 8))
+                                 XvfbRunStartDelay + EmulatorReadyBudget)
   if not ready:
     return eoNoSession
   sleep(800) # give the app a beat to paint after tmux comes up
