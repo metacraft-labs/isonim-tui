@@ -116,10 +116,12 @@ privateConsoleSuite("M10: WindowsDriver VT input parity", 1):
         check getConsoleMode(hin, addr liveMode) != 0
         check (liveMode and ENABLE_VIRTUAL_TERMINAL_INPUT) != 0
 
-        # 2) Inject three structured records that exercise three
-        # different translateKeyRecord branches: modifier (Ctrl+A),
+        # 2) Inject three structured records: modifier (Ctrl+A),
         # navigation (Up arrow), and function (F1). Each must surface
-        # with the canonical Textual-style key name.
+        # with the canonical Textual-style key name. With VT input on, a
+        # real conhost may hand any of them back as VT text records
+        # (Up as `ESC [ A`); `windows_key_decoder` decodes both shapes,
+        # and `test_windows_key_decoder` covers each shape directly.
         var recs: array[3, InputRecord]
         # Ctrl+A — virtual key 'A', uChar = SOH (0x01), Ctrl modifier.
         recs[0] = makeKeyRec(WORD(ord('A')), WCHAR(0x01), LEFT_CTRL_PRESSED)
@@ -143,6 +145,12 @@ privateConsoleSuite("M10: WindowsDriver VT input parity", 1):
 
         d.stop()
 
+        # Name every decoded event, so a failure on a real console says
+        # what the driver produced (a C0 control in `key` is invisible).
+        for i, ev in collected:
+          checkpoint "event " & $i & ": kind=" & $ev.key.kind & " key=" &
+            ev.key.key.repr & " rune=" & $ev.key.rune & " mods=" &
+            $ev.key.modifiers
         check collected.len == 3
 
         # Ctrl+A — must arrive with the modCtrl bit set. The key name

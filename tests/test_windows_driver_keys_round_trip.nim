@@ -110,6 +110,12 @@ privateConsoleSuite("M10: WindowsDriver keys round trip", 1):
 
         d.stop()
 
+        # Name every decoded event, so a failure on a real console says
+        # what the driver produced (a C0 control in `key` is invisible).
+        for i, ev in collected:
+          checkpoint "event " & $i & ": kind=" & $ev.key.kind & " key=" &
+            ev.key.key.repr & " rune=" & $ev.key.rune & " mods=" &
+            $ev.key.modifiers
         check collected.len == 3
         check collected[0].key.key == "a"
         check collected[1].key.key == "enter"

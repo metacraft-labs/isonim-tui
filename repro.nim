@@ -400,6 +400,8 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_windows_driver_ctrl_c_clean_exit"),
   spec("test_windows_driver_alt_screen"),
   spec("test_windows_driver_vt_input"),
+  # The key-record decoder is pure Nim and runs on every host.
+  spec("test_windows_key_decoder"),
   # ---- widgets ----
   spec("test_static_borders_real_cells"),
   spec("test_label_rich_text_wraps"),
