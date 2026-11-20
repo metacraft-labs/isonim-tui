@@ -44,7 +44,16 @@ real-terminal-tests := "tests/real_terminal/test_real_static.nim tests/real_term
 windows-driver-tests := "tests/test_windows_driver_keys_round_trip.nim tests/test_windows_driver_resize.nim tests/test_windows_driver_ctrl_c_clean_exit.nim tests/test_windows_driver_alt_screen.nim tests/test_windows_driver_vt_input.nim tests/test_widget_set_snapshot_windows.nim"
 
 # Hermetic + style checks - applied to every nim invocation in this file.
-nim-flags := "--styleCheck:usages --styleCheck:error"
+#
+# `--parallelBuild` is bounded explicitly. Nim's default (0) means "one C
+# compiler per CPU", and on Linux Nim counts CPUs with
+# sysconf(_SC_NPROCESSORS_ONLN), which reports every thread of the HOST and
+# ignores the cpuset a container is pinned to. A CI runner container is
+# capped at a few CPUs and tens of GiB on a host with many more threads, so
+# each `nim c` started one cc1plus per host thread for isonim's vendored
+# Yoga C++ and the runner was OOM-killed (exit 137). just's `num_cpus()`
+# reads the process's CPU affinity, so it is the container's own count.
+nim-flags := "--styleCheck:usages --styleCheck:error --parallelBuild:" + num_cpus()
 
 # The ordered list of test files. Adding a new test_*.nim here gates it
 # on CI.
