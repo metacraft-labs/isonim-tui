@@ -43,7 +43,7 @@ probe() {
 
 smaller="$(probe perf/bench)"
 bigger="$(probe perf/bench-bigger)"
-printf 'smaller=%s\nbigger=%s\n' "$smaller" "$bigger" >> "$GITHUB_OUTPUT"
+printf 'smaller=%s\nbigger=%s\n' "$smaller" "$bigger" >>"$GITHUB_OUTPUT"
 
 for pair in "smaller:perf/bench:${smaller}" "bigger:perf/bench-bigger:${bigger}"; do
   IFS=: read -r channel dir present <<<"$pair"
@@ -53,7 +53,7 @@ for pair in "smaller:perf/bench:${smaller}" "bigger:perf/bench-bigger:${bigger}"
     msg="No published ${channel}-is-better baseline yet (gh-pages:${dir}/data.js does not exist). This PR is NOT compared against a baseline on that channel; only the hard-threshold gate applies. The first isolated benchmark run on dev publishes the baseline."
     echo "::notice title=No benchmark baseline (${channel})::${msg}"
     if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
-      printf -- '- **No benchmark baseline (%s):** %s\n' "$channel" "$msg" >> "$GITHUB_STEP_SUMMARY"
+      printf -- '- **No benchmark baseline (%s):** %s\n' "$channel" "$msg" >>"$GITHUB_STEP_SUMMARY"
     fi
   fi
 done
