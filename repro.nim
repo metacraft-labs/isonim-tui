@@ -590,12 +590,14 @@ package isonim_tui:
     # generated tables have no hot loops of their own, and -O0 is the
     # fastest to compile.
     #
-    # The RUNTIME on Linux and macOS is the dev shell's ``libtree-sitter``
-    # (tree-sitter 0.25.10 from nixpkgs), which the ``just`` path and the
-    # nix-flavoured CI legs already link. Windows has no such library to
-    # provision, so there the runtime is built here from tree-sitter's own
-    # 0.25.10 source, pinned by sha256 -- the same version -- and its
-    # object goes into the same archive (see ``tsRuntime*`` below).
+    # The RUNTIME (``-ltree-sitter``) for every test build here is built from
+    # tree-sitter's own 0.25.10 source, pinned by sha256, into
+    # ``build/tree-sitter-runtime/libtree-sitter.a`` (see ``tsRuntime*``
+    # below), on every platform. A declared edge, rather than whatever
+    # ``libtree-sitter`` a host or dev shell happens to have: the hermetic
+    # action environment has none, and on Windows no package provides one.
+    # It is the version the dev shell's library has, which is what the
+    # ``just`` path links.
     const grammarDir = "build/grammars"
     const tsNimSrc = "../tree-sitter-nim/src"
     const tsAikenSrc = "../tree-sitter-aiken/src"
@@ -614,31 +616,7 @@ package isonim_tui:
       output = grammarDir & "/ts_aiken_parser.o",
       includeDirs = @[tsAikenSrc], optimization = "0", pic = true,
       actionId = "isonim-tui.grammars.compile_aiken_parser")
-    var archiveObjects = @[tsNimParser, tsNimScanner, tsAikenParser]
-    # The tree-sitter runtime from pinned source, on Windows only. Upstream
-    # builds the runtime as the single translation unit ``lib/src/lib.c``
-    # with ``lib/include`` and ``lib/src`` on the include path
-    # (https://github.com/tree-sitter/tree-sitter/blob/v0.25.10/Makefile).
-    # The tag archive is fetched and verified by a typed pinned-fetch edge
-    # into ``build/tree-sitter-runtime``; nothing is taken from PATH.
-    const tsRuntimeDir = "build/tree-sitter-runtime"
-    const tsRuntimeInclude = tsRuntimeDir & "/lib/include"
-    when defined(windows):
-      let tsRuntimeFetch = emitPinnedFetchAction(activeProviderProjectRoot(),
-        "isonim-tui", PinnedArchive(
-          name: "tree-sitter-0.25.10",
-          url: "https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v0.25.10.tar.gz",
-          sha256: "ad5040537537012b16ef6e1210a572b927c7cdc2b99d1ee88d44a7dcdc3ff44c",
-          kind: pakTarball, stripComponents: 1),
-        activeProviderProjectRoot() / tsRuntimeDir)
-      let tsRuntime = compileGrammarC(
-        source = tsRuntimeDir & "/lib/src/lib.c",
-        output = grammarDir & "/ts_runtime.o",
-        includeDirs = @[tsRuntimeInclude, tsRuntimeDir & "/lib/src"],
-        optimization = "2", pic = false,
-        after = @[tsRuntimeFetch],
-        actionId = "isonim-tui.grammars.compile_runtime")
-      archiveObjects.add tsRuntime
+    let archiveObjects = @[tsNimParser, tsNimScanner, tsAikenParser]
     var archiveObjectPaths: seq[string]
     for o in archiveObjects: archiveObjectPaths.add o.outputs[0]
     let grammarArchive = ar(
@@ -647,15 +625,42 @@ package isonim_tui:
       objects = archiveObjectPaths,
       after = archiveObjects,
       actionId = "isonim-tui.grammars.archive")
-    # How every test build links the runtime: the dev shell's library, or on
-    # Windows the object archived above plus its headers.
-    let tsRuntimePassC =
-      when defined(windows): @["-I" & activeProviderProjectRoot() / tsRuntimeInclude]
-      else: newSeq[string]()
-    let tsRuntimeDefines =
-      when defined(windows): @["isonimTuiTreeSitterRuntime=bundled"]
-      else: newSeq[string]()
-    discard collect("grammars", @[grammarArchive])
+    # The tree-sitter runtime from pinned source. Upstream builds it as the
+    # single translation unit ``lib/src/lib.c`` with ``lib/include`` and
+    # ``lib/src`` on the include path
+    # (https://github.com/tree-sitter/tree-sitter/blob/v0.25.10/Makefile).
+    # The tag archive is fetched and verified by a typed pinned-fetch edge
+    # into ``build/tree-sitter-runtime/src``; nothing is taken from PATH or
+    # from a system library directory.
+    const tsRuntimeDir = "build/tree-sitter-runtime"
+    const tsRuntimeSrc = tsRuntimeDir & "/src"
+    const tsRuntimeInclude = tsRuntimeSrc & "/lib/include"
+    let tsRuntimeFetch = emitPinnedFetchAction(activeProviderProjectRoot(),
+      "isonim-tui", PinnedArchive(
+        name: "tree-sitter-0.25.10",
+        url: "https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v0.25.10.tar.gz",
+        sha256: "ad5040537537012b16ef6e1210a572b927c7cdc2b99d1ee88d44a7dcdc3ff44c",
+        kind: pakTarball, stripComponents: 1),
+      activeProviderProjectRoot() / tsRuntimeSrc)
+    let tsRuntimeObj = compileGrammarC(
+      source = tsRuntimeSrc & "/lib/src/lib.c",
+      output = tsRuntimeDir & "/lib.o",
+      includeDirs = @[tsRuntimeInclude, tsRuntimeSrc & "/lib/src"],
+      optimization = "2", pic = true,
+      after = @[tsRuntimeFetch],
+      actionId = "isonim-tui.tree_sitter_runtime.compile")
+    let tsRuntimeArchive = ar(
+      modifiers = "rcs",
+      archive = tsRuntimeDir & "/libtree-sitter.a",
+      objects = @[tsRuntimeObj.outputs[0]],
+      after = @[tsRuntimeObj],
+      actionId = "isonim-tui.tree_sitter_runtime.archive")
+    # Every test build compiles against the runtime's headers and links it:
+    # ``treesitter_ffi.nim`` passes ``-ltree-sitter``, which the ``-L`` here
+    # resolves to the archive above.
+    let tsRuntimePassC = @["-I" & activeProviderProjectRoot() / tsRuntimeInclude]
+    let tsRuntimePassL = @["-L" & activeProviderProjectRoot() / tsRuntimeDir]
+    discard collect("grammars", @[grammarArchive, tsRuntimeArchive])
 
     # Two-edge test template (Package-Model.md §"The test template"): one
     # compile BUILD edge + one EXECUTE edge per test file. BUILD halves
@@ -694,11 +699,11 @@ package isonim_tui:
       let edge = buildNimUnittest.build(
         source = source,
         binary = binary,
-        defines = @["release"] & tsRuntimeDefines,
+        defines = @["release"],
         paths = paths,
         mm = "orc",
         extraPassC = tsRuntimePassC,
-        extraPassL = extraPassL,
+        extraPassL = extraPassL & tsRuntimePassL,
         actionId = "isonim-tui.test_build." & s.stem,
         cacheable = not s.compilerLocality,
         dependencyPolicy = (if s.compilerLocality: automaticMonitorPolicy()
@@ -709,7 +714,7 @@ package isonim_tui:
           (if s.mutableGitState: @[] else: s.runtimeInputs),
         # Every test links the grammar archive through
         # ``treesitter_ffi.nim``'s ``{.passl.}``.
-        after = @[grammarArchive])
+        after = @[grammarArchive, tsRuntimeArchive])
       testBuildActions.add(edge.action)
 
       # ``registerImplicitName = false``: the BUILD edge already owns the

@@ -70,21 +70,6 @@ const
 
   grammarArchive = isonimTuiGrammarArchive
 
-  isonimTuiTreeSitterRuntime* {.strdefine.} = "system"
-    ## Where the tree-sitter runtime comes from.
-    ##
-    ##   * ``system`` (the default): link ``-ltree-sitter``, the library the
-    ##     dev shell provides (or the platform's own package), with its
-    ##     headers on the system include path.
-    ##   * ``bundled``: the runtime's object is already inside the grammar
-    ##     archive, built from tree-sitter's source (Windows builds through
-    ##     reprobuild do this), so nothing more is linked; the build supplies
-    ##     the headers' include path.
-
-when isonimTuiTreeSitterRuntime notin ["system", "bundled"]:
-  {.error: "isonimTuiTreeSitterRuntime must be \"system\" or \"bundled\", not \"" &
-    isonimTuiTreeSitterRuntime & "\"".}
-
 # Link the pre-built grammar archive, then the system tree-sitter runtime.
 # The runtime ships in the nix dev-shell (see flake.nix) and is also
 # available as a vendored `libtree-sitter` on most distros. Order matters:
@@ -109,10 +94,10 @@ when isonimTuiTreeSitterRuntime notin ["system", "bundled"]:
 # by the time anything links. A pleasant side effect: `nim check` no longer
 # needs the grammars on disk at all, because there is no longer a
 # `{.compile.}` path for it to resolve.
-when isonimTuiTreeSitterRuntime == "bundled":
-  {.passl: grammarArchive.}
-else:
-  {.passl: grammarArchive & " -ltree-sitter".}
+# `-ltree-sitter` is resolved by whoever links: the dev shell's library on
+# the `just` path, the runtime repro.nim builds from pinned source under
+# `repro build`.
+{.passl: grammarArchive & " -ltree-sitter".}
 
 # ----------------------------------------------------------------------------
 # Raw C types — opaque structs from `<tree_sitter/api.h>`. The runtime
