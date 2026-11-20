@@ -37,20 +37,31 @@ jobs:
         include:
           - os: linux
             arch: x64
+            timeout: 360
             runner: [self-hosted, linux, x64]
           - os: linux
             arch: arm64
+            timeout: 240
             runner: [self-hosted, linux, arm64]
           - os: macos
             arch: arm64
+            timeout: 120
             runner: [self-hosted, macos, arm64]
           - os: windows
             arch: x64
+            timeout: 360
             runner: [self-hosted, windows, x64]
           - os: windows
             arch: arm64
+            timeout: 360
             runner: [self-hosted, windows, arm64]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. No leg has completed
+    # yet, so each value is sized from the longest run that was still making progress before it
+    # failed (jobs API, 2026-11,
+    # ~78 runs): linux-x64 155 min, linux-arm64 19, macos-arm64 31, windows-x64 108,
+    # windows-arm64 152. Margins are wide because a complete build and test runs past those points.
+    timeout-minutes: ${{ matrix.timeout }}
     steps:
       - uses: actions/checkout@v4
 

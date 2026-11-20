@@ -51,6 +51,9 @@ jobs:
     # Shared runner: thresholds only. No baseline, no comparison, no push,
     # and no write permission to make one possible.
     runs-on: [self-hosted, linux, x64]
+    # A hung job must not hold a runner for GitHub's 6-hour default. Successful runs (jobs API,
+    # 2026-11): 3-19 min.
+    timeout-minutes: 60
     name: benchmark thresholds (isonim-tui, shared runner)
     permissions:
       contents: read
@@ -100,6 +103,9 @@ jobs:
     # `linux, x64` keep the selector on Linux should another host ever carry
     # the label.
     runs-on: [linux, x64, benchmark-isolated]
+    # `benchmark-isolated` is a single runner, so a hung job here would block every later
+    # benchmark for GitHub's 6-hour default. Successful runs (jobs API, 2026-11): 7-13 min.
+    timeout-minutes: 45
     name: benchmark (isonim-tui, Linux)
     steps:
       # `just bench` compiles the benchmark binaries against the same sibling

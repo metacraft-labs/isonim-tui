@@ -38,6 +38,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 3-15 min (self-hosted linux-x64), 7 (linux-arm64), 3-5 (macOS), 27 (ephemeral x64).
+    timeout-minutes: 60
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -75,6 +80,12 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: linux-x64 168-303 min (shared host), linux-arm64 49. macOS has no complete run yet
+    # (it hung in test_posix_driver_real_pty); it reached that test, the 84th of 163, 5-8 min after start.
+    timeout-minutes: ${{ matrix.runner[1] == 'macos' && 90 || (matrix.runner[2] == 'arm64' && 150 || 480) }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -112,6 +123,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 1-19 min (linux-x64 the slowest), macOS 2-4.
+    timeout-minutes: 60
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -149,6 +165,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 1-5 min.
+    timeout-minutes: 30
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -193,6 +214,11 @@ jobs:
         # compile without threads.
         threads: [on]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: linux-x64 18-213 min, linux-arm64 21-27. macOS: no complete run yet; same suite as `test`.
+    timeout-minutes: ${{ matrix.runner[1] == 'macos' && 90 || (matrix.runner[2] == 'arm64' && 90 || 360) }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -259,6 +285,12 @@ jobs:
     name: Sanitizer (${{ matrix.kind }})
     # Linux-only (clang sanitizers); mapped to the Linux AMD64 Nix class.
     runs-on: [self-hosted, linux, x64]
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: asan 7-249 min, ubsan 4-176, lsan 3-108; lsan at 6d0cc91 was still making
+    # progress after 5 h (126 of 163 tests), which projects to about 6.5 h on a loaded host.
+    timeout-minutes: 480
     strategy:
       fail-fast: false
       matrix:
@@ -296,6 +328,12 @@ jobs:
   test-macos:
     name: Test (macOS)
     runs-on: [self-hosted, macos, arm64]
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # No complete run yet (it hung in test_posix_driver_real_pty); it reached that test, the 84th of
+    # 163, 8 min after start.
+    timeout-minutes: 90
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -337,6 +375,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 0-9 min.
+    timeout-minutes: 30
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -374,6 +417,11 @@ jobs:
       matrix:
         runner: [[self-hosted, windows, x64], [self-hosted, windows, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: windows-x64 26 min, windows-arm64 50.
+    timeout-minutes: 120
     steps:
       # The self-hosted Windows images carry no package manager (there is no
       # `choco`, which is what this job used to call, so it failed before
@@ -423,6 +471,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 0-18 min.
+    timeout-minutes: 45
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
