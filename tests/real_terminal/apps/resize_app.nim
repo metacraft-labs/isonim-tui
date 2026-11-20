@@ -68,7 +68,7 @@ when isMainModule:
     FD_SET(0.cint, rs)
     var tv: Timeval
     tv.tv_sec = posix.Time(0)
-    tv.tv_usec = clong(100_000)
+    tv.tv_usec = typeof(tv.tv_usec)(100_000)
     let n = posix.select(1, addr rs, nil, nil, addr tv)
     if resized:
       resized = false

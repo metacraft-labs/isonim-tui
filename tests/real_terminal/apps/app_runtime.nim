@@ -84,7 +84,7 @@ proc readKey*(timeoutMs: int = 200): string =
   FD_SET(0.cint, rs)
   var tv: Timeval
   tv.tv_sec = posix.Time(timeoutMs div 1000)
-  tv.tv_usec = clong((timeoutMs mod 1000) * 1000)
+  tv.tv_usec = typeof(tv.tv_usec)((timeoutMs mod 1000) * 1000)
   let n = posix.select(1, addr rs, nil, nil, addr tv)
   if n <= 0: return ""
   var buf: array[16, byte]
