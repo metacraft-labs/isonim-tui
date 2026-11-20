@@ -554,6 +554,23 @@ package isonim_tui:
     # Serial pool for the M9 real-pty tests (capacity 1 — see docstring).
     discard buildPool(serialPool, 1)
 
+    proc compileGrammarC(source, output: string; includeDirs: seq[string];
+                         optimization: string; pic: bool; actionId: string;
+                         after: seq[BuildActionDef] = @[]): BuildActionDef =
+      ## One C compile of the grammar archive, through the C compiler this
+      ## recipe's ``uses:`` declares for the platform: clang on macOS, gcc
+      ## elsewhere (Windows included). Each typed compiler wrapper is in scope
+      ## only on the platforms that declare it, so the choice is made here,
+      ## once, rather than at every call site.
+      when defined(macosx):
+        clang(source = source, output = output, compileOnly = true, pic = pic,
+          optimization = optimization, includeDirs = includeDirs,
+          after = after, actionId = actionId)
+      else:
+        gcc(source = source, output = output, compileOnly = true, pic = pic,
+          optimization = optimization, includeDirs = includeDirs,
+          after = after, actionId = actionId)
+
     # ---- The tree-sitter grammar archive ---------------------------------
     #
     # ``src/isonim_tui/syntax/treesitter_ffi.nim`` links
@@ -582,23 +599,20 @@ package isonim_tui:
     const grammarDir = "build/grammars"
     const tsNimSrc = "../tree-sitter-nim/src"
     const tsAikenSrc = "../tree-sitter-aiken/src"
-    let tsNimParser = gcc(
+    let tsNimParser = compileGrammarC(
       source = tsNimSrc & "/parser.c",
       output = grammarDir & "/ts_nim_parser.o",
-      compileOnly = true, pic = true, optimization = "0",
-      includeDirs = @[tsNimSrc],
+      includeDirs = @[tsNimSrc], optimization = "0", pic = true,
       actionId = "isonim-tui.grammars.compile_nim_parser")
-    let tsNimScanner = gcc(
+    let tsNimScanner = compileGrammarC(
       source = tsNimSrc & "/scanner.c",
       output = grammarDir & "/ts_nim_scanner.o",
-      compileOnly = true, pic = true, optimization = "0",
-      includeDirs = @[tsNimSrc],
+      includeDirs = @[tsNimSrc], optimization = "0", pic = true,
       actionId = "isonim-tui.grammars.compile_nim_scanner")
-    let tsAikenParser = gcc(
+    let tsAikenParser = compileGrammarC(
       source = tsAikenSrc & "/parser.c",
       output = grammarDir & "/ts_aiken_parser.o",
-      compileOnly = true, pic = true, optimization = "0",
-      includeDirs = @[tsAikenSrc],
+      includeDirs = @[tsAikenSrc], optimization = "0", pic = true,
       actionId = "isonim-tui.grammars.compile_aiken_parser")
     var archiveObjects = @[tsNimParser, tsNimScanner, tsAikenParser]
     # The tree-sitter runtime from pinned source, on Windows only. Upstream
@@ -617,11 +631,11 @@ package isonim_tui:
           sha256: "ad5040537537012b16ef6e1210a572b927c7cdc2b99d1ee88d44a7dcdc3ff44c",
           kind: pakTarball, stripComponents: 1),
         activeProviderProjectRoot() / tsRuntimeDir)
-      let tsRuntime = gcc(
+      let tsRuntime = compileGrammarC(
         source = tsRuntimeDir & "/lib/src/lib.c",
         output = grammarDir & "/ts_runtime.o",
-        compileOnly = true, optimization = "2",
         includeDirs = @[tsRuntimeInclude, tsRuntimeDir & "/lib/src"],
+        optimization = "2", pic = false,
         after = @[tsRuntimeFetch],
         actionId = "isonim-tui.grammars.compile_runtime")
       archiveObjects.add tsRuntime
