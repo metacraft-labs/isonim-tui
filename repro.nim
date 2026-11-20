@@ -285,8 +285,9 @@ proc spec(stem: string; realPty = false;
     runtimeInputs: runtimeInputs, mutableGitState: mutableGitState,
     compilerLocality: compilerLocality)
 
-# Complete 158-file Justfile ``tests`` corpus, including genuine repo-state
-# baseline failure until an authorized real measured dev baseline is published.
+# The complete Justfile ``tests`` corpus: one entry per file, 162 today.
+# A test added to the Justfile needs an entry here too, or the repro CI
+# legs never build or run it.
 const tuiTestSpecs: seq[TuiTestSpec] = @[
   # ---- M0 renderer / cell primitives ----
   spec("test_renderer_concept_conformance"),
@@ -313,6 +314,7 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_grapheme_width_emoji_zwj"),
   spec("test_sgr_minimal_transition"),
   spec("test_sgr_truecolor"),
+  spec("test_sgr_underline_color"),
   spec("test_content_word_wrap_grapheme_aware"),
   spec("test_ambiguous_width_default_narrow"),
   spec("test_content_basics"),
@@ -479,6 +481,7 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   # ---- web driver ----
   spec("test_web_driver_byte_parity"),
   spec("test_web_driver_packet_roundtrip"),
+  spec("test_web_driver_caps_declaration"),
   # ---- demos ----
   spec("test_demos_compile_and_run"),
   # Nine additional original Justfile cases missing from the old143 graph.
