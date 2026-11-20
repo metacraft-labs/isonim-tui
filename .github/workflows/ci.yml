@@ -403,7 +403,7 @@ jobs:
           gh-token: ${{ steps.app-token.outputs.token }}
       # `just` the way the CI workflow standard installs it on every leg,
       # pinned to the version the Linux dev shell carries.
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v4
         with:
           just-version: '1.49.0'
       - name: Run Windows test lane
