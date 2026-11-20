@@ -16,6 +16,9 @@
 
 import std/unittest
 
+# Windows: run in a private console; see the fixture.
+import ./windows_console_fixture
+
 when defined(windows):
   import std/[os, times]
   # These real console tests exercise the driver, independently of layout.
@@ -71,43 +74,44 @@ when defined(windows):
     kePtr.dwControlKeyState = ctrlState
     result = rec
 
-suite "M10: WindowsDriver keys round trip":
+privateConsoleSuite("M10: WindowsDriver keys round trip", 1):
+  suite "M10: WindowsDriver keys round trip":
 
-  test "test_windows_driver_keys_round_trip":
-    when not defined(windows):
-      skip()
-    else:
-      let d = newWindowsDriver(80, 24,
-                               enableMouse = false,
-                               enablePaste = false,
-                               enableAlt = true)
-      d.start()
+    test "test_windows_driver_keys_round_trip":
+      when not defined(windows):
+        skip()
+      else:
+        let d = newWindowsDriver(80, 24,
+                                 enableMouse = false,
+                                 enablePaste = false,
+                                 enableAlt = true)
+        d.start()
 
-      let hin = winGetStdHandle(STD_INPUT_HANDLE)
+        let hin = winGetStdHandle(STD_INPUT_HANDLE)
 
-      # Inject three records: 'a', Enter, Ctrl+C.
-      var recs: array[3, InputRecord]
-      recs[0] = makeKeyRec(WORD(ord('A')), WCHAR(ord('a')), DWORD(0))
-      recs[1] = makeKeyRec(VK_RETURN, WCHAR(0), DWORD(0))
-      recs[2] = makeKeyRec(WORD(ord('C')), WCHAR(3), DWORD(0x0008))
-      var nwritten: DWORD = 0
-      check writeConsoleInputW(hin, addr recs[0], DWORD(recs.len),
-                                addr nwritten) != 0
-      check int(nwritten) == 3
+        # Inject three records: 'a', Enter, Ctrl+C.
+        var recs: array[3, InputRecord]
+        recs[0] = makeKeyRec(WORD(ord('A')), WCHAR(ord('a')), DWORD(0))
+        recs[1] = makeKeyRec(VK_RETURN, WCHAR(0), DWORD(0))
+        recs[2] = makeKeyRec(WORD(ord('C')), WCHAR(3), DWORD(0x0008))
+        var nwritten: DWORD = 0
+        check writeConsoleInputW(hin, addr recs[0], DWORD(recs.len),
+                                  addr nwritten) != 0
+        check int(nwritten) == 3
 
-      # Drain events for up to 2 seconds.
-      var collected: seq[TerminalEvent] = @[]
-      let deadline = getTime() + initDuration(seconds = 2)
-      while getTime() < deadline and collected.len < 3:
-        for ev in d.readEvents():
-          if ev.kind == ekKey:
-            collected.add(ev)
-        sleep(20)
+        # Drain events for up to 2 seconds.
+        var collected: seq[TerminalEvent] = @[]
+        let deadline = getTime() + initDuration(seconds = 2)
+        while getTime() < deadline and collected.len < 3:
+          for ev in d.readEvents():
+            if ev.kind == ekKey:
+              collected.add(ev)
+          sleep(20)
 
-      d.stop()
+        d.stop()
 
-      check collected.len == 3
-      check collected[0].key.key == "a"
-      check collected[1].key.key == "enter"
-      check collected[2].key.key == "c"
-      check modCtrl in collected[2].key.modifiers
+        check collected.len == 3
+        check collected[0].key.key == "a"
+        check collected[1].key.key == "enter"
+        check collected[2].key.key == "c"
+        check modCtrl in collected[2].key.modifiers

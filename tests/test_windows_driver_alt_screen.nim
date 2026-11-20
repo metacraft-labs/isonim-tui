@@ -32,6 +32,9 @@
 
 import std/unittest
 
+# Windows: run in a private console; see the fixture.
+import ./windows_console_fixture
+
 when defined(windows):
   import std/strutils
   # These real console tests exercise the driver, independently of layout.
@@ -53,64 +56,65 @@ when defined(windows):
   proc getConsoleMode(hConsole: HANDLE; lpMode: ptr DWORD): BOOL
     {.importc: "GetConsoleMode", header: "<windows.h>", stdcall.}
 
-suite "M10: WindowsDriver alt-screen":
+privateConsoleSuite("M10: WindowsDriver alt-screen", 1):
+  suite "M10: WindowsDriver alt-screen":
 
-  test "test_windows_driver_alt_screen":
-    when not defined(windows):
-      skip()
-    else:
-      # Capture pre-start console modes so we can verify byte-for-byte
-      # restoration after stop().
-      let hin = winGetStdHandle(STD_INPUT_HANDLE)
-      let hout = winGetStdHandle(STD_OUTPUT_HANDLE)
-      var savedIn, savedOut: DWORD
-      check getConsoleMode(hin, addr savedIn) != 0
-      check getConsoleMode(hout, addr savedOut) != 0
+    test "test_windows_driver_alt_screen":
+      when not defined(windows):
+        skip()
+      else:
+        # Capture pre-start console modes so we can verify byte-for-byte
+        # restoration after stop().
+        let hin = winGetStdHandle(STD_INPUT_HANDLE)
+        let hout = winGetStdHandle(STD_OUTPUT_HANDLE)
+        var savedIn, savedOut: DWORD
+        check getConsoleMode(hin, addr savedIn) != 0
+        check getConsoleMode(hout, addr savedOut) != 0
 
-      # Boot the driver with alt-screen enabled. mouse/paste off so the
-      # byte stream we assert on contains only raw-mode + alt-screen +
-      # cursor toggles, not the SGR mouse / bracketed-paste enables.
-      let d = newWindowsDriver(80, 24,
-                               enableMouse = false,
-                               enablePaste = false,
-                               enableAlt = true)
-      d.start()
-      check d.state == dsRunning
+        # Boot the driver with alt-screen enabled. mouse/paste off so the
+        # byte stream we assert on contains only raw-mode + alt-screen +
+        # cursor toggles, not the SGR mouse / bracketed-paste enables.
+        let d = newWindowsDriver(80, 24,
+                                 enableMouse = false,
+                                 enablePaste = false,
+                                 enableAlt = true)
+        d.start()
+        check d.state == dsRunning
 
-      # Flush whatever the lifecycle queued so it shows up in
-      # bytesEmitted. (start() writes the cursor-hide directly via
-      # the driver's queue; we drain it here so the assertion below
-      # sees the byte stream the host actually received.)
-      d.flushPending()
+        # Flush whatever the lifecycle queued so it shows up in
+        # bytesEmitted. (start() writes the cursor-hide directly via
+        # the driver's queue; we drain it here so the assertion below
+        # sees the byte stream the host actually received.)
+        d.flushPending()
 
-      # The alt-screen enter sequence must be on the wire. nim-termctl's
-      # AltScreen RAII writes it through stdout; the WindowsDriver also
-      # mirrors the cursor-hide it emits afterwards into bytesEmitted.
-      # We can't see the AltScreen-direct write in bytesEmitted (it
-      # bypasses the driver's queue and goes through stdout / WriteFile
-      # in nim-termctl's terminal.nim), so we verify the post-alt
-      # cursor-hide instead — it lands in bytesEmitted and proves the
-      # start() lifecycle reached step 4.
-      check "\x1b[?25l" in d.bytesEmitted
+        # The alt-screen enter sequence must be on the wire. nim-termctl's
+        # AltScreen RAII writes it through stdout; the WindowsDriver also
+        # mirrors the cursor-hide it emits afterwards into bytesEmitted.
+        # We can't see the AltScreen-direct write in bytesEmitted (it
+        # bypasses the driver's queue and goes through stdout / WriteFile
+        # in nim-termctl's terminal.nim), so we verify the post-alt
+        # cursor-hide instead — it lands in bytesEmitted and proves the
+        # start() lifecycle reached step 4.
+        check "\x1b[?25l" in d.bytesEmitted
 
-      # Stop the driver. This must emit the leave sequence and restore
-      # console modes.
-      d.stop()
-      check d.state == dsStopped
+        # Stop the driver. This must emit the leave sequence and restore
+        # console modes.
+        d.stop()
+        check d.state == dsStopped
 
-      # Cursor-show on stop() goes through bytesEmitted. AltScreen leave
-      # is emitted by nim-termctl's RAII destructor directly to stdout
-      # (same reason as above) — we verify the cursor-show landed and
-      # rely on the console-mode parity check below for the alt-screen
-      # leave's observable effect.
-      check "\x1b[?25h" in d.bytesEmitted
+        # Cursor-show on stop() goes through bytesEmitted. AltScreen leave
+        # is emitted by nim-termctl's RAII destructor directly to stdout
+        # (same reason as above) — we verify the cursor-show landed and
+        # rely on the console-mode parity check below for the alt-screen
+        # leave's observable effect.
+        check "\x1b[?25h" in d.bytesEmitted
 
-      # Console modes must be byte-for-byte equal to the pre-start
-      # snapshot. This is the alt-screen-leave's load-bearing invariant:
-      # ENABLE_VIRTUAL_TERMINAL_PROCESSING must be cleared back to its
-      # original setting, etc.
-      var liveIn, liveOut: DWORD
-      check getConsoleMode(hin, addr liveIn) != 0
-      check getConsoleMode(hout, addr liveOut) != 0
-      check liveIn == savedIn
-      check liveOut == savedOut
+        # Console modes must be byte-for-byte equal to the pre-start
+        # snapshot. This is the alt-screen-leave's load-bearing invariant:
+        # ENABLE_VIRTUAL_TERMINAL_PROCESSING must be cleared back to its
+        # original setting, etc.
+        var liveIn, liveOut: DWORD
+        check getConsoleMode(hin, addr liveIn) != 0
+        check getConsoleMode(hout, addr liveOut) != 0
+        check liveIn == savedIn
+        check liveOut == savedOut

@@ -395,6 +395,14 @@ when defined(windows):
       key.kind = kindForName(named)
       key.key = named
       key.rune = 0'u32
+    elif rec.uChar in 1'u16 .. 26'u16 and events.modCtrl in key.modifiers:
+      # Ctrl+letter: the console delivers the C0 control character
+      # (Ctrl+C is 0x03), not the letter. Report the letter with the Ctrl
+      # modifier, as the POSIX byte parser does for the same keystroke.
+      let letter = uint32(ord('a')) + uint32(rec.uChar) - 1
+      key.kind = events.kkChar
+      key.rune = letter
+      key.key = $char(letter)
     elif rec.uChar != 0:
       let cp = uint32(rec.uChar)
       key.kind = events.kkChar
@@ -618,6 +626,9 @@ when defined(windows):
 # Start / stop
 # ---------------------------------------------------------------------------
 
+proc writeRaw*(d: WindowsDriver; s: string)
+proc flushPending*(d: WindowsDriver)
+
 proc start*(d: WindowsDriver) =
   ## Claim the console. The sequence mirrors PosixDriver: raw mode +
   ## VT processing → alt-screen → cursor hidden → mouse + paste →
@@ -646,8 +657,11 @@ proc start*(d: WindowsDriver) =
       d.altScreen = enterAltScreen()
       d.altScreenOwned = true
 
-    # Step 4 — cursor hidden until paint.
-    write(cursorHide())
+    # Step 4 — cursor hidden until paint. Through the driver's own output
+    # path, so the sequence is recorded in `bytesEmitted` like every other
+    # byte the driver writes.
+    d.writeRaw(cursorHide())
+    d.flushPending()
     d.cursorHidden = true
 
     # Step 5 — mouse + paste.
@@ -716,7 +730,8 @@ proc stop*(d: WindowsDriver) =
     # 4) Show cursor + restore console modes.
     if d.cursorHidden:
       try:
-        write(cursorShow())
+        d.writeRaw(cursorShow())
+        d.flushPending()
       except CatchableError:
         discard
       d.cursorHidden = false

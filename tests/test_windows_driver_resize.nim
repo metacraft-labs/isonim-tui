@@ -10,6 +10,9 @@
 
 import std/unittest
 
+# Windows: run in a private console; see the fixture.
+import ./windows_console_fixture
+
 when defined(windows):
   import std/[os, times]
   # These real console tests exercise the driver, independently of layout.
@@ -65,47 +68,48 @@ when defined(windows):
     wePtr.dwSize.y = SHORT(rows)
     result = rec
 
-suite "M10: WindowsDriver resize":
+privateConsoleSuite("M10: WindowsDriver resize", 1):
+  suite "M10: WindowsDriver resize":
 
-  test "test_windows_driver_resize":
-    when not defined(windows):
-      skip()
-    else:
-      let d = newWindowsDriver(80, 24,
-                               enableMouse = false,
-                               enablePaste = false,
-                               enableAlt = false)
-      d.start()
+    test "test_windows_driver_resize":
+      when not defined(windows):
+        skip()
+      else:
+        let d = newWindowsDriver(80, 24,
+                                 enableMouse = false,
+                                 enablePaste = false,
+                                 enableAlt = false)
+        d.start()
 
-      let hin = winGetStdHandle(STD_INPUT_HANDLE)
-      var rec = makeResizeRec(132, 50)
-      var nwritten: DWORD = 0
-      check writeConsoleInputW(hin, addr rec, DWORD(1), addr nwritten) != 0
-      check int(nwritten) == 1
+        let hin = winGetStdHandle(STD_INPUT_HANDLE)
+        var rec = makeResizeRec(132, 50)
+        var nwritten: DWORD = 0
+        check writeConsoleInputW(hin, addr rec, DWORD(1), addr nwritten) != 0
+        check int(nwritten) == 1
 
-      var sawResize = false
-      var seenCols = 0
-      var seenRows = 0
-      let deadline = getTime() + initDuration(seconds = 2)
-      while getTime() < deadline:
-        for ev in d.readEvents():
-          if ev.kind == ekResize:
-            sawResize = true
-            seenCols = ev.resize.cols
-            seenRows = ev.resize.rows
-            break
-        if sawResize: break
-        sleep(20)
+        var sawResize = false
+        var seenCols = 0
+        var seenRows = 0
+        let deadline = getTime() + initDuration(seconds = 2)
+        while getTime() < deadline:
+          for ev in d.readEvents():
+            if ev.kind == ekResize:
+              sawResize = true
+              seenCols = ev.resize.cols
+              seenRows = ev.resize.rows
+              break
+          if sawResize: break
+          sleep(20)
 
-      check sawResize
-      check seenCols == 132
-      check seenRows == 50
+        check sawResize
+        check seenCols == 132
+        check seenRows == 50
 
-      # Apply the resize so the driver's view of (cols, rows) tracks
-      # the host. After this call a subsequent paint cycle would
-      # render at the new dimensions.
-      d.resize(seenCols, seenRows)
-      check d.cols == 132
-      check d.rows == 50
+        # Apply the resize so the driver's view of (cols, rows) tracks
+        # the host. After this call a subsequent paint cycle would
+        # render at the new dimensions.
+        d.resize(seenCols, seenRows)
+        check d.cols == 132
+        check d.rows == 50
 
-      d.stop()
+        d.stop()
