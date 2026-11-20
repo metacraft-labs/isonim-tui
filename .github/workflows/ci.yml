@@ -398,7 +398,7 @@ jobs:
         uses: metacraft-labs/metacraft-github-actions/setup-dev-env@e6974530143f251fbffbf3158b6951c9cc8b8582
         with:
           env-flavor: reprobuild
-          repro-version: v0.2.28
+          repro-version: v0.2.29
           sibling-strategy: repro-lock
           gh-token: ${{ steps.app-token.outputs.token }}
       # `just` the way the CI workflow standard installs it on every leg,
