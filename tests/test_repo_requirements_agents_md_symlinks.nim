@@ -6,7 +6,8 @@
 ##     Code reads `AGENTS.md` itself and a `CLAUDE.md` shadows it.
 ##   * `.github/copilot-instructions.md` is a symlink to `../AGENTS.md`.
 ##
-## Per `metacraft-specs/policies/repo-requirements.md` §7.
+## The organisation's repository requirements name `AGENTS.md` as the one
+## agent-instruction file.
 
 import unittest
 import std/os

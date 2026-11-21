@@ -45,6 +45,8 @@ export focusMgrMod.FocusManager, focusMgrMod.FocusChange,
        focusMgrMod.focusChain, focusMgrMod.setFocus, focusMgrMod.clearFocus,
        focusMgrMod.setFocusByNode, focusMgrMod.focusNext, focusMgrMod.focusPrev,
        focusMgrMod.pushTrap, focusMgrMod.popTrap, focusMgrMod.currentTrap,
+       focusMgrMod.TrapToken, focusMgrMod.Trap, focusMgrMod.`==`,
+       focusMgrMod.focusPath,
        focusMgrMod.handleKey
 
 export workerMgrMod.WorkerManager, workerMgrMod.WorkerHandle,
@@ -144,6 +146,16 @@ proc dispose*(h: TerminalTestHarness) =
   h.driver.stop()
   h.eventLogStorage.setLen(0)
   h.root = nil
+  # Uninstall the clock `newTerminalTestHarness` installed, if it is still
+  # the current one. `currentClock` is a `{.threadvar.}`, and Nim does not
+  # destroy thread-local variables when a thread exits, so a harness built
+  # on a worker thread otherwise left its `TestClock` referenced by a slot
+  # nothing can reach any more: LeakSanitizer reports it as a direct leak
+  # (tests/test_harness_isolation_parallel.nim, one per thread). It also
+  # lets the next harness on this thread install its own clock instead of
+  # finding a disposed harness's clock still current.
+  if currentClock != nil and currentClock == ClockBase(h.clock):
+    currentClock = nil
 
 # ----------------------------------------------------------------------------
 # Mount + flush

@@ -18,10 +18,20 @@
 ## Test runs on Linux + macOS via the matrix. nim-pty's POSIX backend
 ## uses `openpty(3)` which is identical on both.
 
+##
+## The master is read continuously while the driver runs
+## (`PtyMasterDrain`), as a terminal emulator would: on macOS `stop()`
+## cannot restore termios until the driver's output has been read, and
+## without a reader this test hung in `stop()`. A `PhaseWatchdog` fails
+## the test, naming the phase, if any phase blocks. See
+## `pty_test_support.nim`.
+
 import std/[os, posix, times, unittest]
 
 import isonim_tui
 import nim_pty
+
+import ./pty_test_support
 
 # SIGWINCH constant (std/posix doesn't declare it on all platforms).
 var
@@ -33,10 +43,18 @@ suite "M9: PosixDriver resize via real SIGWINCH":
     when not defined(linux) and not defined(macosx):
       skip()
     else:
-      # 1) Allocate a real pty + a driver bound to its slave FD.
+      var wd = startPhaseWatchdog("test_posix_driver_resize_real",
+                                  initDuration(seconds = 20), "openPty")
+      defer: stopPhaseWatchdog(wd)
+
+      # 1) Allocate a real pty + a driver bound to its slave FD, and read
+      #    the master for as long as the driver runs.
       var (master, slave) = openPty()
-      master.setNonblock()
       master.setWindowSize(80, 24)
+      var drain = startMasterDrain(master.fd)
+      defer: stopMasterDrain(drain)
+
+      wd.phase("newPosixDriver + start")
 
       let d = newPosixDriver(80, 24,
                              inputFd = slave.fd,
@@ -51,6 +69,7 @@ suite "M9: PosixDriver resize via real SIGWINCH":
       #    controlling tty. Setting window size on the master updates
       #    the kernel's winsize record on the slave; our driver then
       #    queries `terminalSize(slave.fd)` from `pollWinchPipe`.
+      wd.phase("resize + wait for ResizeEvent")
       master.setWindowSize(132, 50)
       discard kill(getpid(), TestSIGWINCH)
 
@@ -72,6 +91,7 @@ suite "M9: PosixDriver resize via real SIGWINCH":
         if sawResize: break
         sleep(20)
 
+      wd.phase("stop")
       d.stop()
 
       check sawResize

@@ -12,15 +12,15 @@ name: CI
 #
 # Siblings are cloned by `setup-dev-env`, which delegates to `clone-siblings`
 # and resolves each name in `.github/sibling-repos` against the per-commit
-# workspace lock in the manifest repo. That is the single approved sibling
-# revision source (codetracer-specs/Testing/Cross-Repo-CI-Integration.md); a
-# second hand-pinned `actions/checkout` would be another place for revisions to
+# workspace lock in the manifest repo. That lock is the single source of
+# sibling revisions for CI; a second hand-pinned `actions/checkout` would be another place for revisions to
 # drift away from what the workspace actually builds.
 
 on:
   push:
     branches: [main, dev, stable]
   pull_request:
+    branches-ignore: [agents]
 
 # Cancel superseded PR runs only: a new push to a PR makes its previous run
 # moot, and stale runs otherwise hold scarce self-hosted runners. Every other
@@ -38,6 +38,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 3-15 min (self-hosted linux-x64), 7 (linux-arm64), 3-5 (macOS), 27 (ephemeral x64).
+    timeout-minutes: 60
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -75,6 +80,12 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: linux-x64 168-303 min (shared host), linux-arm64 49. macOS has no complete run yet
+    # (it hung in test_posix_driver_real_pty); it reached that test, the 84th of 163, 5-8 min after start.
+    timeout-minutes: ${{ matrix.runner[1] == 'macos' && 90 || (matrix.runner[2] == 'arm64' && 150 || 480) }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -112,6 +123,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 1-19 min (linux-x64 the slowest), macOS 2-4.
+    timeout-minutes: 60
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -149,6 +165,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 1-5 min.
+    timeout-minutes: 30
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -187,8 +208,17 @@ jobs:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
         mm: [arc, orc, refc]
         mode: [debug, release, danger]
-        threads: [on, off]
+        # `on` only. isonim-tui's drivers are built on a reader thread and
+        # `system.Channel`, so `--threads:off` is unsupported by design --
+        # not a failure being hidden -- and `src/isonim_tui.nim` refuses to
+        # compile without threads.
+        threads: [on]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: linux-x64 18-213 min, linux-arm64 21-27. macOS: no complete run yet; same suite as `test`.
+    timeout-minutes: ${{ matrix.runner[1] == 'macos' && 90 || (matrix.runner[2] == 'arm64' && 90 || 360) }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -219,14 +249,52 @@ jobs:
           path: test-logs/
           retention-days: 30
 
+  # ThreadSanitizer and valgrind are deliberately NOT gates here. Both fail on
+  # every Nim program of the shape this repository is made of, so neither can
+  # tell a defect in this code from a property of the Nim runtime. The
+  # `just test-tsan` and `just test-valgrind` recipes stay, as local
+  # diagnostics whose reports have to be read, not counted.
+  #
+  # ThreadSanitizer. A program of a dozen lines -- one thread sends integers
+  # over a `system.Channel`, the main thread polls it with `tryRecv`, then
+  # joins the thread and calls `close` -- produces the same two reports on
+  # every run (Nim 2.2.4, clang, `--mm:orc --threads:on`), and so does every
+  # threaded driver test here:
+  #   - a data race on the channel's `mask` field: `tryRecv`, `peek` and
+  #     `send` read it before taking the channel lock, while a `send` that
+  #     grows the queue writes it under the lock
+  #     (lib/system/channels_builtin.nim);
+  #   - "destroy of a locked mutex": `close` acquires the channel lock and
+  #     destroys it without releasing it.
+  # Both are inside the standard library. Suppressing them would also hide a
+  # race of ours that happened to pass through the channel.
+  #
+  # Valgrind. A four-line program that imports `std/unittest` and runs one
+  # passing `check`, built with `--mm:orc -d:useMalloc`, fails
+  # `--leak-check=full --show-leak-kinds=all --error-exitcode=1` with
+  # 0 bytes definitely lost and one block "possibly lost": the formatter that
+  # `std/unittest` keeps in a thread-local list until exit. The same happens
+  # for any `ref` held by a threadvar or another global that is not destroyed
+  # at exit. An ORC `ref` points just past the reference-count header at the
+  # start of its allocation, so valgrind sees only an interior pointer to a
+  # block that is still reachable, and classifies it "possibly lost". Every
+  # test here links `std/unittest`, so every test fails the same way.
+  #
+  # Leak detection is gated by `lsan` and memory errors by `asan` below.
   sanitizers:
     name: Sanitizer (${{ matrix.kind }})
     # Linux-only (clang sanitizers); mapped to the Linux AMD64 Nix class.
     runs-on: [self-hosted, linux, x64]
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: asan 7-249 min, ubsan 4-176, lsan 3-108; lsan at 6d0cc91 was still making
+    # progress after 5 h (126 of 163 tests), which projects to about 6.5 h on a loaded host.
+    timeout-minutes: 480
     strategy:
       fail-fast: false
       matrix:
-        kind: [asan, ubsan, tsan, lsan]
+        kind: [asan, ubsan, lsan]
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -257,43 +325,15 @@ jobs:
           path: test-logs/
           retention-days: 30
 
-  valgrind:
-    name: Valgrind
-    # Linux-only (valgrind); mapped to the Linux AMD64 Nix class.
-    runs-on: [self-hosted, linux, x64]
-    steps:
-      # The manifest repo holding the workspace locks (metacraft-manifests) is
-      # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
-      # token from the org's CI Token Provider app instead. The app id is an ORG
-      # VARIABLE and only the private key is a secret -- `secrets.
-      # CI_TOKEN_PROVIDER_APP_ID` does not exist and expands to the empty string.
-      - name: Generate CI token
-        id: app-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ vars.CI_TOKEN_PROVIDER_APP_ID }}
-          private-key: ${{ secrets.CI_TOKEN_PROVIDER_PRIVATE_KEY }}
-          owner: metacraft-labs
-
-      - uses: actions/checkout@v4
-      - name: Setup dev env (clones .github/sibling-repos at lock revisions)
-        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@dev
-        with:
-          env-flavor: nix
-          gh-token: ${{ steps.app-token.outputs.token }}
-          substituters: ${{ vars.SUBSTITUTERS }}
-          trusted-public-keys: ${{ vars.TRUSTED_PUBLIC_KEYS }}
-      - run: dev-exec just test-valgrind
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: valgrind-logs
-          path: test-logs/
-          retention-days: 30
-
   test-macos:
     name: Test (macOS)
     runs-on: [self-hosted, macos, arm64]
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # No complete run yet (it hung in test_posix_driver_real_pty); it reached that test, the 84th of
+    # 163, 8 min after start.
+    timeout-minutes: 90
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -335,6 +375,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 0-9 min.
+    timeout-minutes: 30
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -372,16 +417,46 @@ jobs:
       matrix:
         runner: [[self-hosted, windows, x64], [self-hosted, windows, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: windows-x64 26 min, windows-arm64 50.
+    timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-      - uses: jiro4989/setup-nim-action@v2
+      # The self-hosted Windows images carry no package manager (there is no
+      # `choco`, which is what this job used to call, so it failed before
+      # running a test) and no Nix. Windows lanes provision through
+      # setup-dev-env instead. This is the reprobuild flavour that
+      # ci-reprobuild.yml's Windows legs use, at the same pins: it installs
+      # repro, clones the siblings the Justfile's `src-paths` names at the
+      # revisions repro.lock pins, and makes `dev-exec` run a command inside
+      # the dev env that repro.nim's `uses:` declares (nim and the C
+      # compiler among it). The images provide `bash` (PortableGit), which
+      # the Justfile's recipes run under.
+      - name: Generate CI token
+        id: app-token
+        uses: actions/create-github-app-token@v1
         with:
-          nim-version: '2.2.4'
-      - name: Install just
-        run: choco install just -y
+          app-id: ${{ vars.CI_TOKEN_PROVIDER_APP_ID }}
+          private-key: ${{ secrets.CI_TOKEN_PROVIDER_PRIVATE_KEY }}
+          owner: metacraft-labs
+
+      - uses: actions/checkout@v4
+      - name: Setup dev env (reprobuild flavor, as ci-reprobuild.yml)
+        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@e6974530143f251fbffbf3158b6951c9cc8b8582
+        with:
+          env-flavor: reprobuild
+          repro-version: v0.2.29
+          sibling-strategy: repro-lock
+          gh-token: ${{ steps.app-token.outputs.token }}
+      # `just` the way the CI workflow standard installs it on every leg,
+      # pinned to the version the Linux dev shell carries.
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: '1.49.0'
       - name: Run Windows test lane
-        run: just test-windows
-        shell: cmd
+        run: dev-exec just test-windows
+        shell: bash
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -396,6 +471,11 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
+    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
+    # passes.
+    # Successful runs: 0-18 min.
+    timeout-minutes: 45
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation

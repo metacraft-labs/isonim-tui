@@ -41,45 +41,47 @@ real-terminal-tests := "tests/real_terminal/test_real_static.nim tests/real_term
 # Linux matrix catches Windows-side scaffolding regressions); on the
 # `windows-latest` lane (`test-windows` recipe) the guards drop and the
 # real Win32-API assertions execute.
-windows-driver-tests := "tests/test_windows_driver_keys_round_trip.nim tests/test_windows_driver_resize.nim tests/test_windows_driver_ctrl_c_clean_exit.nim tests/test_windows_driver_alt_screen.nim tests/test_windows_driver_vt_input.nim tests/test_widget_set_snapshot_windows.nim"
+windows-driver-tests := "tests/test_windows_driver_keys_round_trip.nim tests/test_windows_driver_resize.nim tests/test_windows_driver_ctrl_c_clean_exit.nim tests/test_windows_driver_alt_screen.nim tests/test_windows_driver_vt_input.nim tests/test_windows_key_decoder.nim tests/test_widget_set_snapshot_windows.nim"
 
 # Hermetic + style checks - applied to every nim invocation in this file.
-nim-flags := "--styleCheck:usages --styleCheck:error"
+#
+# `--parallelBuild` is bounded explicitly. Nim's default (0) means "one C
+# compiler per CPU", and on Linux Nim counts CPUs with
+# sysconf(_SC_NPROCESSORS_ONLN), which reports every thread of the HOST and
+# ignores the cpuset a container is pinned to. A CI runner container is
+# capped at a few CPUs and tens of GiB on a host with many more threads, so
+# each `nim c` started one cc1plus per host thread for isonim's vendored
+# Yoga C++ and the runner was OOM-killed (exit 137). just's `num_cpus()`
+# reads the process's CPU affinity, so it is the container's own count.
+nim-flags := "--styleCheck:usages --styleCheck:error --parallelBuild:" + num_cpus()
 
 # The ordered list of test files. Adding a new test_*.nim here gates it
 # on CI.
-tests := "tests/test_renderer_concept_conformance.nim tests/test_threadvar_id_isolation.nim tests/test_strip_diff.nim tests/test_screenbuffer_diff_empty.nim tests/test_repo_requirements_envrc.nim tests/test_repo_requirements_agents_md_symlinks.nim tests/test_repo_requirements_justfile_recipes.nim tests/test_repo_requirements_ci_yaml.nim tests/test_repo_requirements_flake.nim tests/test_grapheme_cluster_corpus.nim tests/test_grapheme_width_emoji_zwj.nim tests/test_sgr_minimal_transition.nim tests/test_sgr_truecolor.nim tests/test_content_word_wrap_grapheme_aware.nim tests/test_ambiguous_width_default_narrow.nim tests/test_display_width_explicit_policy.nim tests/test_content_basics.nim tests/test_headless_capture_static_real_stack.nim tests/test_harness_isolation_parallel.nim tests/test_pilot_press_full_chain.nim tests/test_pilot_type_emits_per_character_events.nim tests/test_pilot_waitfor_uses_virtual_clock.nim tests/test_findbyid_and_dumptree.nim tests/test_eventlog_records_in_order.nim tests/test_snapshot_six_formats_recorded.nim tests/test_snapshot_html_report_on_failure.nim tests/test_snapshot_record_mode.nim tests/test_snapshot_stable_across_runs.nim tests/test_layout_cell_snap_integer_real_yoga.nim tests/test_layout_cell_snap_distributes_error.nim tests/test_layout_grid_three_columns_with_gap.nim tests/test_css_grid_size_parses.nim tests/test_css_grid_track_resolver.nim tests/test_css_grid_placement.nim tests/test_grid_column_span.nim tests/test_grid_widget_render.nim tests/test_grid_widget_auto_columns.nim tests/test_grid_widget_auto_rows.nim tests/test_container_horizontal_lays_out_left_to_right.nim tests/test_dock_pinned_left.nim tests/test_double_width_text_reserved_correctly.nim tests/test_layout_reflow_delta.nim tests/test_layout_engine_shared_with_cocoa.nim tests/test_input_simple_keys_corpus.nim tests/test_input_mouse_sgr_corpus.nim tests/test_input_partial_sequence.nim tests/test_input_bracketed_paste.nim tests/test_input_kitty_protocol.nim tests/test_input_in_band_resize.nim tests/test_input_reissue_on_overlength.nim tests/test_css_tokenize_real_textual_corpus.nim tests/test_css_parse_real_textual_corpus.nim tests/test_css_match_specificity_corpus.nim tests/test_css_cascade_full_chain.nim tests/test_css_cascade_reaches_compositor.nim tests/test_css_pseudo_state_focus_repaints.nim tests/test_css_styles_cache_invalidation.nim tests/test_css_tailwind_compat.nim tests/test_css_error_recovery.nim tests/test_css_extended_properties.nim tests/test_color_parse_corpus.nim tests/test_color_blend_gamma_correct.nim tests/test_colorsystem_luminosity_spread.nim tests/test_textual_dark_byte_identical.nim tests/test_runtime_theme_switch.nim tests/test_at_dark_at_light_full_app.nim tests/test_isonim_theme_token_compat.nim tests/test_easing_byte_parity.nim tests/test_animator_full_chain.nim tests/test_animation_cancellation.nim tests/test_animation_pilot_wait_for_animation.nim tests/test_color_blend_in_animation.nim tests/test_compositor_idle_no_writes.nim tests/test_compositor_single_cell_diff.nim tests/test_compositor_overlay_layer.nim tests/test_compositor_wide_glyph_ghost_cell.nim tests/test_compositor_strip_cache_hit.nim tests/test_segment_dedup.nim tests/test_posix_driver_real_pty.nim tests/test_posix_driver_resize_real.nim tests/test_posix_driver_mouse_real.nim tests/test_posix_driver_panic_restores_terminal.nim tests/test_posix_driver_sigterm_clean_exit.nim tests/test_windows_driver_keys_round_trip.nim tests/test_windows_driver_resize.nim tests/test_widget_set_snapshot_windows.nim tests/test_windows_driver_ctrl_c_clean_exit.nim tests/test_windows_driver_alt_screen.nim tests/test_windows_driver_vt_input.nim tests/test_static_borders_real_cells.nim tests/test_label_rich_text_wraps.nim tests/test_container_scroll_keyboard.nim tests/test_placeholder_widget.nim tests/test_rule_widget.nim tests/test_m11_widget_snapshot_coverage.nim tests/test_button_activate_with_enter.nim tests/test_focus_tab_order.nim tests/test_switch_keyboard_toggle.nim tests/test_radio_set_exclusive.nim tests/test_m12_introspection_per_widget.nim tests/test_m12_widget_snapshot_coverage.nim tests/test_listview_keyboard_navigation.nim tests/test_modal_focus_trap_real.nim tests/test_modal_animation_frames.nim tests/test_select_dropdown_keyboard.nim tests/test_menu_keyboard.nim tests/test_tabs_wrap_option.nim tests/test_collapsible_animation.nim tests/test_toast_autodismiss.nim tests/test_image_widget_kitty.nim tests/test_image_widget_protocol_fallback.nim tests/test_image_widget_hot_reload.nim tests/test_worker_runs_to_completion.nim tests/test_worker_cancellation.nim tests/test_workers_isolated_per_harness.nim tests/test_fuzzy_matcher_corpus.nim tests/test_palette_open_search_run.nim tests/test_datatable_virtualisation_perf.nim tests/test_datatable_sort_keyboard.nim tests/test_datatable_selection.nim tests/test_datatable_snapshot_coverage.nim tests/test_tree_expand_lazy.nim tests/test_directory_tree_real_fs.nim tests/test_tree_snapshot_coverage.nim tests/test_textarea_undo_redo.nim tests/test_textarea_syntax_highlighting.nim tests/test_textarea_word_wrap_grapheme_aware.nim tests/test_textarea_treesitter_nim.nim tests/test_textarea_render_with_highlight.nim tests/test_textarea_unhighlighted_still_works.nim tests/test_markdown_renders_textual_readme.nim tests/test_richlog_autofollow_real.nim tests/test_log_basics.nim tests/test_progress_bar_animates.nim tests/test_sparkline_renders.nim tests/test_header_footer_welcome.nim tests/test_task_app_tui_snapshot_five_states.nim tests/test_task_app_shared_vm_byte_identical.nim tests/test_task_app_pilot_drive_real_stack.nim tests/test_task_app_web_target_compiles.nim tests/test_textual_compat.nim tests/test_textual_compat_batch2.nim tests/test_textual_compat_batch3.nim tests/test_m24_bench_full.nim tests/test_record_replay_byte_identical.nim tests/test_recording_round_trip_serialisation.nim tests/test_timeline_html_diffable.nim tests/test_assertNoOverlap_catches_misalignment.nim tests/test_assertSinglePassPaint.nim tests/test_web_driver_byte_parity.nim tests/test_web_driver_packet_roundtrip.nim tests/test_demos_compile_and_run.nim tests/test_m24_gh_pages_branch_exists.nim tests/test_render_native_tui_reactive.nim tests/test_nimcache_is_worktree_local.nim"
+tests := "tests/test_renderer_concept_conformance.nim tests/test_threadvar_id_isolation.nim tests/test_strip_diff.nim tests/test_screenbuffer_diff_empty.nim tests/test_repo_requirements_envrc.nim tests/test_repo_requirements_agents_md_symlinks.nim tests/test_repo_requirements_justfile_recipes.nim tests/test_repo_requirements_ci_yaml.nim tests/test_repo_requirements_flake.nim tests/test_grapheme_cluster_corpus.nim tests/test_grapheme_width_emoji_zwj.nim tests/test_sgr_minimal_transition.nim tests/test_sgr_truecolor.nim tests/test_sgr_underline_color.nim tests/test_content_word_wrap_grapheme_aware.nim tests/test_ambiguous_width_default_narrow.nim tests/test_display_width_explicit_policy.nim tests/test_content_basics.nim tests/test_headless_capture_static_real_stack.nim tests/test_harness_isolation_parallel.nim tests/test_pilot_press_full_chain.nim tests/test_pilot_type_emits_per_character_events.nim tests/test_pilot_waitfor_uses_virtual_clock.nim tests/test_findbyid_and_dumptree.nim tests/test_eventlog_records_in_order.nim tests/test_snapshot_six_formats_recorded.nim tests/test_snapshot_html_report_on_failure.nim tests/test_snapshot_record_mode.nim tests/test_snapshot_stable_across_runs.nim tests/test_layout_cell_snap_integer_real_yoga.nim tests/test_layout_cell_snap_distributes_error.nim tests/test_layout_grid_three_columns_with_gap.nim tests/test_css_grid_size_parses.nim tests/test_css_grid_track_resolver.nim tests/test_css_grid_placement.nim tests/test_grid_column_span.nim tests/test_grid_widget_render.nim tests/test_grid_widget_auto_columns.nim tests/test_grid_widget_auto_rows.nim tests/test_container_horizontal_lays_out_left_to_right.nim tests/test_dock_pinned_left.nim tests/test_double_width_text_reserved_correctly.nim tests/test_layout_reflow_delta.nim tests/test_layout_engine_shared_with_cocoa.nim tests/test_input_simple_keys_corpus.nim tests/test_input_mouse_sgr_corpus.nim tests/test_input_partial_sequence.nim tests/test_input_bracketed_paste.nim tests/test_input_kitty_protocol.nim tests/test_input_in_band_resize.nim tests/test_input_reissue_on_overlength.nim tests/test_css_tokenize_real_textual_corpus.nim tests/test_css_parse_real_textual_corpus.nim tests/test_css_match_specificity_corpus.nim tests/test_css_cascade_full_chain.nim tests/test_css_cascade_reaches_compositor.nim tests/test_css_pseudo_state_focus_repaints.nim tests/test_css_styles_cache_invalidation.nim tests/test_css_tailwind_compat.nim tests/test_css_error_recovery.nim tests/test_css_extended_properties.nim tests/test_color_parse_corpus.nim tests/test_color_blend_gamma_correct.nim tests/test_colorsystem_luminosity_spread.nim tests/test_textual_dark_byte_identical.nim tests/test_runtime_theme_switch.nim tests/test_at_dark_at_light_full_app.nim tests/test_isonim_theme_token_compat.nim tests/test_easing_byte_parity.nim tests/test_animator_full_chain.nim tests/test_animation_cancellation.nim tests/test_animation_pilot_wait_for_animation.nim tests/test_color_blend_in_animation.nim tests/test_compositor_idle_no_writes.nim tests/test_compositor_single_cell_diff.nim tests/test_compositor_overlay_layer.nim tests/test_compositor_tint_overlay.nim tests/test_caret_shape.nim tests/test_compositor_wide_glyph_ghost_cell.nim tests/test_compositor_strip_cache_hit.nim tests/test_compositor_ambiguous_width_policy.nim tests/test_compositor_grapheme_continuation.nim tests/test_segment_dedup.nim tests/test_posix_driver_real_pty.nim tests/test_posix_driver_resize_real.nim tests/test_posix_driver_mouse_real.nim tests/test_posix_driver_panic_restores_terminal.nim tests/test_posix_driver_sigterm_clean_exit.nim tests/test_windows_driver_keys_round_trip.nim tests/test_windows_driver_resize.nim tests/test_widget_set_snapshot_windows.nim tests/test_windows_driver_ctrl_c_clean_exit.nim tests/test_windows_driver_alt_screen.nim tests/test_windows_driver_vt_input.nim tests/test_windows_key_decoder.nim tests/test_static_borders_real_cells.nim tests/test_label_rich_text_wraps.nim tests/test_container_scroll_keyboard.nim tests/test_placeholder_widget.nim tests/test_rule_widget.nim tests/test_m11_widget_snapshot_coverage.nim tests/test_button_activate_with_enter.nim tests/test_focus_tab_order.nim tests/test_event_propagation.nim tests/test_switch_keyboard_toggle.nim tests/test_radio_set_exclusive.nim tests/test_m12_introspection_per_widget.nim tests/test_m12_widget_snapshot_coverage.nim tests/test_listview_keyboard_navigation.nim tests/test_modal_focus_trap_real.nim tests/test_modal_animation_frames.nim tests/test_select_dropdown_keyboard.nim tests/test_menu_keyboard.nim tests/test_tabs_wrap_option.nim tests/test_collapsible_animation.nim tests/test_toast_autodismiss.nim tests/test_image_widget_kitty.nim tests/test_image_widget_protocol_fallback.nim tests/test_image_widget_hot_reload.nim tests/test_worker_runs_to_completion.nim tests/test_worker_cancellation.nim tests/test_workers_isolated_per_harness.nim tests/test_fuzzy_matcher_corpus.nim tests/test_palette_open_search_run.nim tests/test_datatable_virtualisation_perf.nim tests/test_datatable_sort_keyboard.nim tests/test_datatable_selection.nim tests/test_datatable_snapshot_coverage.nim tests/test_tree_expand_lazy.nim tests/test_directory_tree_real_fs.nim tests/test_tree_snapshot_coverage.nim tests/test_textarea_undo_redo.nim tests/test_textarea_syntax_highlighting.nim tests/test_textarea_word_wrap_grapheme_aware.nim tests/test_textarea_treesitter_nim.nim tests/test_textarea_render_with_highlight.nim tests/test_textarea_unhighlighted_still_works.nim tests/test_markdown_renders_textual_readme.nim tests/test_richlog_autofollow_real.nim tests/test_log_basics.nim tests/test_progress_bar_animates.nim tests/test_sparkline_renders.nim tests/test_header_footer_welcome.nim tests/test_task_app_tui_snapshot_five_states.nim tests/test_task_app_shared_vm_byte_identical.nim tests/test_task_app_pilot_drive_real_stack.nim tests/test_task_app_web_target_compiles.nim tests/test_textual_compat.nim tests/test_textual_compat_batch2.nim tests/test_textual_compat_batch3.nim tests/test_m24_bench_full.nim tests/test_record_replay_byte_identical.nim tests/test_recording_round_trip_serialisation.nim tests/test_timeline_html_diffable.nim tests/test_assertNoOverlap_catches_misalignment.nim tests/test_assertSinglePassPaint.nim tests/test_web_driver_byte_parity.nim tests/test_web_driver_packet_roundtrip.nim tests/test_web_driver_caps_declaration.nim tests/test_demos_compile_and_run.nim tests/test_m24_benchmark_publishing_contract.nim tests/test_render_native_tui_reactive.nim tests/test_nimcache_is_worktree_local.nim"
 
 # --- Default targets (per repo-requirements.md) ---
 
-# Generate the tree-sitter Nim grammar's parser sources.
+# Build the tree-sitter grammar archive that `treesitter_ffi.nim` links.
 #
-# `src/isonim_tui/syntax/treesitter_ffi.nim` has
-# `{.compile: <tree-sitter-nim>/src/parser.c.}`, and that file is NOT in
-# the tree-sitter-nim repository: it is in its `.gitignore` and produced
-# by `tree-sitter generate` from `grammar.js`. codetracer's nix package
-# runs the same step before building. Without it every `nim c` AND every
-# `nim check` in this file dies with "cannot find: .../parser.c" before
-# it type-checks a single line -- which is precisely what CI has been
-# doing, invisibly, on every job.
+# Both grammar repositories commit their generated C: tree-sitter-nim its
+# `src/parser.c` (ABI 15) and hand-written `src/scanner.c`, tree-sitter-aiken
+# its `src/parser.c` (ABI 14). Nothing is generated, so neither the
+# tree-sitter CLI nor node is needed. The sibling checkouts are only read.
 #
-# Idempotent: skips the (slow, minutes-scale) generate when parser.c is
-# already there, so local iteration pays it once. tree-sitter-aiken
-# commits its parser.c, so only the Nim grammar is generated here.
-#
-# It also ARCHIVES the two grammars into a single static library, which is
-# what `treesitter_ffi.nim` links. It used to `{.compile.}` the C sources
-# directly, and that does not scale: the generated `tree-sitter-nim`
-# `parser.c` is a 42 MB single translation unit that takes 34 s to compile
-# at -O0 on a 32-core host, and Nim's nimcache is per-project, so every one
-# of the 147 binaries in `tests` recompiled it from scratch. That is ~88
-# minutes of grammar compilation per full-suite job, and this repo's `ci.yml`
-# runs 87 such checks -- roughly 128 CPU-hours per CI run, for a byte-identical
+# The objects go into a single static library, which is what
+# `treesitter_ffi.nim` links. It used to `{.compile.}` the C sources
+# directly, and that does not scale: tree-sitter-nim's `parser.c` is a
+# 42 MB single translation unit that takes 34 s to compile at -O0 on a
+# 32-core host, and Nim's nimcache is per-project, so every one of the 147
+# binaries in `tests` recompiled it from scratch. That is ~88 minutes of
+# grammar compilation per full-suite job, and this repo's `ci.yml` runs 87
+# such checks -- roughly 128 CPU-hours per CI run, for a byte-identical
 # object file each time. Compiling it once per checkout and linking the
 # archive makes it 34 s per job.
 #
-# Archive freshness is keyed on the grammar sources, so a re-clone or a
-# grammar bump rebuilds it and nothing else does.
+# The typed `isonim-tui.grammars.*` edges in repro.nim build the same
+# objects; keep the two in step. Archive freshness is keyed on the grammar
+# sources, so a re-clone or a grammar bump rebuilds it and nothing else does.
 grammars:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -91,21 +93,14 @@ grammars:
       exit 1
     fi
 
-    # 1. Generate tree-sitter-nim's parser.c (gitignored; produced from grammar.js).
-    if [ -f "$nim_dir/src/parser.c" ]; then
-      echo "[grammars] $nim_dir/src/parser.c present; skipping generate"
-    else
-      echo "[grammars] tree-sitter generate in $nim_dir"
-      ( cd "$nim_dir" && tree-sitter generate )
-    fi
-
-    # 2. Archive both grammars once. `-O0` deliberately: this is generated
-    #    table-driven C with no hot loops of its own, and -O1/-O2 measured
-    #    58 s / 37 s against -O0's 34 s for no runtime benefit that shows up
-    #    in `just bench`.
     out_dir="$repo_root/build/grammars"
-    archive="$out_dir/libisonim_tui_grammars.a"
     mkdir -p "$out_dir"
+
+    # Archive both grammars once. `-O0` deliberately: this is generated
+    # table-driven C with no hot loops of its own, and -O1/-O2 measured
+    # 58 s / 37 s against -O0's 34 s for no runtime benefit that shows up
+    # in `just bench`.
+    archive="$out_dir/libisonim_tui_grammars.a"
     srcs="$nim_dir/src/parser.c $nim_dir/src/scanner.c $aiken_dir/src/parser.c"
     if [ -f "$archive" ] && [ -z "$(find $srcs -newer "$archive" 2>/dev/null)" ]; then
       echo "[grammars] $archive is up to date"
@@ -113,8 +108,8 @@ grammars:
     fi
     echo "[grammars] building $archive"
     rm -f "$archive"
-    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src"   "$nim_dir/src/parser.c"   -o "$out_dir/ts_nim_parser.o"
-    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src"   "$nim_dir/src/scanner.c"  -o "$out_dir/ts_nim_scanner.o"
+    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src" "$nim_dir/src/parser.c" -o "$out_dir/ts_nim_parser.o"
+    "${CC:-cc}" -c -O0 -fPIC -I"$nim_dir/src" "$nim_dir/src/scanner.c" -o "$out_dir/ts_nim_scanner.o"
     "${CC:-cc}" -c -O0 -fPIC -I"$aiken_dir/src" "$aiken_dir/src/parser.c" -o "$out_dir/ts_aiken_parser.o"
     "${AR:-ar}" rcs "$archive" "$out_dir/ts_nim_parser.o" "$out_dir/ts_nim_scanner.o" "$out_dir/ts_aiken_parser.o"
     echo "[grammars] $archive: $(stat -c%s "$archive") bytes"
@@ -224,8 +219,7 @@ lint: lint-nim lint-nix lint-markdown lint-shell
 # No `grammars` dependency: this recipe only runs `nim check`, which never
 # links, and `treesitter_ffi.nim` no longer `{.compile.}`s the grammar C
 # sources -- so there is nothing here for the grammars to resolve. Lint
-# therefore skips both `tree-sitter generate` (minutes on a fresh clone) and
-# the archive build. Verified: `nim check` on `treesitter_ffi.nim` succeeds
+# therefore skips the archive build. Verified: `nim check` on `treesitter_ffi.nim` succeeds
 # with `build/grammars/` absent entirely.
 lint-nim:
     @mkdir -p test-logs
@@ -239,11 +233,21 @@ lint-nix:
     nixfmt --check flake.nix
 
 lint-markdown:
-    @if command -v markdownlint-cli2 >/dev/null 2>&1; then \
-      markdownlint-cli2 "**/*.md" "#node_modules" "#test-logs" || true; \
-    else \
-      echo "markdownlint-cli2 not available; skipping"; \
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v markdownlint-cli2 >/dev/null
+    inventory=$(mktemp)
+    trap 'rm -f "$inventory"' EXIT
+    git ls-files -z -- '*.md' > "$inventory"
+    documents=()
+    while IFS= read -r -d '' document; do
+      documents+=("$document")
+    done < "$inventory"
+    if (( ${#documents[@]} == 0 )); then
+      echo "No tracked Markdown documents" >&2
+      exit 1
     fi
+    markdownlint-cli2 "${documents[@]}"
 
 # Shell linting per repo-requirements §8 (table row: Shell | shfmt | shellcheck).
 # Both binaries are provided by the dev shell (flake.nix). Outside the dev
@@ -305,9 +309,10 @@ test-refc:
     just _matrix refc debug on
     just _matrix refc danger on
 
-test-threads-off:
-    just _matrix orc release off
-    just _matrix arc release off
+# There is no `--threads:off` cell. The drivers are built on a reader
+# thread and `system.Channel`, so isonim-tui requires `--threads:on` by
+# design (not a failure being hidden); `src/isonim_tui.nim` refuses to
+# compile without it.
 
 # Sanitizers (Linux/amd64 only).
 test-asan: grammars
@@ -337,6 +342,10 @@ test-ubsan: grammars
         -r $t 2>&1 | tee -a test-logs/ubsan.log; \
     done
 
+# A local diagnostic, not a CI gate: every threaded test reports the data
+# race and the locked-mutex destroy inside Nim's own `system.Channel`
+# (see the comment above the `sanitizers` job in .github/workflows/ci.yml).
+# Read the reports for frames outside lib/system/channels_builtin.nim.
 test-tsan: grammars
     @mkdir -p test-logs
     @for t in {{tests}}; do \
@@ -361,6 +370,10 @@ test-lsan: grammars
         -r $t 2>&1 | tee -a test-logs/lsan.log; \
     done
 
+# A local diagnostic, not a CI gate: every test fails on the "possibly
+# lost" block that `std/unittest` keeps referenced until exit (see the
+# comment above the `sanitizers` job in .github/workflows/ci.yml). Read the
+# "definitely lost" and invalid-access reports, not the exit status.
 test-valgrind: grammars
     #!/usr/bin/env bash
     set -euo pipefail
@@ -382,7 +395,7 @@ test-valgrind: grammars
       fi
     done
 
-test-all: test-arc test-orc test-refc test-threads-off
+test-all: test-arc test-orc test-refc
     @echo "Charter primary matrix complete."
 
 # Internal: one matrix cell.  $1=mm, $2=mode, $3=threads
@@ -402,8 +415,7 @@ clean:
 
 # --- Benchmarks ---
 #
-# Per `metacraft-specs/policies/continuous-benchmarking.md`. The M24
-# suite lives under `benchmarks/` (one source per metric), driven by
+# The M24 benchmark suite lives under `benchmarks/` (one source per metric), driven by
 # `scripts/collect-benchmark-metrics.sh` which writes
 # `bench-results/benchmark_results.json` in github-action-benchmark
 # format. `scripts/render-bench-report.sh` produces the
@@ -412,7 +424,7 @@ clean:
 # Both recipes accept an optional argument: pass "--quick" to run the
 # abbreviated CI variant.
 
-bench *FLAGS:
+bench *FLAGS: grammars
     @mkdir -p bench-results
     bash scripts/collect-benchmark-metrics.sh {{FLAGS}}
     bash scripts/render-bench-report.sh
@@ -464,3 +476,13 @@ test-windows:
       nim c {{nim-flags}} {{src-paths}} --mm:orc -d:release --threads:on \
         -r $t 2>&1 | tee -a test-logs/windows.log; \
     done
+
+# Entering the dev shell from another git repository must write nothing there.
+# Runs `nix develop`, so it is not part of the in-shell test recipes.
+test-dev-shell:
+    bash tests/test_dev_shell_writes_nothing_elsewhere.sh
+
+# Consume real owning benchmark output; run `just bench --quick` first.
+# These refusal fixtures never measure or publish a reference baseline.
+bench-tools-test:
+    node tools/test-benchmark-directions.mjs bench-results/benchmark_results.json benchmarks/metric-directions.json "$(git rev-parse HEAD)"

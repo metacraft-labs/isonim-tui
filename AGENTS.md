@@ -24,9 +24,7 @@ landing across milestones M0-M27.
   bodies stay portable.
 
 Drivers (POSIX / Windows), compositor, layout, CSS engine, animation,
-widgets — every later milestone builds on the M0 surface. See
-`isonim-specs/isonim-tui.milestones.org` in `codetracer-specs`
-for the full plan.
+widgets — every later milestone builds on the M0 surface.
 
 ## Commands
 
@@ -43,12 +41,11 @@ Charter matrix recipes (CI runs each as a separate matrix cell):
 just test-arc        # arc memory manager, all three modes
 just test-orc        # orc memory manager, all three modes
 just test-refc       # refc memory manager, all three modes
-just test-threads-off
 just test-asan       # AddressSanitizer (Linux/clang)
 just test-ubsan      # UndefinedBehaviorSanitizer
-just test-tsan       # ThreadSanitizer
+just test-tsan       # ThreadSanitizer (local diagnostic, not a CI gate)
 just test-lsan       # LeakSanitizer
-just test-valgrind   # secondary leak verification
+just test-valgrind   # valgrind memcheck (local diagnostic, not a CI gate)
 just test-all        # everything that runs on a Linux runner
 ```
 
@@ -59,21 +56,30 @@ language-specific sub-recipes (`lint-nim`, `lint-nix`, `lint-markdown`,
 
 ## Project structure
 
-```
+```text
 src/
-  isonim_tui.nim                       # public top-level - re-exports cells/events/renderer
+  isonim_tui.nim
+  # public top-level - re-exports cells/events/renderer
   isonim_tui/cells.nim                 # Cell, Strip, ScreenBuffer + diff
-  isonim_tui/events.nim                # TerminalEvent, KeyEvent, MouseEvent (value types)
-  isonim_tui/renderer.nim              # TerminalRenderer (RendererBackend conformance)
+  isonim_tui/events.nim
+  # TerminalEvent, KeyEvent, MouseEvent (value types)
+  isonim_tui/renderer.nim
+  # TerminalRenderer (RendererBackend conformance)
 tests/
-  test_renderer_concept_conformance.nim  # checkRendererBackend + cross-renderer counter
-  test_threadvar_id_isolation.nim        # 4 threads x 100 elements, no id collision
+  test_renderer_concept_conformance.nim
+  # checkRendererBackend + cross-renderer counter
+  test_threadvar_id_isolation.nim
+  # 4 threads x 100 elements, no id collision
   test_strip_diff.nim                    # 1 / 5 / 2-disjoint diff regions
   test_screenbuffer_diff_empty.nim       # buf.diff(buf) == [] for any size
-  test_repo_requirements_*.nim           # flake / Justfile / .envrc / AGENTS.md / CI conformance
-.github/workflows/ci.yml                 # lint, test, charter matrix, sanitizers, valgrind, nix-build
-flake.nix                                # nix devShell + checks (pre-commit via git-hooks.nix)
-Justfile                                 # build/test/lint/format + matrix + sanitizers
+  test_repo_requirements_*.nim
+  # flake / Justfile / .envrc / AGENTS.md / CI conformance
+.github/workflows/ci.yml
+  # lint, test, charter matrix, sanitizers, nix-build
+flake.nix
+  # nix devShell + checks (pre-commit via git-hooks.nix)
+Justfile
+  # build/test/lint/format + matrix + sanitizers
 isonim_tui.nimble                        # single-source-of-truth version
 ```
 
@@ -121,14 +127,13 @@ isonim_tui.nimble                        # single-source-of-truth version
 
 ## Specs
 
-The authoritative specifications for this library live in the
-`codetracer-specs` repo:
-
-- `isonim-specs/isonim-tui.milestones.org` — the full milestone
-  plan (M0 through M29) and the "Memory-safety + testing-rigor
-  charter".
-- `metacraft-specs/policies/repo-requirements.md` — repo-level
-  conformance (flake, Justfile, .envrc, hooks, CI).
+The specifications and the milestone plan (M0 through M29, with its
+memory-safety and testing-rigor charter) are maintained outside this
+repository. What a contributor needs from them is stated here and in
+the comments of the files concerned: the repo-level conformance rules
+(flake, Justfile, .envrc, hooks, CI) are checked by the
+`tests/test_repo_requirements_*.nim` tests, and the charter's test
+matrix is the `charter-matrix` job in `.github/workflows/ci.yml`.
 
 When user requests change the public API, update the spec in the same
 change set.

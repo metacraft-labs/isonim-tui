@@ -43,10 +43,13 @@
 import std/[hashes, strutils, tables, unicode]
 
 import ./cells
+import ./overlay
 import ./renderer
 import ./drivers/headless_driver
 import ./text/ansi
 import ./text/width
+import ./text/fences
+export fences
 
 # ----------------------------------------------------------------------------
 # Layered layout entry
@@ -69,17 +72,24 @@ type
     fg: Color
     bg: Color
     attrs: set[Attr]
+    ul: Color              ## The underline's own colour (`underline-color`);
+                           ## default: the foreground's.
     fillBackground: bool   ## When true, the entry's full rectangle is
                            ## filled with `bg` even if it's wider than
                            ## the rendered text (so modals visually mask
                            ## the layer below). Set when a node has an
                            ## explicit background-color or when it
                            ## carries a `layer` > 0.
+    isOverlay: bool        ## An `overlay: tint` node (`overlay.nim`): not
+                           ## stamped, APPLIED — the cells of `overlay`'s
+                           ## rectangle composited so far are re-coloured.
+    overlay: OverlaySpec
 
   StyleSnapshot = object
     fg: Color
     bg: Color
     attrs: set[Attr]
+    ul: Color
 
   StripCacheStats* = object
     ## Snapshot of the strip cache's hit / miss counters since the
@@ -121,16 +131,28 @@ type
     stripCache: Table[int, StripCacheEntry]
     cacheHits: int
     cacheMisses: int
+    ambiguous*: AmbiguousWidth
+      ## How many cells an East Asian Width `A` character takes in THIS
+      ## compositor's layout — an explicit input, so a frame's cell layout
+      ## is a function of what it was handed and never of the thread-local
+      ## `setAmbiguousWidth`. A front-end that measured its terminal drawing
+      ## them wide passes `awWide`, and its own layout and this one agree.
+    fences*: WidthFences
+      ## The width questions this terminal left unanswered: the cells
+      ## `text/fences` says may be drawn at another width are followed by an
+      ## absolute move (Terminal-Adaptation §6.5). The zero value fences none.
 
 # ----------------------------------------------------------------------------
 # Construction
 # ----------------------------------------------------------------------------
 
-proc newCompositor*(cols, rows: int): Compositor =
+proc newCompositor*(cols, rows: int;
+                    ambiguous = awNarrow): Compositor =
   ## Construct a fresh compositor of the given dimensions. The strip
-  ## cache starts empty; counters start at zero.
+  ## cache starts empty; counters start at zero. `ambiguous` is the width
+  ## policy for East Asian Width `A` characters (`Compositor.ambiguous`).
   Compositor(
-    cols: cols, rows: rows,
+    cols: cols, rows: rows, ambiguous: ambiguous,
     lastBuffer: newScreenBuffer(cols, rows),
     lastDirty: @[],
     initialPainted: false,
@@ -265,6 +287,11 @@ proc styleFor(node: TerminalNode; inherited: StyleSnapshot):
     result.snap.attrs.incl(attrItalic)
   if "underline" in node.styles and node.styles["underline"] == "true":
     result.snap.attrs.incl(attrUnderline)
+  if "underline-color" in node.styles:
+    # The underline's own colour (CSS `text-decoration-color`), sent as SGR
+    # 58 (`renderSgr`). Inherited like `color`; "default" restores the
+    # foreground's.
+    result.snap.ul = parseColorOrDefault(node.styles["underline-color"])
   if "reverse" in node.styles and node.styles["reverse"] == "true":
     result.snap.attrs.incl(attrReverse)
 
@@ -379,7 +406,8 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
                     parentStyle: StyleSnapshot;
                     parentLayer: int;
                     parentHasBg: bool;
-                    entries: var seq[LayoutEntry]) =
+                    entries: var seq[LayoutEntry];
+                    ambiguous = awNarrow) =
   ## Recursive tree walk. Mirrors M2's flatten-to-rows model but
   ## propagates inherited foreground / background / attribute style and
   ## the active layer. Boxes whose children are all text collapse to a
@@ -395,13 +423,37 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
       row: row, col: 0, width: cols, text: node.text, nodeId: node.id,
       layer: parentLayer,
       fg: resolved.snap.fg, bg: resolved.snap.bg,
-      attrs: resolved.snap.attrs,
+      attrs: resolved.snap.attrs, ul: resolved.snap.ul,
       fillBackground: parentHasBg or resolved.hasBg or parentLayer > 0)
     inc row
   of tnkBox, tnkButton, tnkInput:
     let resolved = styleFor(node, parentStyle)
     let nodeLayer = layerFromStyle(node, parentLayer)
     let nodeHasBg = parentHasBg or resolved.hasBg or nodeLayer > parentLayer
+    # OUT OF FLOW, both of them: neither takes a row of the flow layout.
+    if isOverlayNode(node):
+      # An overlay re-colours what is under it (`overlay.nim`).
+      entries.add LayoutEntry(row: 0, col: 0, width: 0, nodeId: node.id,
+                              layer: nodeLayer, isOverlay: true,
+                              overlay: overlaySpecOf(node, nodeLayer))
+      return
+    if node.styles.getOrDefault("position", "") == "absolute":
+      # A label at an absolute cell (`top` / `left`), its own width wide —
+      # a drag's ghost label, a tooltip. Drawn at its layer like any entry,
+      # masking only its own cells.
+      proc intOf(name: string): int =
+        try: parseInt(node.styles.getOrDefault(name, "0"))
+        except ValueError: 0
+      let text = subtreeText(node)
+      var w = 0
+      for rune in runes(text):
+        w.inc(displayWidth(rune, ambiguous))
+      entries.add LayoutEntry(
+        row: intOf("top"), col: intOf("left"), width: w, text: text,
+        nodeId: node.id, layer: nodeLayer,
+        fg: resolved.snap.fg, bg: resolved.snap.bg,
+        attrs: resolved.snap.attrs, ul: resolved.snap.ul, fillBackground: true)
+      return
     var allText = node.children.len > 0
     for ch in node.children:
       if ch.kind != tnkText:
@@ -427,7 +479,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
           let chResolved = styleFor(ch, resolved.snap)
           var w = 0
           for rune in runes(ch.text):
-            w.inc(displayWidth(rune))
+            w.inc(displayWidth(rune, ambiguous))
           let remaining = max(0, cols - segCol)
           let segWidth = min(w, remaining)
           entries.add LayoutEntry(
@@ -436,7 +488,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
             text: ch.text, nodeId: ch.id,
             layer: nodeLayer,
             fg: chResolved.snap.fg, bg: chResolved.snap.bg,
-            attrs: chResolved.snap.attrs,
+            attrs: chResolved.snap.attrs, ul: chResolved.snap.ul,
             fillBackground: nodeHasBg or chResolved.hasBg)
           segCol.inc(segWidth)
           if segCol >= cols: break
@@ -449,7 +501,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
           row: row, col: 0, width: cols, text: s, nodeId: node.id,
           layer: nodeLayer,
           fg: resolved.snap.fg, bg: resolved.snap.bg,
-          attrs: resolved.snap.attrs,
+          attrs: resolved.snap.attrs, ul: resolved.snap.ul,
           fillBackground: nodeHasBg)
         inc row
     else:
@@ -458,7 +510,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
           row: row, col: 0, width: cols, text: "", nodeId: node.id,
           layer: nodeLayer,
           fg: resolved.snap.fg, bg: resolved.snap.bg,
-          attrs: resolved.snap.attrs,
+          attrs: resolved.snap.attrs, ul: resolved.snap.ul,
           fillBackground: nodeHasBg)
         inc row
         return
@@ -525,7 +577,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
             text: renderedLabel, nodeId: node.id,
             layer: nodeLayer,
             fg: resolved.snap.fg, bg: resolved.snap.bg,
-            attrs: resolved.snap.attrs,
+            attrs: resolved.snap.attrs, ul: resolved.snap.ul,
             fillBackground: nodeHasBg)
           # Widget glyph entry — owned by the widget node so cache
           # invalidation on a widget mutation still fires correctly.
@@ -536,7 +588,7 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
             text: glyph, nodeId: widgetNode.id,
             layer: nodeLayer,
             fg: widgetStyle.snap.fg, bg: widgetStyle.snap.bg,
-            attrs: widgetStyle.snap.attrs,
+            attrs: widgetStyle.snap.attrs, ul: widgetStyle.snap.ul,
             fillBackground: nodeHasBg or widgetStyle.hasBg)
           inc row
           # Each description span renders on its own row, indented
@@ -553,15 +605,16 @@ proc walkLayoutImpl(node: TerminalNode; row: var int; cols: int;
               text: descText, nodeId: desc.id,
               layer: nodeLayer,
               fg: descStyle.snap.fg, bg: descStyle.snap.bg,
-              attrs: descStyle.snap.attrs,
+              attrs: descStyle.snap.attrs, ul: descStyle.snap.ul,
               fillBackground: nodeHasBg or descStyle.hasBg)
             inc row
           return
       for ch in node.children:
         walkLayoutImpl(ch, row, cols, resolved.snap, nodeLayer,
-                       nodeHasBg, entries)
+                       nodeHasBg, entries, ambiguous)
 
-proc walkLayoutClean(node: TerminalNode; cols: int): seq[LayoutEntry] =
+proc walkLayoutClean(node: TerminalNode; cols: int;
+                     ambiguous = awNarrow): seq[LayoutEntry] =
   ## Convenience wrapper; the recursion uses `var` row + accumulator
   ## so the public surface stays a plain seq.
   result = @[]
@@ -569,13 +622,14 @@ proc walkLayoutClean(node: TerminalNode; cols: int): seq[LayoutEntry] =
   var row = 0
   let parentStyle = StyleSnapshot(
     fg: defaultColor(), bg: defaultColor(), attrs: {})
-  walkLayoutImpl(node, row, cols, parentStyle, 0, false, result)
+  walkLayoutImpl(node, row, cols, parentStyle, 0, false, result, ambiguous)
 
 # ----------------------------------------------------------------------------
 # Strip construction (cache-aware)
 # ----------------------------------------------------------------------------
 
-proc rawCellsForEntry(entry: LayoutEntry; cols: int): seq[Cell] =
+proc rawCellsForEntry(entry: LayoutEntry; cols: int;
+                      ambiguous = awNarrow): seq[Cell] =
   ## Project a layout entry into cells *before* the cache lookup. The
   ## entry's text is laid out at column zero; the trailing background
   ## (if `fillBackground` is set) is painted with the entry's bg.
@@ -586,24 +640,32 @@ proc rawCellsForEntry(entry: LayoutEntry; cols: int): seq[Cell] =
     result.add spaceCell()
     inc col
   for r in runes(entry.text):
-    if col >= limit: break
-    let w = displayWidth(r)
+    let w = displayWidth(r, ambiguous)
     if w == 0:
+      # A combining mark, a joiner, a variation selector: no cell of its own
+      # — it goes with the rune before it, so the glyph the text holds is
+      # the glyph drawn. A control character goes nowhere.
+      if isClusterContinuation(r) and result.len > min(entry.col, limit):
+        var k = result.high
+        if result[k].width == 0 and k > 0: dec k
+        if result[k].width > 0:
+          result[k].extra.add toUTF8(r)
       continue
+    if col >= limit: break
     if w >= 2:
       if col + 1 >= limit: break
       result.add Cell(rune: r, fg: entry.fg, bg: entry.bg,
-                      attrs: entry.attrs, width: 2)
+                      attrs: entry.attrs, ul: entry.ul, width: 2)
       result.add ghostCell()
       col += 2
     else:
       result.add Cell(rune: r, fg: entry.fg, bg: entry.bg,
-                      attrs: entry.attrs, width: 1)
+                      attrs: entry.attrs, ul: entry.ul, width: 1)
       col += 1
   while col < limit:
     if entry.fillBackground:
       result.add Cell(rune: Rune(' '.ord), fg: entry.fg, bg: entry.bg,
-                      attrs: entry.attrs, width: 1)
+                      attrs: entry.attrs, ul: entry.ul, width: 1)
     else:
       result.add spaceCell()
     inc col
@@ -611,7 +673,8 @@ proc rawCellsForEntry(entry: LayoutEntry; cols: int): seq[Cell] =
     result.add spaceCell()
     inc col
 
-proc inputHashForEntry(entry: LayoutEntry; cols: int): uint64 =
+proc inputHashForEntry(entry: LayoutEntry; cols: int;
+                       ambiguous = awNarrow): uint64 =
   ## Hash the *inputs* that determine the entry's cells: text, fg, bg,
   ## attrs, layer, fill flag, and the destination width. Matches in
   ## the cache mean the cells will be byte-identical so we can skip
@@ -624,25 +687,27 @@ proc inputHashForEntry(entry: LayoutEntry; cols: int): uint64 =
   for at in entry.attrs:
     a = a or (1 shl ord(at))
   h = h !& hash(a)
+  h = h !& hash(entry.ul)
   h = h !& hash(entry.layer)
   h = h !& hash(if entry.fillBackground: 1 else: 0)
   h = h !& hash(entry.col)
   h = h !& hash(entry.width)
   h = h !& hash(cols)
+  h = h !& hash(ord(ambiguous))
   cast[uint64](!$h)
 
 proc stripForEntry(c: Compositor; entry: LayoutEntry): Strip =
   ## Cache-aware strip construction. Returns a cached Strip on hit;
   ## reconstructs and stores on miss.
   let key = entry.nodeId
-  let want = inputHashForEntry(entry, c.cols)
+  let want = inputHashForEntry(entry, c.cols, c.ambiguous)
   if key in c.stripCache:
     let cached = c.stripCache[key]
     if cached.inputHash == want and cached.width == c.cols:
       inc c.cacheHits
       return cached.strip
   inc c.cacheMisses
-  let cells = rawCellsForEntry(entry, c.cols)
+  let cells = rawCellsForEntry(entry, c.cols, c.ambiguous)
   let strip = newStrip(cells)
   c.stripCache[key] = StripCacheEntry(
     inputHash: want, width: c.cols, strip: strip)
@@ -687,7 +752,7 @@ proc paintEntryOnto(buf: var ScreenBuffer; strip: Strip; entry: LayoutEntry;
         row.cells[i] = src
         stamped = true
       elif src.fg != defaultColor() or src.bg != defaultColor() or
-           src.attrs != {}:
+           src.attrs != {} or src.ul != defaultColor():
         row.cells[i] = src
         stamped = true
     if stamped and src.width == 2 and i + 1 < row.cells.len:
@@ -720,7 +785,7 @@ proc render*(c: Compositor; root: TerminalNode): ScreenBuffer =
   ## absorbs the per-entry cell construction on hits.
   var buf = newScreenBuffer(c.cols, c.rows)
   if root == nil: return buf
-  var entries = walkLayoutClean(root, c.cols)
+  var entries = walkLayoutClean(root, c.cols, c.ambiguous)
   for i in 1 ..< entries.len:
     var j = i
     while j > 0 and entries[j - 1].layer > entries[j].layer:
@@ -729,6 +794,11 @@ proc render*(c: Compositor; root: TerminalNode): ScreenBuffer =
       entries[j] = tmp
       dec j
   for entry in entries:
+    if entry.isOverlay:
+      # Applied in paint order: over every entry before it (lower layers,
+      # then earlier nodes of its own layer), under every entry after it.
+      applyOverlay(buf, entry.overlay)
+      continue
     if entry.row >= c.rows: continue
     let strip = stripForEntry(c, entry)
     paintEntryOnto(buf, strip, entry, c.cols)
@@ -766,9 +836,10 @@ proc diffRegions*(a, b: ScreenBuffer): seq[CellRegion] =
 # ----------------------------------------------------------------------------
 
 proc cellStyle(cell: Cell): Style {.inline.} =
-  newStyle(cell.fg, cell.bg, cell.attrs)
+  newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
 
-proc emitRegion*(prev: Style; region: CellRegion):
+proc emitRegion*(prev: Style; region: CellRegion;
+                 fences = WidthFences()):
                 tuple[bytes: string; trailing: Style] =
   ## Encode one dirty region as a minimal SGR-aware byte run. The
   ## output is `cursorTo(row, col)` followed by:
@@ -782,7 +853,7 @@ proc emitRegion*(prev: Style; region: CellRegion):
   ## regions on the same row can keep emitting minimal transitions.
   result.bytes = cursorTo(region.row, region.col)
   result.trailing = prev
-  for cell in region.cells:
+  for i, cell in region.cells:
     if cell.width == 0:
       continue
     let target = cellStyle(cell)
@@ -790,12 +861,14 @@ proc emitRegion*(prev: Style; region: CellRegion):
     if sgr.len > 0:
       result.bytes.add sgr
       result.trailing = target
-    if cell.rune.int32 != 0:
-      result.bytes.add toUTF8(cell.rune)
-    else:
-      result.bytes.add ' '
+    result.bytes.add cellText(cell)
+    # A cell whose width this terminal may not draw as counted: the next
+    # cell is placed absolutely (`text/fences`).
+    if cell.needsFence(fences) and i + int(cell.width) < region.cells.len:
+      result.bytes.add fenceAfter(region.col + i, cell)
 
-proc emitRow*(prev: Style; regions: seq[CellRegion]):
+proc emitRow*(prev: Style; regions: seq[CellRegion];
+              fences = WidthFences()):
              tuple[bytes: string; trailing: Style] =
   ## Encode every region in `regions` (assumed to be on the same row,
   ## col-ascending) using `emitRegion` and concatenate the byte runs.
@@ -804,7 +877,7 @@ proc emitRow*(prev: Style; regions: seq[CellRegion]):
   result.bytes = ""
   result.trailing = prev
   for r in regions:
-    let (bytes, after) = emitRegion(result.trailing, r)
+    let (bytes, after) = emitRegion(result.trailing, r, fences)
     result.bytes.add bytes
     result.trailing = after
 
@@ -835,7 +908,7 @@ proc paint*(c: Compositor; root: TerminalNode; driver: HeadlessDriver) =
       while j < regions.len and regions[j].row == row:
         inc j
       let rowRegions = regions[i ..< j]
-      let (bytes, after) = emitRow(prev, rowRegions)
+      let (bytes, after) = emitRow(prev, rowRegions, c.fences)
       driver.writeRaw(bytes)
       prev = after
       i = j
@@ -874,7 +947,7 @@ proc layoutRegionFor*(c: Compositor; root: TerminalNode; nodeId: int):
   ## outer node doesn't emit a layout entry directly.
   result = (row: 0, col: 0, width: 0, height: 0)
   if root == nil: return
-  let entries = walkLayoutClean(root, c.cols)
+  let entries = walkLayoutClean(root, c.cols, c.ambiguous)
   for entry in entries:
     if entry.nodeId == nodeId:
       result = (row: entry.row, col: entry.col,

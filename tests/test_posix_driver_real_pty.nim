@@ -16,11 +16,20 @@
 ## /dev/pts/<n> pair via `openpty(3)`; `PosixDriver` calls real
 ## `tcgetattr`/`tcsetattr` on the slave FD; the alt-screen escape is
 ## a real byte sequence written through `write(2)`.
+##
+## The master is read continuously while the driver runs, as a terminal
+## emulator reads it (`PtyMasterDrain`): on macOS the driver's `stop()`
+## cannot restore termios until its output has been read, and a test that
+## read the master only after `stop()` hung there forever. A
+## `PhaseWatchdog` fails the test, naming the phase, if any phase blocks.
+## See `pty_test_support.nim` for the kernel behaviour behind both.
 
-import std/[os, posix, strutils, termios, times, unittest]
+import std/[posix, strutils, termios, times, unittest]
 
 import isonim_tui
 import nim_pty
+
+import ./pty_test_support
 
 suite "M9: PosixDriver real-pty round trip":
 
@@ -28,12 +37,18 @@ suite "M9: PosixDriver real-pty round trip":
     when not defined(linux) and not defined(macosx):
       skip()
     else:
-      # 1) Allocate a real pty pair.
+      var wd = startPhaseWatchdog("test_posix_driver_real_pty",
+                                  initDuration(seconds = 20), "openPty")
+      defer: stopPhaseWatchdog(wd)
+
+      # 1) Allocate a real pty pair, and read its master the way a
+      #    terminal emulator does for as long as the driver runs.
       var (master, slave) = openPty()
       # The reader-thread side wants the slave readable without
       # blocking the test forever; mark non-blocking.
       slave.setNonblock()
-      master.setNonblock()
+      var drain = startMasterDrain(master.fd)
+      defer: stopMasterDrain(drain)
 
       # 2) Capture the slave's pre-start termios so we can verify the
       #    "restored to cooked mode" claim later.
@@ -42,6 +57,7 @@ suite "M9: PosixDriver real-pty round trip":
       let savedLflag = savedTermios.c_lflag
 
       # 3) Build a driver running on the slave FD.
+      wd.phase("newPosixDriver + start")
       let d = newPosixDriver(80, 24,
                              inputFd = slave.fd,
                              outputFd = slave.fd,
@@ -60,6 +76,7 @@ suite "M9: PosixDriver real-pty round trip":
       check (liveTermios.c_lflag and Cflag(ECHO)) == Cflag(0)
 
       # 4) Simulate a render: write a strip to the driver and flush.
+      wd.phase("writeRaw + write + flushPending")
       let strip = newStrip(@[
         newCell('h'), newCell('e'), newCell('l'), newCell('l'),
         newCell('o')])
@@ -71,6 +88,7 @@ suite "M9: PosixDriver real-pty round trip":
       check d.bytesEmitted.contains("hello")
 
       # 5) Stop. termios must be restored to its pre-start state.
+      wd.phase("stop")
       d.stop()
       check d.state == dsStopped
 
@@ -78,24 +96,13 @@ suite "M9: PosixDriver real-pty round trip":
       check tcGetAttr(slave.fd, addr restored) == 0
       check restored.c_lflag == savedLflag
 
-      # 6) Read the master side to confirm the driver actually wrote
-      #    alt-screen-enter, the payload, and alt-screen-leave bytes.
-      var allOutput = ""
-      let deadline = getTime() + initDuration(milliseconds = 200)
-      while getTime() < deadline:
-        var buf: array[1024, byte]
-        let n = posix.read(master.fd, addr buf[0], buf.len)
-        if n > 0:
-          var s = newString(int(n))
-          for i in 0 ..< int(n): s[i] = char(buf[i])
-          allOutput.add(s)
-        elif n == 0:
-          break
-        else:
-          # EAGAIN — sleep briefly.
-          sleep(5)
-      # The exact bytes include the entry/leave sequences plus the
-      # "hello" payload.
+      # 6) The master must have received alt-screen-enter, the payload,
+      #    and alt-screen-leave. `stop()` returned, so on macOS all of it
+      #    has already been read; Linux may still be delivering it.
+      wd.phase("read the master")
+      check drain.waitForOutput("\x1b[?1049l", initDuration(seconds = 5))
+      let allOutput = drain.output
+      checkpoint "master output: " & allOutput.repr
       check allOutput.contains("\x1b[?1049h")  # enter alt-screen
       check allOutput.contains("\x1b[?1049l")  # leave alt-screen
       check allOutput.contains("hello")

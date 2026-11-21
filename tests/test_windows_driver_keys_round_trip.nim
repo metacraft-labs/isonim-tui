@@ -16,14 +16,18 @@
 
 import std/unittest
 
+# Windows: run in a private console; see the fixture.
+import ./windows_console_fixture
+
 when defined(windows):
   import std/[os, times]
-  import isonim_tui
+  # These real console tests exercise the driver, independently of layout.
+  import isonim_tui/[events, drivers/driver, drivers/windows_driver]
 
 when defined(windows):
   type
     HANDLE = pointer
-    DWORD = uint32
+    DWORD {.importc: "DWORD", header: "<windows.h>".} = uint32
     BOOL = int32
     WORD = uint16
     WCHAR = uint16
@@ -34,13 +38,16 @@ when defined(windows):
       wRepeatCount: WORD
       wVirtualKeyCode: WORD
       wVirtualScanCode: WORD
-      uChar: WCHAR
+      uChar {.importc: "uChar.UnicodeChar".}: WCHAR
       dwControlKeyState: DWORD
+
+    InputEventPayload {.union, bycopy.} = object
+      keyEvent: KeyEventRec
 
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
-      eventType: WORD
-      eventBlob: array[16, byte]
+      eventType {.importc: "EventType".}: WORD
+      eventBlob {.importc: "Event".}: InputEventPayload
 
   const
     STD_INPUT_HANDLE = DWORD(-10'i32)
@@ -58,7 +65,7 @@ when defined(windows):
   proc makeKeyRec(vk: WORD; ch: WCHAR; ctrlState: DWORD): InputRecord =
     var rec: InputRecord
     rec.eventType = KEY_EVENT_KIND
-    let kePtr = cast[ptr KeyEventRec](addr rec.eventBlob[0])
+    let kePtr = cast[ptr KeyEventRec](addr rec.eventBlob)
     kePtr.bKeyDown = BOOL(1)
     kePtr.wRepeatCount = WORD(1)
     kePtr.wVirtualKeyCode = vk
@@ -67,43 +74,50 @@ when defined(windows):
     kePtr.dwControlKeyState = ctrlState
     result = rec
 
-suite "M10: WindowsDriver keys round trip":
+privateConsoleSuite("M10: WindowsDriver keys round trip", 1):
+  suite "M10: WindowsDriver keys round trip":
 
-  test "test_windows_driver_keys_round_trip":
-    when not defined(windows):
-      skip()
-    else:
-      let d = newWindowsDriver(80, 24,
-                               enableMouse = false,
-                               enablePaste = false,
-                               enableAlt = true)
-      d.start()
+    test "test_windows_driver_keys_round_trip":
+      when not defined(windows):
+        skip()
+      else:
+        let d = newWindowsDriver(80, 24,
+                                 enableMouse = false,
+                                 enablePaste = false,
+                                 enableAlt = true)
+        d.start()
 
-      let hin = winGetStdHandle(STD_INPUT_HANDLE)
+        let hin = winGetStdHandle(STD_INPUT_HANDLE)
 
-      # Inject three records: 'a', Enter, Ctrl+C.
-      var recs: array[3, InputRecord]
-      recs[0] = makeKeyRec(WORD(ord('A')), WCHAR(ord('a')), DWORD(0))
-      recs[1] = makeKeyRec(VK_RETURN, WCHAR(0), DWORD(0))
-      recs[2] = makeKeyRec(WORD(ord('C')), WCHAR(3), DWORD(0x0008))
-      var nwritten: DWORD = 0
-      check writeConsoleInputW(hin, addr recs[0], DWORD(recs.len),
-                                addr nwritten) != 0
-      check int(nwritten) == 3
+        # Inject three records: 'a', Enter, Ctrl+C.
+        var recs: array[3, InputRecord]
+        recs[0] = makeKeyRec(WORD(ord('A')), WCHAR(ord('a')), DWORD(0))
+        recs[1] = makeKeyRec(VK_RETURN, WCHAR(0), DWORD(0))
+        recs[2] = makeKeyRec(WORD(ord('C')), WCHAR(3), DWORD(0x0008))
+        var nwritten: DWORD = 0
+        check writeConsoleInputW(hin, addr recs[0], DWORD(recs.len),
+                                  addr nwritten) != 0
+        check int(nwritten) == 3
 
-      # Drain events for up to 2 seconds.
-      var collected: seq[TerminalEvent] = @[]
-      let deadline = getTime() + initDuration(seconds = 2)
-      while getTime() < deadline and collected.len < 3:
-        for ev in d.readEvents():
-          if ev.kind == ekKey:
-            collected.add(ev)
-        sleep(20)
+        # Drain events for up to 2 seconds.
+        var collected: seq[TerminalEvent] = @[]
+        let deadline = getTime() + initDuration(seconds = 2)
+        while getTime() < deadline and collected.len < 3:
+          for ev in d.readEvents():
+            if ev.kind == ekKey:
+              collected.add(ev)
+          sleep(20)
 
-      d.stop()
+        d.stop()
 
-      check collected.len == 3
-      check collected[0].key.key == "a"
-      check collected[1].key.key == "enter"
-      check collected[2].key.key == "c"
-      check modCtrl in collected[2].key.modifiers
+        # Name every decoded event, so a failure on a real console says
+        # what the driver produced (a C0 control in `key` is invisible).
+        for i, ev in collected:
+          checkpoint "event " & $i & ": kind=" & $ev.key.kind & " key=" &
+            ev.key.key.repr & " rune=" & $ev.key.rune & " mods=" &
+            $ev.key.modifiers
+        check collected.len == 3
+        check collected[0].key.key == "a"
+        check collected[1].key.key == "enter"
+        check collected[2].key.key == "c"
+        check modCtrl in collected[2].key.modifiers

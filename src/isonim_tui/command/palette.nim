@@ -114,6 +114,7 @@ type
     width*: int
     height*: int
     onClose*: proc()
+    trap: TrapToken                   ## The focus trap `open` pushed.
 
 # ----------------------------------------------------------------------------
 # Hit construction
@@ -419,14 +420,14 @@ proc open*(cp: CommandPalette) =
   if cp.h.root != nil:
     cp.h.renderer.appendChild(cp.h.root, cp.node)
   # Push a focus trap so Tab can't escape into background widgets.
-  cp.h.focusManager.pushTrap(cp.node.id)
+  cp.trap = cp.h.focusManager.pushTrap(cp.node.id)
   cp.runQuery()
   discard cp.h.setFocus(cp.inputNode)
 
 proc close*(cp: CommandPalette) =
   if not cp.isOpen: return
   cp.isOpen = false
-  cp.h.focusManager.popTrap()
+  discard cp.h.focusManager.popTrap(cp.trap)
   if cp.h.root != nil and cp.node.parent != nil:
     cp.h.renderer.removeChild(cp.h.root, cp.node)
   if cp.opener != nil:

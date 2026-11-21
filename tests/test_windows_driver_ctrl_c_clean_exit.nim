@@ -21,14 +21,18 @@
 
 import std/unittest
 
+# Windows: run in a private console; see the fixture.
+import ./windows_console_fixture
+
 when defined(windows):
   import std/os
-  import isonim_tui
+  # These real console tests exercise the driver, independently of layout.
+  import isonim_tui/[events, drivers/driver, drivers/windows_driver]
 
 when defined(windows):
   type
     HANDLE = pointer
-    DWORD = uint32
+    DWORD {.importc: "DWORD", header: "<windows.h>".} = uint32
     BOOL = int32
 
   const
@@ -45,52 +49,57 @@ when defined(windows):
   proc getConsoleMode(hConsole: HANDLE; lpMode: ptr DWORD): BOOL
     {.importc: "GetConsoleMode", header: "<windows.h>", stdcall.}
 
-suite "M10: WindowsDriver Ctrl+C clean exit":
+privateConsoleSuite("M10: WindowsDriver Ctrl+C clean exit", 1):
+  suite "M10: WindowsDriver Ctrl+C clean exit":
 
-  test "test_windows_driver_ctrl_c_clean_exit":
-    when not defined(windows):
-      skip()
-    else:
-      # Capture pre-start console modes for restoration verification.
-      let hin = winGetStdHandle(STD_INPUT_HANDLE)
-      let hout = winGetStdHandle(STD_OUTPUT_HANDLE)
-      var savedIn, savedOut: DWORD
-      check getConsoleMode(hin, addr savedIn) != 0
-      check getConsoleMode(hout, addr savedOut) != 0
+    test "test_windows_driver_ctrl_c_clean_exit":
+      when not defined(windows):
+        skip()
+      else:
+        # Capture pre-start console modes for restoration verification.
+        let hin = winGetStdHandle(STD_INPUT_HANDLE)
+        let hout = winGetStdHandle(STD_OUTPUT_HANDLE)
+        var savedIn, savedOut: DWORD
+        check getConsoleMode(hin, addr savedIn) != 0
+        check getConsoleMode(hout, addr savedOut) != 0
 
-      let d = newWindowsDriver(80, 24,
-                               enableMouse = true,
-                               enablePaste = true,
-                               enableAlt = true)
-      d.start()
-      check d.state == dsRunning
+        let d = newWindowsDriver(80, 24,
+                                 enableMouse = true,
+                                 enablePaste = true,
+                                 enableAlt = true)
+        d.start()
+        check d.state == dsRunning
 
-      # Fire a real CTRL_C_EVENT against the driver's handler. The
-      # group id 0 means "every process attached to this console" —
-      # which is just our test runner.
-      check generateConsoleCtrlEvent(DWORD(0), DWORD(0)) != 0
+        # Fire a real CTRL_C_EVENT against the driver's handler. The
+        # group id 0 means "every process attached to this console" —
+        # which is just our test runner.
+        check generateConsoleCtrlEvent(DWORD(0), DWORD(0)) != 0
 
-      # Wait briefly for the handler to fire and the reader thread to
-      # observe the stop flag.
-      sleep(200)
+        # Wait briefly for the handler to fire and the reader thread to
+        # observe the stop flag.
+        sleep(200)
 
-      # Stop the driver normally. The handler should already have
-      # flipped the stop flag; `stop()` joins the reader and unwinds
-      # the RAII handles.
-      d.stop()
-      check d.state == dsStopped
+        # The handler ran on a thread the system created for it; it must
+        # still have reached this driver's stop flag.
+        check d.stopRequested
 
-      # Verify console modes restored to their pre-start values.
-      var liveIn, liveOut: DWORD
-      check getConsoleMode(hin, addr liveIn) != 0
-      check getConsoleMode(hout, addr liveOut) != 0
-      check liveIn == savedIn
-      check liveOut == savedOut
+        # Stop the driver normally. The handler should already have
+        # flipped the stop flag; `stop()` joins the reader and unwinds
+        # the RAII handles.
+        d.stop()
+        check d.state == dsStopped
 
-      # The Ctrl handler emits leave sequences directly via
-      # WriteConsoleW (outside the driver's `bytesEmitted` mirror,
-      # since the handler can't safely allocate Nim memory on its
-      # OS-spawned thread). We verify the visible side-effect: console
-      # mode parity above already confirms termios-equivalent
-      # restoration; alt-screen exit is implicit in the AltScreen RAII
-      # destructor having fired (it emits `\x1b[?1049l` synchronously).
+        # Verify console modes restored to their pre-start values.
+        var liveIn, liveOut: DWORD
+        check getConsoleMode(hin, addr liveIn) != 0
+        check getConsoleMode(hout, addr liveOut) != 0
+        check liveIn == savedIn
+        check liveOut == savedOut
+
+        # The Ctrl handler emits leave sequences directly via
+        # WriteConsoleW (outside the driver's `bytesEmitted` mirror,
+        # since the handler can't safely allocate Nim memory on its
+        # OS-spawned thread). We verify the visible side-effect: console
+        # mode parity above already confirms termios-equivalent
+        # restoration; alt-screen exit is implicit in the AltScreen RAII
+        # destructor having fired (it emits `\x1b[?1049l` synchronously).

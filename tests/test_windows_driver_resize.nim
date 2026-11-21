@@ -10,30 +10,43 @@
 
 import std/unittest
 
+# Windows: run in a private console; see the fixture.
+import ./windows_console_fixture
+
 when defined(windows):
   import std/[os, times]
-  import isonim_tui
+  # These real console tests exercise the driver, independently of layout.
+  import isonim_tui/[events, drivers/driver, drivers/windows_driver]
 
 when defined(windows):
   type
     HANDLE = pointer
-    DWORD = uint32
+    DWORD {.importc: "DWORD", header: "<windows.h>".} = uint32
     BOOL = int32
     WORD = uint16
     SHORT = int16
 
     CoordRec {.importc: "COORD", header: "<windows.h>", pure, final.} = object
-      x: SHORT
-      y: SHORT
+      x {.importc: "X".}: SHORT
+      y {.importc: "Y".}: SHORT
 
     WindowBufferSizeRec {.importc: "WINDOW_BUFFER_SIZE_RECORD",
                            header: "<windows.h>", pure, final.} = object
       dwSize: CoordRec
 
+    KeyEventStorage {.importc: "KEY_EVENT_RECORD",
+                       header: "<windows.h>", pure, final.} = object
+    MouseEventStorage {.importc: "MOUSE_EVENT_RECORD",
+                         header: "<windows.h>", pure, final.} = object
+    InputEventPayload {.union, bycopy.} = object
+      keyEvent: KeyEventStorage
+      mouseEvent: MouseEventStorage
+      windowSizeEvent: WindowBufferSizeRec
+
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
-      eventType: WORD
-      eventBlob: array[16, byte]
+      eventType {.importc: "EventType".}: WORD
+      eventBlob {.importc: "Event".}: InputEventPayload
 
   const
     STD_INPUT_HANDLE = DWORD(-10'i32)
@@ -50,52 +63,53 @@ when defined(windows):
   proc makeResizeRec(cols, rows: int): InputRecord =
     var rec: InputRecord
     rec.eventType = WINDOW_BUFFER_SIZE_KIND
-    let wePtr = cast[ptr WindowBufferSizeRec](addr rec.eventBlob[0])
+    let wePtr = cast[ptr WindowBufferSizeRec](addr rec.eventBlob)
     wePtr.dwSize.x = SHORT(cols)
     wePtr.dwSize.y = SHORT(rows)
     result = rec
 
-suite "M10: WindowsDriver resize":
+privateConsoleSuite("M10: WindowsDriver resize", 1):
+  suite "M10: WindowsDriver resize":
 
-  test "test_windows_driver_resize":
-    when not defined(windows):
-      skip()
-    else:
-      let d = newWindowsDriver(80, 24,
-                               enableMouse = false,
-                               enablePaste = false,
-                               enableAlt = false)
-      d.start()
+    test "test_windows_driver_resize":
+      when not defined(windows):
+        skip()
+      else:
+        let d = newWindowsDriver(80, 24,
+                                 enableMouse = false,
+                                 enablePaste = false,
+                                 enableAlt = false)
+        d.start()
 
-      let hin = winGetStdHandle(STD_INPUT_HANDLE)
-      var rec = makeResizeRec(132, 50)
-      var nwritten: DWORD = 0
-      check writeConsoleInputW(hin, addr rec, DWORD(1), addr nwritten) != 0
-      check int(nwritten) == 1
+        let hin = winGetStdHandle(STD_INPUT_HANDLE)
+        var rec = makeResizeRec(132, 50)
+        var nwritten: DWORD = 0
+        check writeConsoleInputW(hin, addr rec, DWORD(1), addr nwritten) != 0
+        check int(nwritten) == 1
 
-      var sawResize = false
-      var seenCols = 0
-      var seenRows = 0
-      let deadline = getTime() + initDuration(seconds = 2)
-      while getTime() < deadline:
-        for ev in d.readEvents():
-          if ev.kind == ekResize:
-            sawResize = true
-            seenCols = ev.resize.cols
-            seenRows = ev.resize.rows
-            break
-        if sawResize: break
-        sleep(20)
+        var sawResize = false
+        var seenCols = 0
+        var seenRows = 0
+        let deadline = getTime() + initDuration(seconds = 2)
+        while getTime() < deadline:
+          for ev in d.readEvents():
+            if ev.kind == ekResize:
+              sawResize = true
+              seenCols = ev.resize.cols
+              seenRows = ev.resize.rows
+              break
+          if sawResize: break
+          sleep(20)
 
-      check sawResize
-      check seenCols == 132
-      check seenRows == 50
+        check sawResize
+        check seenCols == 132
+        check seenRows == 50
 
-      # Apply the resize so the driver's view of (cols, rows) tracks
-      # the host. After this call a subsequent paint cycle would
-      # render at the new dimensions.
-      d.resize(seenCols, seenRows)
-      check d.cols == 132
-      check d.rows == 50
+        # Apply the resize so the driver's view of (cols, rows) tracks
+        # the host. After this call a subsequent paint cycle would
+        # render at the new dimensions.
+        d.resize(seenCols, seenRows)
+        check d.cols == 132
+        check d.rows == 50
 
-      d.stop()
+        d.stop()

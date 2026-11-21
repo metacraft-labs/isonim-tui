@@ -53,6 +53,7 @@ type
     animProgress*: float64            ## 0..1
     animDurationMs*: float64
     onClose*: proc()
+    trap: TrapToken                   ## The focus trap `open` pushed.
 
 # ----------------------------------------------------------------------------
 # Forward declarations
@@ -169,7 +170,7 @@ proc open*(m: ModalWidget) =
   m.opener = m.h.focusedNode
   if m.h.root != nil:
     m.h.renderer.appendChild(m.h.root, m.node)
-  m.h.focusManager.pushTrap(m.panel.id)
+  m.trap = m.h.focusManager.pushTrap(m.panel.id)
   m.animProgress = 0.0
   m.renderTree()
   m.h.flush()
@@ -209,7 +210,7 @@ proc close*(m: ModalWidget) =
       m.h.flush(),
     onComplete = proc() =
       m.state = msClosed
-      m.h.focusManager.popTrap()
+      discard m.h.focusManager.popTrap(m.trap)
       if m.h.root != nil and m.node.parent != nil:
         m.h.renderer.removeChild(m.h.root, m.node)
       if m.opener != nil:

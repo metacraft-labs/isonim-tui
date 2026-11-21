@@ -15,13 +15,12 @@
 ##   * bench_datatable_scroll_meets_target     — bounded
 ##   * bench_strip_cache_hit_rate              — > 95 %
 ##   * bench_memory_at_idle                    — < 30 MB at idle;
-##                                                < 10 KB per added widget
-##                                                (the second figure is
-##                                                an aspirational target;
-##                                                we assert a relaxed
-##                                                bound that current
-##                                                Nim runtime overhead
-##                                                supports — see code)
+##                                                <= 20 KB per added widget
+##                                                (gated by
+##                                                benchmarks/check_thresholds.nim;
+##                                                this suite asserts a
+##                                                looser regression
+##                                                bound — see code)
 ##   * bench_vs_textual_within_targets         — DEFERRED
 ##   * bench_json_format_validates             — schema check
 ##   * bench_html_report_self_contained        — no external resources
@@ -174,7 +173,8 @@ suite "M24: continuous benchmarking":
   test "bench_memory_at_idle":
     let mb = metrics.valueOf("RSS at idle (standard app)")
     check mb < 30.0
-    # Per-widget figure: the milestone target is < 10 KB amortised.
+    # Per-widget figure: the hard-threshold gate is <= 20 KB amortised
+    # (benchmarks/check_thresholds.nim says how that was chosen).
     # The current Nim renderer node uses 4 initTable() allocations per
     # node — runtime overhead dominates and the absolute target lands
     # in M27 (the M24 acceptance budget is "documented and tracked",
@@ -221,7 +221,21 @@ suite "M24: continuous benchmarking":
     # DEFERRED: same source — workflow shape verified statically.
     let wf = repoRoot / ".github" / "workflows" / "benchmark.yml"
     let body = readFile(wf)
-    check "auto-push: true" in body
+    # Preserve baseline publication protection while requiring the reviewed
+    # no-push action contract and checked normal two-channel publisher.
+    check "auto-push: true" notin body
+    check body.count("auto-push: false") == 4
+    check body.count("benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc") == 4
+    check "customSmallerIsBetter" in body
+    check "customBiggerIsBetter" in body
+    check "benchmark-data-dir-path: perf/bench-bigger" in body
+    check "verify-benchmark-publication.mjs" in body
+    check "test-benchmark-directions.mjs" in body
+    check "BENCH_DATA_SOURCE_SHA" in body
+    check "BENCH_PAGES_PARENT" in body
+    check "merge-base --is-ancestor" in body
+    check "git -C \"$smaller\" push origin gh-pages:gh-pages" in body
+    check "Remove all owned baseline-clone credentials" in body
     check "gh-pages-branch: gh-pages" in body
     check "benchmark-data-dir-path: perf/bench" in body
 

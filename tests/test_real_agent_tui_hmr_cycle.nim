@@ -672,8 +672,8 @@ suite "NH-M4: IsoNim native HMR against the real Reprobuild agent":
   test "test_real_agent_tui_multi_edit_session":
     # The DEVELOPER EDIT LOOP. Reprobuild GDH-M4 gave the in-target agent a
     # session loop, so a process is no longer limited to one patch for its
-    # lifetime — the constraint recorded at the top of
-    # Hot-Module-Reload-Native.milestones.org on 2026-09-10. Two edits, one
+    # lifetime, a constraint the native hot-reload plan recorded on
+    # 2026-09-10. Two edits, one
     # connection, and each one observed independently.
     let t0 = epochTime()
     let arm = runSessionArm(targetBin, driverBin, "session", [

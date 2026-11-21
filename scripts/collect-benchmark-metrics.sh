@@ -54,6 +54,9 @@ NIM_PATHS=(
   "--path:$REPO_ROOT/../nim-everywhere/src"
 )
 
+# --parallelBuild bounded by the CPUs this process may use (nproc reads
+# the affinity mask); Nim's own default counts every host thread, which
+# over-commits a CPU-capped CI container (see nim-flags in the Justfile).
 NIM_FLAGS=(
   "--styleCheck:off"
   "--mm:orc"
@@ -61,6 +64,7 @@ NIM_FLAGS=(
   "--threads:on"
   "--hints:off"
   "--warnings:off"
+  "--parallelBuild:$(nproc)"
 )
 
 # Ordered list of benchmark sources. Each name corresponds to

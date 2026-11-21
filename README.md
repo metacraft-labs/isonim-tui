@@ -1,6 +1,7 @@
 # isonim-tui
 
-Production terminal renderer for [IsoNim](https://github.com/metacraft-labs/isonim).
+Production terminal renderer for
+[IsoNim](https://github.com/metacraft-labs/isonim).
 Cell-grid primitives, RendererBackend conformance, and (in later
 milestones) a full Textual-equivalent TUI runtime built on top of
 `nim-pty`, `nim-libvterm`, and `nim-termctl`.
@@ -23,6 +24,13 @@ let txt = r.createTextNode("hello")
 r.appendChild(div, txt)
 echo textContent(div)  # "hello"
 ```
+
+## Requirements
+
+isonim-tui requires `--threads:on` (Nim 2's default). Its terminal drivers
+read input on a dedicated thread and hand events to the application over a
+`system.Channel`, so building with `--threads:off` is unsupported and fails
+at compile time with an explicit error.
 
 ## Development
 

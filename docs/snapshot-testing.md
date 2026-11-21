@@ -22,6 +22,7 @@ type TerminalTestHarness* = ref object
 ```
 
 Each harness bundles **everything an app needs to run**:
+
 - a fresh renderer with a per-thread node-id counter,
 - a HeadlessDriver that owns a `ScreenBuffer` + recorded byte stream,
 - a Compositor with strip cache,
@@ -56,14 +57,29 @@ event-routing code paths.
 Each call to `h.snap(name)` writes (or compares against) six files
 under `tests/snapshots/<name>/`:
 
-| File | Format | Purpose |
-| --- | --- | --- |
-| `plaintext.txt` | UTF-8 cell grid | Eyeball-friendly. Easiest diff. |
-| `ansi.ansi` | Cell grid + SGR escapes | Real terminal output. |
-| `cellmap.json` | Per-cell JSON triple | Machine-readable; SGR-stable. |
-| `svg.svg` | Vector SVG of the buffer | Visual diff in a browser. |
-| `annotated.svg` | SVG + bbox / focus / hover overlays | M25 introspection. |
-| `treedump.txt` | Element tree dump | Verifies node identity and layout regions. |
+- **File:** `plaintext.txt`
+  - **Format:** UTF-8 cell grid
+  - **Purpose:** Eyeball-friendly. Easiest diff.
+
+- **File:** `ansi.ansi`
+  - **Format:** Cell grid + SGR escapes
+  - **Purpose:** Real terminal output.
+
+- **File:** `cellmap.json`
+  - **Format:** Per-cell JSON triple
+  - **Purpose:** Machine-readable; SGR-stable.
+
+- **File:** `svg.svg`
+  - **Format:** Vector SVG of the buffer
+  - **Purpose:** Visual diff in a browser.
+
+- **File:** `annotated.svg`
+  - **Format:** SVG + bbox / focus / hover overlays
+  - **Purpose:** M25 introspection.
+
+- **File:** `treedump.txt`
+  - **Format:** Element tree dump
+  - **Purpose:** Verifies node identity and layout regions.
 
 The `cellmap.json` format is the gold-standard for byte-stable
 diffing: SGR ordering can differ between runs without affecting cell
