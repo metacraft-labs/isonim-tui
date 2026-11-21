@@ -36,7 +36,7 @@
 # reported success -- the recipes pipe into `tee` and just's default shell
 # had no pipefail.
 
-isonim=f39688e6d988d3622ad8575dd87792eeb022bf75  # isonim@dev tip
+isonim=e88b0dd349d49b44f24e9109440baab10ecf684d  # isonim@dev: adds the renderers/native reactive root seam that src/isonim_tui/reactive_root.nim exports
 isonim-examples=bacac9ef64081b030f71d8e38df2c05f73a33952  # isonim-examples@dev tip
 nim-everywhere=749f037dd40da1d0c04f499f568dda18f7aebd1b  # nim-everywhere@dev tip
 nim-pty=a44c4d0efb1d19fcd4e7ff369e8e7d27af9c84ab  # nim-pty@dev tip
