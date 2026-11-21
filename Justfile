@@ -443,19 +443,27 @@ bench-quick:
 # imports (kernel32 procs, ReadConsoleInputW, SetConsoleCtrlHandler,
 # etc.) are validated. Mirrors the gate nim-termctl ships.
 #
-# We `nim check` the driver source directly (not the full top-level
-# `isonim_tui.nim` module, which transitively imports
-# `syntax/treesitter_ffi.nim` whose `{.compile.}` directives use
-# absolute paths that get mangled by the Windows path-separator pass).
-# That covers the M10 surface; the Windows tests themselves run on the
-# real `windows-latest` lane below.
+# The Windows tests themselves run on the real Windows lane below.
 # `nim check` only -- see the note on `lint-nim` for why `grammars` is not
 # a dependency here.
+#
+# Every test is checked too, because the Windows repro leg builds every test:
+# a test that does not compile under `--os:windows` (an identifier only
+# exported off Windows, say) fails that leg, and this recipe catches it
+# from Linux first. `pipefail` makes a failed check fail the recipe; before
+# it, the exit status was `tee`'s.
 check-windows-cross:
-    @mkdir -p test-logs
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p test-logs
     nim check {{nim-flags}} {{src-paths}} --os:windows --mm:orc \
       src/isonim_tui/drivers/windows_driver.nim 2>&1 | \
       tee test-logs/check-windows-cross.log
+    for t in {{tests}}; do
+      echo "[windows-cross-check] $t"
+      nim check {{nim-flags}} {{src-paths}} --os:windows --mm:orc \
+        --threads:on "$t" 2>&1 | tee -a test-logs/check-windows-cross.log
+    done
 
 # Native Windows lane — runs on `windows-latest` in CI. Builds and runs
 # the M10 WindowsDriver tests against the real Win32 Console API. The

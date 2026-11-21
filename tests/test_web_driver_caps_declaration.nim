@@ -63,10 +63,15 @@ suite "WebDriver: the client's capability declaration":
       discard posix.close(devNull)
 
   test "a malformed declaration is not believed":
-    check not parseDeclaredCaps("{").declared
-    check not parseDeclaredCaps("[]").declared
-    check not parseDeclaredCaps("{\"xtermJs\":\"5.3.0\"}").declared
-    check parseDeclaredCaps(Body).declared
+    # The WebDriver is POSIX-only (it reads and writes file descriptors
+    # through std/posix), and isonim_tui exports it only off Windows.
+    when defined(windows):
+      skip()
+    else:
+      check not parseDeclaredCaps("{").declared
+      check not parseDeclaredCaps("[]").declared
+      check not parseDeclaredCaps("{\"xtermJs\":\"5.3.0\"}").declared
+      check parseDeclaredCaps(Body).declared
 
   test "without a declaration, waiting gives up at its bound":
     when defined(windows):

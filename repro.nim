@@ -119,7 +119,7 @@
 ## ``pool = "isonim-tui.serial"`` on their EXECUTE edges — the reprobuild-
 ## native way to SERIALISE resource-contending tests WITHOUT touching any
 ## assertion (nothing skipped or weakened, only scheduled). They also need
-## ``-lutil`` on Linux (glibc splits ``openpty``/``forkpty`` into
+## ``-lutil`` on Linux only (glibc splits ``openpty``/``forkpty`` into
 ## ``libutil``), threaded via ``extraPassL = @["-lutil"]`` on their BUILD
 ## edges. Both facts are per-spec flagged on the ``PosixDriverSpec`` fields.
 ##
@@ -691,10 +691,16 @@ package isonim_tui:
     for s in tuiTestSpecs:
       let source = "tests/" & s.stem & ".nim"
       let binary = "build/test-bin/" & s.stem
-      # ``-lutil`` on Linux for the real-pty tests (glibc splits
-      # ``openpty``/``forkpty`` into ``libutil``); other tests need no
-      # extra link flag.
-      let extraPassL = if s.realPty: @["-lutil"] else: newSeq[string]()
+      # ``-lutil`` on Linux only, for the real-pty tests: glibc splits
+      # ``openpty``/``forkpty`` into ``libutil``, while macOS keeps them in
+      # libSystem and Windows has neither (those tests skip there, and
+      # mingw has no ``libutil`` to link). nim-pty's own recipe gates it
+      # the same way. Other tests need no extra link flag.
+      let extraPassL =
+        when defined(linux):
+          (if s.realPty: @["-lutil"] else: newSeq[string]())
+        else:
+          newSeq[string]()
 
       # The modelled PASS-2 ``task_app`` byte-identity test appends
       # ``../isonim-examples`` via ``s.extraPaths``; every other edge uses
