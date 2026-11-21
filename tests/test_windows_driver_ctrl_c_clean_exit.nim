@@ -79,6 +79,10 @@ privateConsoleSuite("M10: WindowsDriver Ctrl+C clean exit", 1):
         # observe the stop flag.
         sleep(200)
 
+        # The handler ran on a thread the system created for it; it must
+        # still have reached this driver's stop flag.
+        check d.stopRequested
+
         # Stop the driver normally. The handler should already have
         # flipped the stop flag; `stop()` joins the reader and unwinds
         # the RAII handles.

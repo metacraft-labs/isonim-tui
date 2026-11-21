@@ -474,10 +474,17 @@ when defined(windows):
 # and lets the reader thread drain cleanly.
 
 when defined(windows):
+  # Process-wide, not `{.threadvar.}`: the system runs the handler on a new
+  # thread it creates for each event ("the system creates a new thread in
+  # the process to execute the function",
+  # https://learn.microsoft.com/en-us/windows/console/handlerroutine), whose
+  # copies of thread-local variables are all unset. Per thread, the handler
+  # found no stop flag and no output handle, so it claimed the event and did
+  # nothing: the reader never stopped and nothing was restored.
   var
-    gCtrlHandlerOutputHandle {.threadvar.}: HANDLE
-    gCtrlHandlerStopFlag {.threadvar.}: ptr StopFlag
-    gCtrlHandlerInstalled {.threadvar.}: bool
+    gCtrlHandlerOutputHandle: HANDLE
+    gCtrlHandlerStopFlag: ptr StopFlag
+    gCtrlHandlerInstalled: bool
 
   proc emitLeaveSequencesViaConsole(h: HANDLE) =
     ## Async-signal-equivalent: emit the leave sequences directly via
@@ -730,6 +737,13 @@ proc resize*(d: WindowsDriver; cols, rows: int) =
 
 proc state*(d: WindowsDriver): DriverState {.inline.} =
   d.lifecycleState
+
+proc stopRequested*(d: WindowsDriver): bool =
+  ## Whether the reader thread has been told to stop since `start()`: by
+  ## `stop()`, or by the console control handler on Ctrl+C / Ctrl+Break /
+  ## close. A test reads it to see that the handler reached this driver
+  ## from the thread the system ran it on.
+  (addr d.stopFlag).requested
 
 # ---------------------------------------------------------------------------
 # Conformance

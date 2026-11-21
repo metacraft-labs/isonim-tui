@@ -22,12 +22,10 @@
 ##     the main thread through `system.Channel[T]` (which deep-copies
 ##     on `send` so the receiving thread sees an independently
 ##     allocated payload — necessary for `--mm:refc` correctness);
-##   * SIGWINCH handling on the *main thread*, via `pollWinchPipe`
-##     called from `readEvents`. nim-termctl stores the self-pipe FD
-##     in a threadvar; consuming it on the main thread (which called
-##     `installWinchHandler` from `start`) avoids the threadvar mismatch
-##     that would otherwise mis-identify stdin as the winch pipe in the
-##     reader thread;
+##   * SIGWINCH handling on the thread that calls `readEvents`, via
+##     `pollWinchPipe`. nim-termctl's handler writes a byte to a
+##     process-wide self-pipe on whichever thread the kernel delivers
+##     SIGWINCH to; the reader thread handles stdin bytes only;
 ##   * a *compositor handoff* — the driver implements the
 ##     `drivers/driver.Driver` concept (`start`/`stop`/`write`/
 ##     `readEvents`/`resize`/`flushPending`/`state`) so any consumer
@@ -203,16 +201,11 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
   ## Body of the dedicated input thread.
   ##
   ## *Why we don't call `nim_termctl.pollEvent` directly.* That helper
-  ## consults `winchPipeReadFd()` to multiplex stdin and the SIGWINCH
-  ## self-pipe in one `select`. The pipe FDs are stored in
-  ## `nim-termctl` threadvars; from this child thread the threadvar
-  ## defaults to zero, which would make `select` treat fd 0 (stdin)
-  ## as the winch pipe — the symptom is `ioctl(TIOCGWINSZ)` failing
-  ## on every input byte. We bypass that by running our own
-  ## select-and-read loop on `inputFd` only and feeding bytes into a
-  ## fresh `Parser`. SIGWINCH delivery is handled separately on the
-  ## main thread inside `readEvents`, which has access to the
-  ## installer's threadvars.
+  ## multiplexes stdin and the SIGWINCH self-pipe and reads standard
+  ## input, while this driver reads `inputFd` (a pty slave in the tests).
+  ## So this thread runs its own select-and-read loop on `inputFd` only
+  ## and feeds the bytes into a fresh `Parser`; resizes are picked up
+  ## from the self-pipe in `readEvents`.
   var parser = termctlParser.initParser()
   if args.enableKitty:
     termctlParser.enableKittyKeyboard(parser)
@@ -274,10 +267,14 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
 # last started against. Async-signal-safe (uses `cWrite` only, no Nim
 # allocation).
 
+# Process-wide, not `{.threadvar.}`: `exit(3)` runs atexit handlers on the
+# thread that calls it, which in an application with workers need not be
+# the one that called `start()`. Per thread, a worker's `quit` saw "cursor
+# not hidden" and left it hidden.
 var
-  gAtexitOutputFd {.threadvar.}: cint
-  gAtexitCursorHidden {.threadvar.}: bool
-  gAtexitInstalled {.threadvar.}: bool
+  gAtexitOutputFd: cint = -1
+  gAtexitCursorHidden: bool
+  gAtexitInstalled: bool
 
 proc cWrite(fd: cint; buf: pointer; count: csize_t): clong
   {.importc: "write", header: "<unistd.h>".}
@@ -476,13 +473,8 @@ proc pollWinchPipe(d: PosixDriver): seq[events.TerminalEvent] =
   ## `terminalSize()` ioctl succeeds. Idempotent — when no byte is
   ## queued, returns an empty seq.
   ##
-  ## Called from the main thread. nim-termctl stores the pipe FDs as
-  ## threadvars on the thread that called `installWinchHandler`; in our
-  ## design that thread is whichever called `start()` (typically the
-  ## main thread). The reader thread can't see the pipe at all — it
-  ## only handles stdin bytes. This split avoids the threadvar
-  ## mismatch that would otherwise mis-identify stdin as the winch
-  ## pipe inside the reader.
+  ## Called from `readEvents`. The pipe is process-wide in nim-termctl,
+  ## and its handler writes to it on whichever thread takes SIGWINCH.
   result = @[]
   let fd = winchPipeReadFd()
   if fd < 0: return
