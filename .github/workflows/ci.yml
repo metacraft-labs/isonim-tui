@@ -443,7 +443,7 @@ jobs:
 
       - uses: actions/checkout@v4
       - name: Setup dev env (reprobuild flavor, as ci-reprobuild.yml)
-        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@e6974530143f251fbffbf3158b6951c9cc8b8582
+        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@8b9f60a18323425b0c81c1769a24bcb9d7cbd037
         with:
           env-flavor: reprobuild
           repro-version: v0.2.29
