@@ -163,6 +163,14 @@ proc emitImage(w: ImageWidget): string =
   of ipITerm2:
     return termctlImage.emitITerm2Inline(w.src)
   of ipSixel:
+    # Sixel carries pixels, so nim-termctl draws only an RGBA source
+    # (`sfRgba`) and refuses an encoded one (PNG, JPEG, GIF) with
+    # `ImageError`. This widget does not decode images, so an encoded
+    # source emits nothing on a Sixel-only terminal; `chosen` still
+    # reports Sixel. Older nim-termctl raised `ImageNotImplementedDefer`
+    # for every source.
+    if w.src.format != termctlImage.sfRgba:
+      return ""
     try:
       return termctlImage.emitSixel(w.src)
     except termctlImage.ImageNotImplementedDefer:

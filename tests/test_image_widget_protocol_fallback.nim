@@ -59,9 +59,9 @@ suite "M14: image widget — protocol fallback":
       clearSupportOverride()
       h.dispose()
 
-    # Sixel session — encoder is deferred (raises NotImplemented).
-    # The widget catches the exception and falls back to empty bytes,
-    # but `chosen` still reports Sixel so callers know the intent.
+    # Sixel session — Sixel carries pixels and this source is PNG, which
+    # the widget does not decode, so it emits nothing; `chosen` still
+    # reports Sixel so callers know the intent.
     block:
       let h = newTerminalTestHarness(30, 6)
       setSupportOverride(ImageProtocols(kitty: false,
@@ -73,6 +73,7 @@ suite "M14: image widget — protocol fallback":
         r.appendChild(root, img.node)
         root)
       check img.protocol == ipSixel
+      check img.emittedBytes == ""
       hashes.add img.imageHash
       clearSupportOverride()
       h.dispose()
@@ -101,3 +102,26 @@ suite "M14: image widget — protocol fallback":
     check hashes.len == 4
     for i in 1 ..< hashes.len:
       check hashes[0] == hashes[i]
+
+  test "an RGBA source on a Sixel-only terminal emits a Sixel escape":
+    # 2x2 RGBA pixels: Sixel can carry them, so the widget draws them.
+    let rgba = Image(bytes: @[255'u8, 0, 0, 255, 0, 255, 0, 255,
+                              0, 0, 255, 255, 255, 255, 255, 255],
+                     format: sfRgba, width: 2, height: 2,
+                     preferredFormat: ifAuto)
+    let h = newTerminalTestHarness(30, 6)
+    setSupportOverride(ImageProtocols(kitty: false,
+                                       iterm2: false, sixel: true))
+    var img: ImageWidget
+    h.mount(proc(r: TerminalRenderer): TerminalNode =
+      let root = r.createElement("div")
+      img = newImageWidget(r, rgba, widthCells = 2, heightCells = 1)
+      r.appendChild(root, img.node)
+      root)
+    check img.protocol == ipSixel
+    # A Sixel image is a DCS string: ESC P ... q ... ESC \.
+    check img.emittedBytes.len > 4
+    check img.emittedBytes[0 ..< 2] == "\x1bP"
+    check img.emittedBytes[^2 .. ^1] == "\x1b\\"
+    clearSupportOverride()
+    h.dispose()
