@@ -467,10 +467,10 @@ jobs:
 
       - uses: actions/checkout@v4
       - name: Setup dev env (reprobuild flavor, as ci-reprobuild.yml)
-        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@8b9f60a18323425b0c81c1769a24bcb9d7cbd037
+        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@343eabc6109dbaa282d0b63aaf87a3566e17fc4e
         with:
           env-flavor: reprobuild
-          repro-version: v0.2.29
+          repro-version: v0.2.31
           sibling-strategy: repro-lock
           gh-token: ${{ steps.app-token.outputs.token }}
       # `just` the way the CI workflow standard installs it on every leg,

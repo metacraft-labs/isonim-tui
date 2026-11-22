@@ -85,10 +85,10 @@ jobs:
       - name: Setup dev env (reprobuild flavor)
         # Consume this checkout's complete committed source closure and exact pins.
         # The shared action reconciles legacy requests against repro.lock.
-        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@8b9f60a18323425b0c81c1769a24bcb9d7cbd037
+        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@343eabc6109dbaa282d0b63aaf87a3566e17fc4e
         with:
           env-flavor: reprobuild
-          repro-version: v0.2.29
+          repro-version: v0.2.31
           sibling-strategy: repro-lock
           gh-token: ${{ steps.ci_token.outputs.token }}
 
