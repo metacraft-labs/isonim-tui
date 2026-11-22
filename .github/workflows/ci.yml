@@ -500,8 +500,9 @@ jobs:
     # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
     # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
     # on `charter-matrix`.
-    # Worst pass: 29m53s (m3, b5e896e), 18m33s (linux-x64) -> 60.
-    timeout-minutes: 60
+    # Worst pass: 18m33s (linux-x64), 10m48s (m3, 9ea9500) -> 45. The 29m53s on m3-mcl-001 at
+    # b5e896e is the overloaded run and is not sized to.
+    timeout-minutes: 45
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation

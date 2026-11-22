@@ -52,8 +52,9 @@ jobs:
     # and no write permission to make one possible.
     runs-on: [self-hosted, linux, x64]
     # A hung job must not hold a runner for GitHub's 6-hour default. Worst passing run (jobs
-    # API, last ~25 runs through b5e896e, 2026-11-22): 47 min on a shared garm host -> 100.
-    timeout-minutes: 100
+    # API, last ~25 runs through b5e896e, 2026-11-22): 36m24s at 82b9e4a -> 75. The b5e896e run
+    # (47 min, setup slowed like the rest of that run) is not sized to, and still fits.
+    timeout-minutes: 75
     name: benchmark thresholds (isonim-tui, shared runner)
     permissions:
       contents: read
