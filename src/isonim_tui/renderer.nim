@@ -103,27 +103,25 @@ proc tagToKind*(tag: string): TerminalNodeKind =
 # Required RendererBackend procs (the conformance surface)
 # ----------------------------------------------------------------------------
 
+# The four tables on a node (attributes, styles, eventListeners,
+# eventHandlers) are left at their default, empty value. A default `Table`
+# allocates nothing until the first insert, and most nodes never get one.
+# `initTable()` allocated a 32-slot table for each, which made every node
+# about 16 KB: the "RSS per added widget" benchmark read 16.4 KB with eager
+# tables and 0.42 KB without them.
 proc createElement*(r: TerminalRenderer; tag: string): TerminalNode =
   TerminalNode(
     id: nextNodeId(),
     kind: tagToKind(tag),
     tag: tag,
-    attributes: initTable[string, string](),
-    styles: initTable[string, string](),
-    children: @[],
-    eventListeners: initTable[string, seq[proc()]](),
-    eventHandlers: initTable[string, seq[proc(ev: TerminalEvent)]]()
+    children: @[]
   )
 
 proc createTextNode*(r: TerminalRenderer; text: string): TerminalNode =
   TerminalNode(
     id: nextNodeId(),
     kind: tnkText,
-    text: text,
-    attributes: initTable[string, string](),
-    styles: initTable[string, string](),
-    eventListeners: initTable[string, seq[proc()]](),
-    eventHandlers: initTable[string, seq[proc(ev: TerminalEvent)]]()
+    text: text
   )
 
 proc appendChild*(r: TerminalRenderer; parent, child: TerminalNode) =
@@ -169,11 +167,7 @@ proc setTextContent*(r: TerminalRenderer; node: TerminalNode; text: string) =
       id: nextNodeId(),
       kind: tnkText,
       text: text,
-      parent: node,
-      attributes: initTable[string, string](),
-      styles: initTable[string, string](),
-      eventListeners: initTable[string, seq[proc()]](),
-      eventHandlers: initTable[string, seq[proc(ev: TerminalEvent)]]()
+      parent: node
     )
     node.children.add(textNode)
 
