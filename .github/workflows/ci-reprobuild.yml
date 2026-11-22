@@ -58,9 +58,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     # A hung job must not hold a scarce runner for GitHub's 6-hour default. No leg has completed
     # yet, so each value is sized from the longest run that was still making progress before it
-    # failed (jobs API, 2026-11,
-    # ~78 runs): linux-x64 155 min, linux-arm64 19, macos-arm64 31, windows-x64 108,
-    # windows-arm64 152. Margins are wide because a complete build and test runs past those points.
+    # failed (jobs API, through b5e896e, 2026-11-22): linux-x64 155 min, linux-arm64 19,
+    # macos-arm64 68, windows-x64 222, windows-arm64 152. Margins are wide because a complete
+    # build and test runs past those points.
     timeout-minutes: ${{ matrix.timeout }}
     steps:
       - uses: actions/checkout@v4

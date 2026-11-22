@@ -38,10 +38,12 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: 3-15 min (self-hosted linux-x64), 7 (linux-arm64), 3-5 (macOS), 27 (ephemeral x64).
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: 16m48s (linux-x64), 7m49s (linux-arm64), 7m17s (macOS garm), 6m52s (m3) -> 60.
     timeout-minutes: 60
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -80,12 +82,14 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: linux-x64 168-303 min (shared host), linux-arm64 49. macOS has no complete run yet
-    # (it hung in test_posix_driver_real_pty); it reached that test, the 84th of 163, 5-8 min after start.
-    timeout-minutes: ${{ matrix.runner[1] == 'macos' && 90 || (matrix.runner[2] == 'arm64' && 150 || 480) }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: linux-x64 303m34s -> 480 (1.6x: the slowest shared host), linux-arm64 54m38s
+    # -> 150, macOS 64m42s (m3) -> 130.
+    timeout-minutes: ${{ matrix.runner[1] == 'macos' && 130 || (matrix.runner[2] == 'arm64' && 150 || 480) }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -123,10 +127,12 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: 1-19 min (linux-x64 the slowest), macOS 2-4.
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: 23m05s (linux-x64), 8m25s (m3), 6m14s (macOS garm), 6m31s (linux-arm64) -> 60.
     timeout-minutes: 60
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -165,10 +171,14 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: 1-5 min.
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: 5m18s (linux-x64), 3m23s (m3). An m3 job also spends up to ~2 min in setup and
+    # up to ~7.5 min in "Complete job" -> about 13 min in all -> 30. (The b5e896e run's
+    # 31.7 min, 20 of them in setup, is the overloaded-host case noted on `charter-matrix`.)
     timeout-minutes: 30
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -214,11 +224,17 @@ jobs:
         # compile without threads.
         threads: [on]
     runs-on: ${{ matrix.runner }}
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: linux-x64 18-213 min, linux-arm64 21-27. macOS: no complete run yet; same suite as `test`.
-    timeout-minutes: ${{ matrix.runner[1] == 'macos' && 90 || (matrix.runner[2] == 'arm64' && 90 || 360) }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: linux-x64 213m07s -> 360, linux-arm64 31m27s -> 90, macOS 47m00s (m3) -> 120.
+    # On m3 a test compiles in 2.6-12.3 s and setup takes 0.5-2 min (every m3 Charter/Test job
+    # logged from 5a7be5b to 449699b). The b5e896e run was not like that: setup took 13-20 min
+    # and m3-mcl-bench-001 compiled at 40.6 s per test, m3-mcl-001 at 18.2 s; that is a host
+    # problem, and no budget here is sized to it.
+    timeout-minutes: ${{ matrix.runner[1] == 'macos' && 120 || (matrix.runner[2] == 'arm64' && 90 || 360) }}
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -285,11 +301,13 @@ jobs:
     name: Sanitizer (${{ matrix.kind }})
     # Linux-only (clang sanitizers); mapped to the Linux AMD64 Nix class.
     runs-on: [self-hosted, linux, x64]
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: asan 7-249 min, ubsan 4-176, lsan 3-108; lsan at 6d0cc91 was still making
-    # progress after 5 h (126 of 163 tests), which projects to about 6.5 h on a loaded host.
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: asan 249m05s, ubsan 176m12s, lsan 126m13s; lsan at 6d0cc91 was still making
+    # progress after 5 h (126 of 163 tests), which projects to about 6.5 h on a loaded host -> 480.
     timeout-minutes: 480
     strategy:
       fail-fast: false
@@ -328,12 +346,14 @@ jobs:
   test-macos:
     name: Test (macOS)
     runs-on: [self-hosted, macos, arm64]
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # No complete run yet (it hung in test_posix_driver_real_pty); it reached that test, the 84th of
-    # 163, 8 min after start.
-    timeout-minutes: 90
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # No passing run yet; it runs the same suite as `test` on macOS, whose worst pass is 64m42s
+    # (m3) -> 130.
+    timeout-minutes: 130
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
@@ -375,10 +395,12 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: 0-9 min.
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: 13m08s (linux-x64, checking every test since 51b0b0e), 8m36s (macOS) -> 30.
     timeout-minutes: 30
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
@@ -417,11 +439,13 @@ jobs:
       matrix:
         runner: [[self-hosted, windows, x64], [self-hosted, windows, arm64]]
     runs-on: ${{ matrix.runner }}
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: windows-x64 26 min, windows-arm64 50.
-    timeout-minutes: 120
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: windows-x64 68m50s (garm), 31m41s (win-ci-vm), windows-arm64 53m24s -> 140.
+    timeout-minutes: 140
     steps:
       # The self-hosted Windows images carry no package manager (there is no
       # `choco`, which is what this job used to call, so it failed before
@@ -471,11 +495,13 @@ jobs:
       matrix:
         runner: [[self-hosted, linux, x64], [self-hosted, linux, arm64], [self-hosted, macos, arm64]]
     runs-on: ${{ matrix.runner }}
-    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Sized from the jobs
-    # API over this repo's runs (2026-11, ~60 runs); margins are wide so a slow but healthy run
-    # passes.
-    # Successful runs: 0-18 min.
-    timeout-minutes: 45
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. Each budget is the
+    # worst PASSING duration seen per runner class (jobs API, last ~60 runs of this branch and
+    # dev, through b5e896e, 2026-11-22; `self-hosted-macos-arm64` covers both garm VMs and the
+    # m3 hosts) times about 2. Runs on an overloaded host are not sized to: see the macOS note
+    # on `charter-matrix`.
+    # Worst pass: 29m53s (m3, b5e896e), 18m33s (linux-x64) -> 60.
+    timeout-minutes: 60
     steps:
       # The manifest repo holding the workspace locks (metacraft-manifests) is
       # private, so `secrets.GITHUB_TOKEN` cannot read it. Mint an installation
