@@ -1,3 +1,16 @@
+## Complete TUI corpus: all 158 Justfile ``tests`` files are modeled.
+## Historical rollout notes below describe the earlier143 subset and its now
+## corrected exclusions; they are not current acceptance exceptions.
+## Current source/runtime binding is specified in owning
+## Tui-CI-Source-Closure-and-Corpus-Restoration.md and
+## Tui-Baseline-Runtime-Graph-Binding.md. All existing actions/flags/platform
+## guards remain; the fourteen missing cases are restored, with real runtime
+## inputs and uncached mutable Git baseline execution. The three cases
+## ``agents`` added to the Justfile after that restoration
+## (``test_compositor_ambiguous_width_policy``,
+## ``test_compositor_grapheme_continuation``, ``test_event_propagation``)
+## are modeled too.
+##
 ## Reprobuild project file for isonim-tui.
 ##
 ## **Typed-Cross-Project-Deps rollout — the IsoNim TERMINAL renderer, a
@@ -60,8 +73,8 @@
 ## edge — both are provisioned by the ``nix develop`` environment the engine
 ## runs under (``defaultToolProvisioning "path"``).
 ##
-## A Mode 1 / Mode 3 hybrid (per
-## ``reprobuild-specs/Three-Mode-Convention-System.md``) modelled on the
+## A Mode 1 / Mode 3 hybrid (a convention-driven package that also declares
+## explicit edges) modelled on the
 ## canonical Nim-consumer recipes ``isonim-freya/repro.nim`` +
 ## ``isonim-gpui/repro.nim`` and the leaf ``nim-libvterm/repro.nim`` /
 ## ``nim-pty/repro.nim`` two-edge test template:
@@ -78,8 +91,8 @@
 ## * Emits, per HEADLESS-runnable test file in the ``Justfile`` ``tests``
 ##   list, a BUILD edge (``buildNimUnittest.build``) that compiles
 ##   ``build/test-bin/<stem>`` and an EXECUTE edge (``edge.testBinary.run``)
-##   that runs it — the two-edge test template from
-##   ``reprobuild-specs/Package-Model.md`` §"The test template". BUILD
+##   that runs it — the two-edge test template: compile once, run as a
+##   separate edge, so a re-run needs no rebuild. BUILD
 ##   halves collect into ``test-builds``; EXECUTE halves into ``test`` so
 ##   ``repro build test`` / ``repro test`` materialise the runnable closure
 ##   (each execute edge transitively depends on its build edge).
@@ -106,7 +119,7 @@
 ## ``pool = "isonim-tui.serial"`` on their EXECUTE edges — the reprobuild-
 ## native way to SERIALISE resource-contending tests WITHOUT touching any
 ## assertion (nothing skipped or weakened, only scheduled). They also need
-## ``-lutil`` on Linux (glibc splits ``openpty``/``forkpty`` into
+## ``-lutil`` on Linux only (glibc splits ``openpty``/``forkpty`` into
 ## ``libutil``), threaded via ``extraPassL = @["-lutil"]`` on their BUILD
 ## edges. Both facts are per-spec flagged on the ``PosixDriverSpec`` fields.
 ##
@@ -211,25 +224,6 @@
 ## to the effect-driven API. This is a documented deferral, NOT a weakening:
 ## no test is disabled in the repo and no assertion is touched.
 ##
-## ==========================================================================
-## NON-REPRODUCIBLE REPO-STATE precondition — one test excluded (not faked)
-## ==========================================================================
-##
-## ONE ``Justfile`` ``tests`` entry asserts local git-repository state that a
-## hermetic build cannot reproduce and that is NOT carried by any committed
-## file, so it is OMITTED from the modelled corpus (not disabled in the repo,
-## not weakened) and reported as a repo/CI-state precondition:
-##
-##   * ``test_m24_gh_pages_branch_exists.nim`` — asserts the local
-##     ``refs/heads/gh-pages`` branch exists and contains a ``perf/bench/``
-##     tree + ``.nojekyll`` blob (populated by the CI ``benchmark.yml`` run on
-##     the default branch). In a fresh checkout the ``gh-pages`` head is either
-##     absent or seeded with only ``.nojekyll`` + ``README.md``. Satisfying it
-##     depends on out-of-band git-ref state (not on any source file the recipe
-##     builds), so modelling it would make the closure pass or fail on ambient
-##     repository topology rather than on a reproducible artifact — excluded,
-##     not faked.
-##
 ## (A previously-flagged second red — ``test_textual_compat``'s
 ## ``m23_progress_gradient`` snapshot mismatch — was a genuine STALE golden:
 ## the port's ``barColor`` (``#99dd55``) is now correctly threaded through the
@@ -257,6 +251,9 @@ import repro_dsl_stdlib/foreign_env
 # the exit-0 verification this corpus needs — Nim ``unittest`` prints per-suite
 # results and exits non-zero on failure.
 import ct_test_nim_unittest
+# ``ar`` is not among the automatically imported tool wrappers.
+import repro_dsl_stdlib/packages/binutils
+import repro_dsl_stdlib/operations/pinned_fetch
 
 # Capacity-1 pool name that serialises the real-pty M9 tests (see the
 # real-pty note in the module docstring).
@@ -275,24 +272,22 @@ type
     stem: string
     realPty: bool
     extraPaths: seq[string]
+    runtimeInputs: seq[string]
+    mutableGitState: bool
+    compilerLocality: bool
 
 proc spec(stem: string; realPty = false;
-          extraPaths: seq[string] = @[]): TuiTestSpec =
-  TuiTestSpec(stem: stem, realPty: realPty, extraPaths: extraPaths)
+          extraPaths: seq[string] = @[];
+          runtimeInputs: seq[string] = @[];
+          mutableGitState = false;
+          compilerLocality = false): TuiTestSpec =
+  TuiTestSpec(stem: stem, realPty: realPty, extraPaths: extraPaths,
+    runtimeInputs: runtimeInputs, mutableGitState: mutableGitState,
+    compilerLocality: compilerLocality)
 
-# The HEADLESS native corpus — the ``Justfile`` ``tests`` list (148 files)
-# MINUS the one repo-state-dependent test
-# (``test_m24_gh_pages_branch_exists``, see the module docstring) MINUS the one
-# pre-existing-red ``test_textual_compat`` (documented below) MINUS the THREE
-# PASS-2 ``task_app`` tests still deferred on the removed synchronous demo API
-# (EX-M17; see the module docstring) = 143 modelled files. This INCLUDES the
-# one PASS-2 ``task_app`` test now green
-# (``test_task_app_shared_vm_byte_identical``). Every entry compiles + runs to
-# exit 0 under ``nim c`` on
-# this Linux host with the default matrix flags (``--mm:orc -d:release
-# --threads:on``); the six ``windows_driver`` / ``widget_set_snapshot_windows``
-# tests self-``skip()`` at runtime via their ``when defined(windows)`` guards
-# (verified exit 0).
+# The complete Justfile ``tests`` corpus: one entry per file, 162 today.
+# A test added to the Justfile needs an entry here too, or the repro CI
+# legs never build or run it.
 const tuiTestSpecs: seq[TuiTestSpec] = @[
   # ---- M0 renderer / cell primitives ----
   spec("test_renderer_concept_conformance"),
@@ -319,6 +314,7 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_grapheme_width_emoji_zwj"),
   spec("test_sgr_minimal_transition"),
   spec("test_sgr_truecolor"),
+  spec("test_sgr_underline_color"),
   spec("test_content_word_wrap_grapheme_aware"),
   spec("test_ambiguous_width_default_narrow"),
   spec("test_content_basics"),
@@ -388,6 +384,8 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_compositor_single_cell_diff"),
   spec("test_compositor_overlay_layer"),
   spec("test_compositor_strip_cache_hit"),
+  spec("test_compositor_ambiguous_width_policy"),
+  spec("test_compositor_grapheme_continuation"),
   spec("test_segment_dedup"),
   # ---- M9 real-pty POSIX driver (serialised + -lutil) ----
   spec("test_posix_driver_real_pty", realPty = true),
@@ -402,6 +400,8 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_windows_driver_ctrl_c_clean_exit"),
   spec("test_windows_driver_alt_screen"),
   spec("test_windows_driver_vt_input"),
+  # The key-record decoder is pure Nim and runs on every host.
+  spec("test_windows_key_decoder"),
   # ---- widgets ----
   spec("test_static_borders_real_cells"),
   spec("test_label_rich_text_wraps"),
@@ -411,6 +411,7 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_m11_widget_snapshot_coverage"),
   spec("test_button_activate_with_enter"),
   spec("test_focus_tab_order"),
+  spec("test_event_propagation"),
   spec("test_switch_keyboard_toggle"),
   spec("test_radio_set_exclusive"),
   spec("test_m12_introspection_per_widget"),
@@ -454,27 +455,22 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   spec("test_progress_bar_animates"),
   spec("test_sparkline_renders"),
   spec("test_header_footer_welcome"),
-  # ---- M22 cross-platform task_app (PASS-2: isonim-examples landed) ----
-  # Only the byte-identity test is modelled here — it reads
-  # ``../../isonim-examples/task_app/*`` at RUNTIME (no removed-API compile
-  # import) and passes green. ``../isonim-examples`` is threaded via
-  # ``extraPaths`` (NOT a ``uses:`` edge — see the "Why ``paths:``" note in the
-  # module docstring). The other three task_app tests stay DEFERRED on the
-  # removed synchronous ``rerender`` / ``newTaskAppVM()`` demo API (EX-M17;
-  # see the per-test status list in the module docstring).
+  # ---- M22 real task_app source/runtime boundaries ----
+  spec("test_task_app_tui_snapshot_five_states",
+       extraPaths = @["../isonim-examples", "../isonim-render-serve/src"],
+       runtimeInputs = @["../isonim-examples/task_app", "../isonim-render-serve/src"]),
   spec("test_task_app_shared_vm_byte_identical",
-       extraPaths = @["../isonim-examples"]),
-  # ---- Textual-compat batches ----
-  # NOTE: ``test_textual_compat`` is EXCLUDED — its
-  # ``test_compat_progress_gradient`` sub-test snapshot-mismatches the
-  # committed ``m23_progress_gradient`` golden across all four formats
-  # (ansi/cellmap/svg/annotated). The port renders a real colour gradient
-  # (``Gradient.from_colors("#881177", ...)``; HEAD's ANSI emits truecolor
-  # ``38;2;153;221;85``), but golden and render disagree; reconciling needs
-  # the intended colour output confirmed against the Textual reference in a
-  # canonical colour environment + a re-record. Out of scope for the recipe
-  # rollout — we ship NO golden change and defer this one edge (not weakened,
-  # not disabled in the repo). ``batch2`` / ``batch3`` ARE modelled + green.
+       extraPaths = @["../isonim-examples"],
+       runtimeInputs = @["../isonim-examples"]),
+  spec("test_task_app_pilot_drive_real_stack",
+       extraPaths = @["../isonim-examples", "../isonim-render-serve/src"],
+       runtimeInputs = @["../isonim-examples/task_app", "../isonim-render-serve/src"]),
+  spec("test_task_app_web_target_compiles",
+       extraPaths = @["../isonim-examples", "../isonim-render-serve/src"],
+       runtimeInputs = @["../isonim-examples/task_app", "../isonim-render-serve/src"]),
+  # ---- Original strict committed Textual golden parity ----
+  spec("test_textual_compat",
+       runtimeInputs = @["tests/snapshots", "examples/ports"]),
   spec("test_textual_compat_batch2"),
   spec("test_textual_compat_batch3"),
   # ---- bench / record-replay / timeline / assertions ----
@@ -487,12 +483,23 @@ const tuiTestSpecs: seq[TuiTestSpec] = @[
   # ---- web driver ----
   spec("test_web_driver_byte_parity"),
   spec("test_web_driver_packet_roundtrip"),
+  spec("test_web_driver_caps_declaration"),
   # ---- demos ----
   spec("test_demos_compile_and_run"),
-  # NOTE: ``test_m24_gh_pages_branch_exists`` is PRE-EXISTING RED at HEAD
-  # (requires a ``perf/bench/`` tree on the ``gh-pages`` branch that CI
-  # populates on its first ``main`` benchmark run); excluded + documented
-  # in the module docstring.
+  # Nine additional original Justfile cases missing from the old143 graph.
+  spec("test_caret_shape"),
+  spec("test_compositor_tint_overlay"),
+  spec("test_compositor_wide_glyph_ghost_cell"),
+  spec("test_css_cascade_reaches_compositor"),
+  spec("test_display_width_explicit_policy"),
+  spec("test_menu_keyboard"),
+  spec("test_render_native_tui_reactive"),
+  spec("test_tabs_wrap_option"),
+  spec("test_nimcache_is_worktree_local", compilerLocality = true,
+       runtimeInputs = @["src", "tests", "config.nims", "isonim_tui.nimble"]),
+  # Reads the committed benchmark workflow; no repository state.
+  spec("test_m24_benchmark_publishing_contract",
+       runtimeInputs = @[".github/workflows/benchmark.yml"]),
 ]
 
 package isonim_tui:
@@ -500,18 +507,29 @@ package isonim_tui:
     when not defined(windows):
       useFlakeDevShell()
 
-  defaultToolProvisioning "path"
+  # Windows obtains the declared compilers from pinned store realizations,
+  # rather than accepting an unrelated compiler from the runner's PATH.
+  # POSIX keeps the toolchain supplied by the captured Nix development shell.
+  defaultToolProvisioning(when defined(windows): "tarball" else: "path")
 
   uses:
     # Toolchain floor — the PATH-resolvable binaries the build needs. ``nim``
     # compiles every test binary (the ``buildNimUnittest.build`` edges below,
-    # matching the nimble file's ``requires "nim >= 2.0.0"``); ``gcc`` is the
-    # C back-end ``nim c`` shells out to and links through (it also compiles
-    # isonim's vendored Yoga C++ + the tree-sitter grammar C sources the
-    # ``{.compile.}`` directives pull in). Sufficient for the path-mode
-    # resolver under ``nix develop``.
+    # matching the nimble file's ``requires "nim >= 2.0.0"``). Native Nim
+    # selects Clang on Darwin and GCC elsewhere; declare that actual backend
+    # so its identity and executable directory reach each compile action.
+    # It also compiles isonim's vendored Yoga C++ sources, so availability
+    # must survive the normal action-scoped tool selection.
     "nim >=2.0"
-    "gcc >=12"
+    when defined(macosx):
+      "clang"
+    else:
+      "gcc >=12"
+    # A test declared with ``mutableGitState`` runs ``git`` against the live
+    # repository state, and its execute action records git's tool identity.
+    # No test is declared that way at present; the option and this floor
+    # are kept so one can be without touching the toolchain.
+    "git >=2"
 
     # The four landed sibling Nim-library producers this repo consumes from
     # source (SC-11 develop-mode). Naming each workspace project here makes
@@ -524,6 +542,12 @@ package isonim_tui:
     "nim-pty"         # library nim_pty (real-pty driver tests, M9)
     "nim-everywhere"  # library nim_everywhere (isonim's platform seam)
 
+    # The grammar archive producer (``isonim-tui.grammars.*`` below): the
+    # compiler above builds the grammars' committed C sources and ``ar``
+    # archives them. No grammar is generated, so neither the tree-sitter
+    # CLI nor node is needed on any platform.
+    "ar"
+
   # Library declaration — the ``src/`` tree is importable when this package
   # is consumed via ``uses: "isonim-tui"`` (e.g. the isonim-examples
   # ``task_app`` composition roots in PASS 2). The umbrella is
@@ -534,6 +558,114 @@ package isonim_tui:
   build:
     # Serial pool for the M9 real-pty tests (capacity 1 — see docstring).
     discard buildPool(serialPool, 1)
+
+    proc compileGrammarC(source, output: string; includeDirs: seq[string];
+                         optimization: string; pic: bool; actionId: string;
+                         after: seq[BuildActionDef] = @[]): BuildActionDef =
+      ## One C compile of the grammar archive, through the C compiler this
+      ## recipe's ``uses:`` declares for the platform: clang on macOS, gcc
+      ## elsewhere (Windows included). Each typed compiler wrapper is in scope
+      ## only on the platforms that declare it, so the choice is made here,
+      ## once, rather than at every call site.
+      when defined(macosx):
+        clang(source = source, output = output, compileOnly = true, pic = pic,
+          optimization = optimization, includeDirs = includeDirs,
+          after = after, actionId = actionId)
+      else:
+        gcc(source = source, output = output, compileOnly = true, pic = pic,
+          optimization = optimization, includeDirs = includeDirs,
+          after = after, actionId = actionId)
+
+    # ---- The tree-sitter grammar archive ---------------------------------
+    #
+    # ``src/isonim_tui/syntax/treesitter_ffi.nim`` links
+    # ``build/grammars/libisonim_tui_grammars.a`` and then the tree-sitter
+    # runtime. The archive holds the Nim grammar (tree-sitter-nim's
+    # committed, generated ``src/parser.c`` -- ABI 15 -- and its
+    # hand-written ``src/scanner.c``) and the Aiken grammar
+    # (tree-sitter-aiken's committed ``src/parser.c``, ABI 14). Both grammar
+    # repositories are siblings, declared in ``.github/sibling-repos`` and
+    # pinned by ``repro.lock``; their files are read, never written.
+    #
+    # These are typed edges, not a script, so that a grammar change rebuilds
+    # the archive, every compile that links it depends on it, and each
+    # step's reads are monitored as its own. The ``grammars`` recipe in the
+    # Justfile builds the same objects for the ``just`` path; keep the two
+    # in step until that path is retired. ``-O0 -fPIC`` as there: the
+    # generated tables have no hot loops of their own, and -O0 is the
+    # fastest to compile.
+    #
+    # The RUNTIME (``-ltree-sitter``) for every test build here is built from
+    # tree-sitter's own 0.25.10 source, pinned by sha256, into
+    # ``build/tree-sitter-runtime/libtree-sitter.a`` (see ``tsRuntime*``
+    # below), on every platform. A declared edge, rather than whatever
+    # ``libtree-sitter`` a host or dev shell happens to have: the hermetic
+    # action environment has none, and on Windows no package provides one.
+    # It is the version the dev shell's library has, which is what the
+    # ``just`` path links.
+    const grammarDir = "build/grammars"
+    const tsNimSrc = "../tree-sitter-nim/src"
+    const tsAikenSrc = "../tree-sitter-aiken/src"
+    let tsNimParser = compileGrammarC(
+      source = tsNimSrc & "/parser.c",
+      output = grammarDir & "/ts_nim_parser.o",
+      includeDirs = @[tsNimSrc], optimization = "0", pic = true,
+      actionId = "isonim-tui.grammars.compile_nim_parser")
+    let tsNimScanner = compileGrammarC(
+      source = tsNimSrc & "/scanner.c",
+      output = grammarDir & "/ts_nim_scanner.o",
+      includeDirs = @[tsNimSrc], optimization = "0", pic = true,
+      actionId = "isonim-tui.grammars.compile_nim_scanner")
+    let tsAikenParser = compileGrammarC(
+      source = tsAikenSrc & "/parser.c",
+      output = grammarDir & "/ts_aiken_parser.o",
+      includeDirs = @[tsAikenSrc], optimization = "0", pic = true,
+      actionId = "isonim-tui.grammars.compile_aiken_parser")
+    let archiveObjects = @[tsNimParser, tsNimScanner, tsAikenParser]
+    var archiveObjectPaths: seq[string]
+    for o in archiveObjects: archiveObjectPaths.add o.outputs[0]
+    let grammarArchive = ar(
+      modifiers = "rcs",
+      archive = grammarDir & "/libisonim_tui_grammars.a",
+      objects = archiveObjectPaths,
+      after = archiveObjects,
+      actionId = "isonim-tui.grammars.archive")
+    # The tree-sitter runtime from pinned source. Upstream builds it as the
+    # single translation unit ``lib/src/lib.c`` with ``lib/include`` and
+    # ``lib/src`` on the include path
+    # (https://github.com/tree-sitter/tree-sitter/blob/v0.25.10/Makefile).
+    # The tag archive is fetched and verified by a typed pinned-fetch edge
+    # into ``build/tree-sitter-runtime/src``; nothing is taken from PATH or
+    # from a system library directory.
+    const tsRuntimeDir = "build/tree-sitter-runtime"
+    const tsRuntimeSrc = tsRuntimeDir & "/src"
+    const tsRuntimeInclude = tsRuntimeSrc & "/lib/include"
+    let tsRuntimeFetch = emitPinnedFetchAction(activeProviderProjectRoot(),
+      "isonim-tui", PinnedArchive(
+        name: "tree-sitter-0.25.10",
+        url: "https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v0.25.10.tar.gz",
+        sha256: "ad5040537537012b16ef6e1210a572b927c7cdc2b99d1ee88d44a7dcdc3ff44c",
+        kind: pakTarball, stripComponents: 1),
+      activeProviderProjectRoot() / tsRuntimeSrc)
+    let tsRuntimeObj = compileGrammarC(
+      source = tsRuntimeSrc & "/lib/src/lib.c",
+      output = tsRuntimeDir & "/lib.o",
+      includeDirs = @[tsRuntimeInclude, tsRuntimeSrc & "/lib/src"],
+      optimization = "2", pic = true,
+      after = @[tsRuntimeFetch],
+      actionId = "isonim-tui.tree_sitter_runtime.compile")
+    let tsRuntimeArchive = ar(
+      modifiers = "rcs",
+      archive = tsRuntimeDir & "/libtree-sitter.a",
+      objects = @[tsRuntimeObj.outputs[0]],
+      after = @[tsRuntimeObj],
+      actionId = "isonim-tui.tree_sitter_runtime.archive")
+    # Every test build compiles against the runtime's headers and links it:
+    # ``treesitter_ffi.nim`` passes ``-ltree-sitter``, which the ``-L`` here
+    # resolves to the archive above.
+    let tsRuntimePassC = @["-I" & activeProviderProjectRoot() / tsRuntimeInclude]
+    let tsRuntimePassL = @["-L" & activeProviderProjectRoot() / tsRuntimeDir]
+    discard collect("grammars", @[grammarArchive, tsRuntimeArchive])
 
     # Two-edge test template (Package-Model.md §"The test template"): one
     # compile BUILD edge + one EXECUTE edge per test file. BUILD halves
@@ -559,10 +691,16 @@ package isonim_tui:
     for s in tuiTestSpecs:
       let source = "tests/" & s.stem & ".nim"
       let binary = "build/test-bin/" & s.stem
-      # ``-lutil`` on Linux for the real-pty tests (glibc splits
-      # ``openpty``/``forkpty`` into ``libutil``); other tests need no
-      # extra link flag.
-      let extraPassL = if s.realPty: @["-lutil"] else: newSeq[string]()
+      # ``-lutil`` on Linux only, for the real-pty tests: glibc splits
+      # ``openpty``/``forkpty`` into ``libutil``, while macOS keeps them in
+      # libSystem and Windows has neither (those tests skip there, and
+      # mingw has no ``libutil`` to link). nim-pty's own recipe gates it
+      # the same way. Other tests need no extra link flag.
+      let extraPassL =
+        when defined(linux):
+          (if s.realPty: @["-lutil"] else: newSeq[string]())
+        else:
+          newSeq[string]()
 
       # The modelled PASS-2 ``task_app`` byte-identity test appends
       # ``../isonim-examples`` via ``s.extraPaths``; every other edge uses
@@ -575,11 +713,19 @@ package isonim_tui:
         defines = @["release"],
         paths = paths,
         mm = "orc",
-        extraPassL = extraPassL,
+        extraPassC = tsRuntimePassC,
+        extraPassL = extraPassL & tsRuntimePassL,
         actionId = "isonim-tui.test_build." & s.stem,
+        cacheable = not s.compilerLocality,
+        dependencyPolicy = (if s.compilerLocality: automaticMonitorPolicy()
+                            else: defaultDependencyPolicy()),
         # ``src`` + the nimble file are declared inputs so the monitor tracks
         # the transitively imported ``src/isonim_tui/**`` module tree.
-        extraInputs = @["src", "isonim_tui.nimble"])
+        extraInputs = @["src", "tests", "config.nims", "isonim_tui.nimble"] &
+          (if s.mutableGitState: @[] else: s.runtimeInputs),
+        # Every test links the grammar archive through
+        # ``treesitter_ffi.nim``'s ``{.passl.}``.
+        after = @[grammarArchive, tsRuntimeArchive])
       testBuildActions.add(edge.action)
 
       # ``registerImplicitName = false``: the BUILD edge already owns the
@@ -591,11 +737,18 @@ package isonim_tui:
           edge.testBinary.run(
             actionId = "isonim-tui.test_execute." & s.stem,
             pool = serialPool,
+            extraInputs = s.runtimeInputs,
             registerImplicitName = false)
         else:
           edge.testBinary.run(
             actionId = "isonim-tui.test_execute." & s.stem,
+            extraInputs = s.runtimeInputs,
+            cacheable = not (s.mutableGitState or s.compilerLocality),
             registerImplicitName = false)
+      if s.mutableGitState:
+        appendRegisteredActionToolIdentityRefs(executeEdge.id, @["git"])
+      if s.compilerLocality:
+        appendRegisteredActionToolIdentityRefs(executeEdge.id, @["nim"])
       testExecuteActions.add(executeEdge)
 
     discard collect("test", testExecuteActions)

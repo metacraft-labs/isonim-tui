@@ -4,13 +4,18 @@
 ## event types, the renderer backend, and (with M2) the headless
 ## driver / compositor / TerminalTestHarness / pilot / introspection
 ## API and the six snapshot encoders.
-##
-## See `isonim-specs/isonim-tui.milestones.org` in `codetracer-specs`
-## for the full multi-milestone plan.
+
+# The drivers read input on a dedicated thread and pass events to the
+# application over a `system.Channel`, so the library needs threads by
+# design. Fail here, with a message that says so, instead of in the
+# middle of `system.Channel` or `createThread`.
+when not compileOption("threads"):
+  {.error: "isonim-tui requires --threads:on".}
 
 import isonim_tui/cells
 import isonim_tui/events
 import isonim_tui/renderer
+import isonim_tui/event_dispatch
 import isonim_tui/text/width
 import isonim_tui/text/ansi
 import isonim_tui/text/content
@@ -19,6 +24,8 @@ import isonim_tui/text/content
 import isonim_tui/drivers/driver
 import isonim_tui/drivers/headless_driver
 import isonim_tui/compositor
+import isonim_tui/overlay
+import isonim_tui/caret
 import isonim_tui/testing/introspection
 import isonim_tui/testing/harness
 import isonim_tui/testing/pilot
@@ -121,9 +128,9 @@ import isonim_tui/syntax/highlighter as tsHighlighter
 # archive this aggregate module links.
 import isonim_tui/reactive_root as reactiveRootMod
 
-export cells, events, renderer
+export cells, events, renderer, event_dispatch
 export width, ansi, content
-export driver, headless_driver, compositor
+export driver, headless_driver, compositor, overlay, caret
 export introspection, harness, pilot
 export snapPlain, snapAnsi, snapCellmap, snapSvg, snapAnnotatedSvg
 export snapTreedump, snapRunner, snapTimeline

@@ -22,12 +22,10 @@
 ##     the main thread through `system.Channel[T]` (which deep-copies
 ##     on `send` so the receiving thread sees an independently
 ##     allocated payload — necessary for `--mm:refc` correctness);
-##   * SIGWINCH handling on the *main thread*, via `pollWinchPipe`
-##     called from `readEvents`. nim-termctl stores the self-pipe FD
-##     in a threadvar; consuming it on the main thread (which called
-##     `installWinchHandler` from `start`) avoids the threadvar mismatch
-##     that would otherwise mis-identify stdin as the winch pipe in the
-##     reader thread;
+##   * SIGWINCH handling on the thread that calls `readEvents`, via
+##     `pollWinchPipe`. nim-termctl's handler writes a byte to a
+##     process-wide self-pipe on whichever thread the kernel delivers
+##     SIGWINCH to; the reader thread handles stdin bytes only;
 ##   * a *compositor handoff* — the driver implements the
 ##     `drivers/driver.Driver` concept (`start`/`stop`/`write`/
 ##     `readEvents`/`resize`/`flushPending`/`state`) so any consumer
@@ -60,6 +58,8 @@ import ../events
 import ../input/parser as inputParser
 import ../text/ansi
 import ./driver
+import ./event_channel
+import ./stop_flag
 
 # ---------------------------------------------------------------------------
 # Inter-thread event queue
@@ -83,38 +83,12 @@ import ./driver
 # thread. Each `send` deep-copies; the receiver therefore never
 # accesses memory the reader thread allocated.
 
-type
-  EventChannel = object
-    chan: Channel[events.TerminalEvent]
+# `EventChannel` lives in `./event_channel`, shared with the other
+# threaded drivers; it owns the channel and releases it on destruction.
 
-proc initEventChannel(ch: var EventChannel) =
-  open(ch.chan)
-
-proc deinitEventChannel(ch: var EventChannel) {.used.} =
-  close(ch.chan)
-
-proc pushEvent(ch: var EventChannel; ev: events.TerminalEvent) =
-  ch.chan.send(ev)
-
-proc drainAll(ch: var EventChannel): seq[events.TerminalEvent] =
-  result = @[]
-  while true:
-    let (got, ev) = ch.chan.tryRecv()
-    if not got: break
-    result.add ev
-
-# ---------------------------------------------------------------------------
-# Stop flag (owned at a stable address)
-# ---------------------------------------------------------------------------
-#
-# The reader thread observes a plain `bool` flipped by `stop()`. We
-# wrap it in a tiny object so `addr d.stopFlag.value` is well-defined
-# even after the driver is moved (it isn't moved, since `PosixDriver`
-# is a `ref object`, but the convention is documented).
-
-type
-  StopFlag = object
-    value: bool
+# The reader thread observes a `StopFlag` (`./stop_flag`, an atomic
+# shared with the other threaded drivers) raised by `stop()`. It lives
+# inside the `ref object`, so `addr d.stopFlag` is stable.
 
 # ---------------------------------------------------------------------------
 # ReaderArgs — heap-stable bundle handed to the input thread
@@ -124,7 +98,7 @@ type
   ReaderArgs = object
     inputFd: cint
     chan: ptr EventChannel
-    stopRequested: ptr bool
+    stopRequested: ptr StopFlag
     enableKitty: bool
 
 # ---------------------------------------------------------------------------
@@ -227,21 +201,16 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
   ## Body of the dedicated input thread.
   ##
   ## *Why we don't call `nim_termctl.pollEvent` directly.* That helper
-  ## consults `winchPipeReadFd()` to multiplex stdin and the SIGWINCH
-  ## self-pipe in one `select`. The pipe FDs are stored in
-  ## `nim-termctl` threadvars; from this child thread the threadvar
-  ## defaults to zero, which would make `select` treat fd 0 (stdin)
-  ## as the winch pipe — the symptom is `ioctl(TIOCGWINSZ)` failing
-  ## on every input byte. We bypass that by running our own
-  ## select-and-read loop on `inputFd` only and feeding bytes into a
-  ## fresh `Parser`. SIGWINCH delivery is handled separately on the
-  ## main thread inside `readEvents`, which has access to the
-  ## installer's threadvars.
+  ## multiplexes stdin and the SIGWINCH self-pipe and reads standard
+  ## input, while this driver reads `inputFd` (a pty slave in the tests).
+  ## So this thread runs its own select-and-read loop on `inputFd` only
+  ## and feeds the bytes into a fresh `Parser`; resizes are picked up
+  ## from the self-pipe in `readEvents`.
   var parser = termctlParser.initParser()
   if args.enableKitty:
     termctlParser.enableKittyKeyboard(parser)
   var buf: array[4096, byte]
-  while not args.stopRequested[]:
+  while not args.stopRequested.requested:
     # Drain any partial-sequence resolutions the parser already has.
     while termctlParser.pending(parser) > 0:
       let nxt = termctlParser.pop(parser)
@@ -257,7 +226,7 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
     tv.tv_sec = posix.Time(0)
     tv.tv_usec = posix.Suseconds(50_000)
     let n = posix.select(args.inputFd + 1, addr rs, nil, nil, addr tv)
-    if args.stopRequested[]: break
+    if args.stopRequested.requested: break
     if n == 0:
       # Timeout — give the parser a chance to age-out a bare-Escape.
       termctlParser.tick(parser)
@@ -298,10 +267,14 @@ proc readerLoop(args: ptr ReaderArgs) {.thread, nimcall.} =
 # last started against. Async-signal-safe (uses `cWrite` only, no Nim
 # allocation).
 
+# Process-wide, not `{.threadvar.}`: `exit(3)` runs atexit handlers on the
+# thread that calls it, which in an application with workers need not be
+# the one that called `start()`. Per thread, a worker's `quit` saw "cursor
+# not hidden" and left it hidden.
 var
-  gAtexitOutputFd {.threadvar.}: cint
-  gAtexitCursorHidden {.threadvar.}: bool
-  gAtexitInstalled {.threadvar.}: bool
+  gAtexitOutputFd: cint = -1
+  gAtexitCursorHidden: bool
+  gAtexitInstalled: bool
 
 proc cWrite(fd: cint; buf: pointer; count: csize_t): clong
   {.importc: "write", header: "<unistd.h>".}
@@ -376,11 +349,11 @@ proc start*(d: PosixDriver) =
     d.pasteOwned = true
 
   # Step 6 — reader thread.
-  d.stopFlag.value = false
+  d.stopFlag.clear()
   d.readerArgs = ReaderArgs(
     inputFd: d.inputFd,
     chan: addr d.channel,
-    stopRequested: addr d.stopFlag.value,
+    stopRequested: addr d.stopFlag,
     enableKitty: d.parserUsesKitty)
   createThread(d.readerThread, readerLoop, addr d.readerArgs)
   d.readerSpawned = true
@@ -399,7 +372,7 @@ proc stop*(d: PosixDriver) =
 
   # 1) Tell the reader thread to exit.
   if d.readerSpawned:
-    d.stopFlag.value = true
+    d.stopFlag.request()
     joinThread(d.readerThread)
     d.readerSpawned = false
 
@@ -448,15 +421,12 @@ proc emitCellPayload(d: PosixDriver; cell: Cell) =
   ## ghost cells (the trailing-half of a width-2 grapheme) are
   ## skipped — the wide rune already occupied both columns.
   if cell.width == 0: return
-  let target = newStyle(cell.fg, cell.bg, cell.attrs)
+  let target = newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
   let sgr = renderSgr(d.currentStyle, target)
   if sgr.len > 0:
     d.writeBuf.add(sgr)
     d.currentStyle = target
-  if cell.rune.int32 != 0:
-    d.writeBuf.add(toUTF8(cell.rune))
-  else:
-    d.writeBuf.add(' ')
+  d.writeBuf.add(cellText(cell))
 
 proc write*(d: PosixDriver; strip: Strip) =
   ## Compositor entry point. Encode every cell in the strip as a byte
@@ -503,13 +473,8 @@ proc pollWinchPipe(d: PosixDriver): seq[events.TerminalEvent] =
   ## `terminalSize()` ioctl succeeds. Idempotent — when no byte is
   ## queued, returns an empty seq.
   ##
-  ## Called from the main thread. nim-termctl stores the pipe FDs as
-  ## threadvars on the thread that called `installWinchHandler`; in our
-  ## design that thread is whichever called `start()` (typically the
-  ## main thread). The reader thread can't see the pipe at all — it
-  ## only handles stdin bytes. This split avoids the threadvar
-  ## mismatch that would otherwise mis-identify stdin as the winch
-  ## pipe inside the reader.
+  ## Called from `readEvents`. The pipe is process-wide in nim-termctl,
+  ## and its handler writes to it on whichever thread takes SIGWINCH.
   result = @[]
   let fd = winchPipeReadFd()
   if fd < 0: return

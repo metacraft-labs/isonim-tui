@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Cold start to first paint",
+    "unit": "ms",
+    "direction": "smaller"
+  },
+  {
+    "name": "Input latency p50",
+    "unit": "ms",
+    "direction": "smaller"
+  },
+  {
+    "name": "Input latency p99",
+    "unit": "ms",
+    "direction": "smaller"
+  },
+  {
+    "name": "Idle CPU",
+    "unit": "%",
+    "direction": "smaller"
+  },
+  {
+    "name": "DataTable scroll repaint cells",
+    "unit": "cells",
+    "direction": "smaller"
+  },
+  {
+    "name": "DataTable scroll FPS",
+    "unit": "fps",
+    "direction": "bigger"
+  },
+  {
+    "name": "Single-cell mutation byte volume",
+    "unit": "bytes",
+    "direction": "smaller"
+  },
+  {
+    "name": "Compositor frame paint",
+    "unit": "ms",
+    "direction": "smaller"
+  },
+  {
+    "name": "Strip cache hit rate",
+    "unit": "%",
+    "direction": "bigger"
+  },
+  {
+    "name": "RSS at idle (standard app)",
+    "unit": "MB",
+    "direction": "smaller"
+  },
+  {
+    "name": "RSS per added widget",
+    "unit": "KB",
+    "direction": "smaller"
+  },
+  {
+    "name": "Animation frame rate",
+    "unit": "fps",
+    "direction": "bigger"
+  },
+  {
+    "name": "CSS cascade per node",
+    "unit": "us",
+    "direction": "smaller"
+  },
+  {
+    "name": "CSS cascade cached",
+    "unit": "us",
+    "direction": "smaller"
+  },
+  {
+    "name": "Reactive signal write->effect latency",
+    "unit": "us",
+    "direction": "smaller"
+  },
+  {
+    "name": "Snapshot capture (six formats)",
+    "unit": "ms",
+    "direction": "smaller"
+  },
+  {
+    "name": "Input parser throughput",
+    "unit": "events/s",
+    "direction": "bigger"
+  },
+  {
+    "name": "vs. Textual cold start ratio",
+    "unit": "ratio",
+    "direction": "smaller"
+  },
+  {
+    "name": "vs. Textual p50 latency ratio",
+    "unit": "ratio",
+    "direction": "smaller"
+  },
+  {
+    "name": "vs. Textual idle CPU ratio",
+    "unit": "ratio",
+    "direction": "smaller"
+  }
+]

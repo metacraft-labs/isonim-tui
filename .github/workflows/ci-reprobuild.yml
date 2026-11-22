@@ -4,10 +4,9 @@ name: CI (reprobuild)
 # deterministic dev env through reprobuild instead of `nix develop` or
 # `env.ps1`. Runs alongside the existing `ci.yml` (`nix`) and any
 # `windows-build.yml` (`windows-diy`) entries so regressions in either
-# of the older paths still gate merges — see
-# `codetracer-specs/Repo-Requirements.md` §2.9 and
-# `metacraft-dev-guidelines/policies/ci-shared-dev-env.md` §4 for the
-# rollout shape.
+# of the older paths still gate merges. The reprobuild path is meant to
+# replace the others once it has run green beside them for long enough;
+# until then it is additive and the older paths stay authoritative.
 #
 # The `setup-dev-env` composite action accepts `env-flavor: reprobuild`
 # (target state per the policy). When the action's reprobuild branch
@@ -15,6 +14,7 @@ name: CI (reprobuild)
 # host without any other repo-side change.
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, dev, stable]
   pull_request:
@@ -37,20 +37,31 @@ jobs:
         include:
           - os: linux
             arch: x64
+            timeout: 360
             runner: [self-hosted, linux, x64]
           - os: linux
             arch: arm64
+            timeout: 240
             runner: [self-hosted, linux, arm64]
           - os: macos
             arch: arm64
+            timeout: 120
             runner: [self-hosted, macos, arm64]
           - os: windows
             arch: x64
+            timeout: 360
             runner: [self-hosted, windows, x64]
           - os: windows
             arch: arm64
+            timeout: 360
             runner: [self-hosted, windows, arm64]
     runs-on: ${{ matrix.runner }}
+    # A hung job must not hold a scarce runner for GitHub's 6-hour default. No leg has completed
+    # yet, so each value is sized from the longest run that was still making progress before it
+    # failed (jobs API, through b5e896e, 2026-11-22): linux-x64 155 min, linux-arm64 19,
+    # macos-arm64 68, windows-x64 222, windows-arm64 152. Margins are wide because a complete
+    # build and test runs past those points.
+    timeout-minutes: ${{ matrix.timeout }}
     steps:
       - uses: actions/checkout@v4
 
@@ -72,12 +83,13 @@ jobs:
           owner: metacraft-labs
 
       - name: Setup dev env (reprobuild flavor)
-        # setup-dev-env clones the siblings listed in .github/sibling-repos
-        # (codetracer-trace-format, codetracer-trace-format-nim) at the
-        # workspace-lock-pinned revisions before materialising the env.
-        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@dev
+        # Consume this checkout's complete committed source closure and exact pins.
+        # The shared action reconciles legacy requests against repro.lock.
+        uses: metacraft-labs/metacraft-github-actions/setup-dev-env@343eabc6109dbaa282d0b63aaf87a3566e17fc4e
         with:
           env-flavor: reprobuild
+          repro-version: v0.2.31
+          sibling-strategy: repro-lock
           gh-token: ${{ steps.ci_token.outputs.token }}
 
       - name: repro build
@@ -100,7 +112,7 @@ jobs:
       - name: just test (cross-check)
         run: dev-exec just test
 
-      # Diagnostics on failure. Three things below are load-bearing:
+      # Diagnostics and ordinary tool identities on every result. Three things below are load-bearing:
       #
       # 1. `include-hidden-files: true`. actions/upload-artifact@v4 defaults this
       #    input to false, and @actions/glob then skips any entry it traverses whose
@@ -119,7 +131,7 @@ jobs:
       #    a build-output tree rather than a log tree, it matches nothing in the Nim
       #    repos, and where it does match it would permanently mask the warning below.
       # 3. `if-no-files-found: warn` (the action's own default). This step only runs
-      #    on failure, so a warning costs nothing -- and it is exactly what would have
+      #    on every result, so a warning exposes a missing record -- it would have
       #    surfaced (1) years ago instead of hiding it behind a green step.
       #
       # Context, 2026-09: no leg of this workflow is green on ANY platform. Census of
@@ -129,14 +141,16 @@ jobs:
       # fails earlier than x64, and x64 fails for an unrelated project-level reason
       # (`cannot open file: results`, codetracer_ct_print.nim(24, 8)). These
       # artifacts are the only way to find out why any of it actually fails.
-      - name: Upload logs on failure
-        if: failure()
+      - name: Upload logs and tool identities
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reprobuild-logs-${{ matrix.os }}-${{ matrix.arch }}
           path: |
             .repro/build/*/build-failure-report.json
             .repro/build/*/build-engine-cache/actions/
+            .repro/dev-env/**/*-tool-identities.inspect.json
+            .repro/build/**/*-tool-identities.inspect.json
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: warn

@@ -42,8 +42,13 @@ suite "M9: PosixDriver panic-safe restoration":
       master.setNonblock()
 
       let pid = posix.fork()
-      check pid >= 0
-      if pid == 0:
+      if pid < 0:
+        # No child: fail with the reason, and never hand pid -1 to
+        # waitpid(2), where it means "any child".
+        let err = errno
+        checkpoint "fork failed: " & $strerror(err)
+        fail()
+      elif pid == 0:
         # ----- child -----
         # Become our own session leader so signals stay local and the
         # parent test runner isn't disturbed by anything we send.

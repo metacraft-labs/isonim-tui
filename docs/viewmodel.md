@@ -31,10 +31,6 @@ signals, GUI-agnostic core, and the SSR story):
 - `metacraft/isonim/docs/` (absolute path; relative cross-repo links
   do not resolve in standard Markdown viewers).
 
-The cross-platform architecture spec lives in:
-
-- `metacraft/isonim-specs/isonim-cross-platform-architecture.md`
-
 ## Reactive primitives
 
 Layer 3 imports `isonim/core/signals` and uses three primitives:

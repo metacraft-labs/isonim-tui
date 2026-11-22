@@ -1,8 +1,6 @@
 ## NH-M1 verification: test_render_native_tui_reactive
 ##
-## Claim under test (from
-## `isonim-specs/Hot-Module-Reload-Native.milestones.org`,
-## NH-M1): "`renderTui` wraps the root in a render-effect; mutating a signal in
+## Claim under test (native hot module reload, milestone NH-M1): "`renderTui` wraps the root in a render-effect; mutating a signal in
 ## the root proc fires the effect and produces a new screen buffer."
 ##
 ## MOCK POLICY: no mocks. `TerminalTestHarness` is isonim-tui's real headless

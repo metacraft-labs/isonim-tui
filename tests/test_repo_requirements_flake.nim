@@ -1,7 +1,7 @@
 ## test_repo_requirements_flake
 ##
-## Verifies `flake.nix` conforms to
-## `metacraft-specs/policies/repo-requirements.md` §1:
+## Verifies `flake.nix` has the shape the organisation's repository
+## requirements ask of every repo:
 ##   * `devShells.default` declared
 ##   * `packages.default` declared
 ##   * `checks.*` declared (we look for `checks.pre-commit` here)

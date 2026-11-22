@@ -26,9 +26,11 @@
 ##     refc / arc / orc all see independently allocated payloads);
 ##   * *capability detection* — when `ENABLE_VIRTUAL_TERMINAL_INPUT`
 ##     can't be set (Windows < 10 1809 or a non-VT host), the
-##     structured-record path still emits the same typed events. We
-##     never try the byte-stream parser on Windows: the console API
-##     hands us decoded records directly;
+##     structured-record path still emits the same typed events. When
+##     it is set, conhost replaces some key records with records that
+##     carry VT input text one character at a time (Ctrl+C becomes a
+##     lone 0x03, Up becomes `ESC [ A`); `windows_key_decoder` feeds
+##     those to the POSIX byte parser and decodes the rest structurally;
 ##   * *console-mode save/restore* — saved on `start()`, restored on
 ##     `stop()` and in a `SetConsoleCtrlHandler` callback that
 ##     intercepts Ctrl+C / Ctrl+Break and the close / logoff /
@@ -51,12 +53,15 @@
 ## stubs that raise `WindowsDriverError("not supported on this host")`.
 ## Tests that exercise the driver use `when not defined(windows): skip()`.
 
-import std/[locks, unicode]
+import std/locks
 
 import ../cells
 import ../events
 import ../text/ansi
 import ./driver
+import ./event_channel
+import ./stop_flag
+import ./windows_key_decoder
 
 when defined(windows):
   import nim_termctl
@@ -73,15 +78,17 @@ when defined(windows):
 when defined(windows):
   type
     HANDLE* = pointer
-    DWORD* = uint32
+    # Use the C typedef as well as its 32-bit Nim representation: the
+    # console APIs take DWORD pointers, which are not unsigned-int pointers.
+    DWORD* {.importc: "DWORD", header: "<windows.h>".} = uint32
     BOOL* = int32
     WORD* = uint16
     SHORT* = int16
     WCHAR* = uint16
 
     CoordRec {.importc: "COORD", header: "<windows.h>", pure, final.} = object
-      x: SHORT
-      y: SHORT
+      x {.importc: "X".}: SHORT
+      y {.importc: "Y".}: SHORT
 
     KeyEventRec {.importc: "KEY_EVENT_RECORD",
                   header: "<windows.h>", pure, final.} = object
@@ -89,9 +96,8 @@ when defined(windows):
       wRepeatCount: WORD
       wVirtualKeyCode: WORD
       wVirtualScanCode: WORD
-      uChar: WCHAR             ## Union member: UnicodeChar (we always read
-                               ## the UTF-16 code unit; the AsciiChar variant
-                               ## is for legacy callers).
+      # The Win32 member is a union; select its UTF-16 arm explicitly.
+      uChar {.importc: "uChar.UnicodeChar".}: WCHAR
       dwControlKeyState: DWORD
 
     MouseEventRec {.importc: "MOUSE_EVENT_RECORD",
@@ -105,17 +111,18 @@ when defined(windows):
                            header: "<windows.h>", pure, final.} = object
       dwSize: CoordRec
 
+    InputEventPayload {.union, bycopy.} = object
+      keyEvent: KeyEventRec
+      mouseEvent: MouseEventRec
+      windowSizeEvent: WindowBufferSizeRec
+
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
-      eventType: WORD
-      ## The actual union of the five Event sub-records. We pick the
-      ## widest (KEY_EVENT_RECORD is the largest at 16 bytes on x64,
-      ## MOUSE is 16 too) and reinterpret via `cast`. Since this is
-      ## inside a `when defined(windows)` block targeting a real Win32
-      ## build, sizeof is determined by the actual `<windows.h>`.
-      ## We use a fixed buffer matching `INPUT_RECORD`'s tail size:
-      ## 16 bytes covers all variants on both x86 and x64.
-      eventBlob: array[16, byte]
+      eventType {.importc: "EventType".}: WORD
+      ## Model the SDK Event field as a union, not an array: Nim elides
+      ## address-of for arrays because C arrays decay to pointers. A union
+      ## needs an actual address before casting to its selected record.
+      eventBlob {.importc: "Event".}: InputEventPayload
 
     PHandlerRoutine = proc (ctrlType: DWORD): BOOL {.stdcall.}
 
@@ -126,16 +133,8 @@ when defined(windows):
     MENU_EVENT_KIND      = WORD(0x0008)
     FOCUS_EVENT_KIND     = WORD(0x0010)
 
-    # Control-key-state flags from <windows.h>. We OR the LEFT_*/RIGHT_*
-    # variants because terminals generally don't distinguish.
-    RIGHT_ALT_PRESSED    = DWORD(0x0001)
-    LEFT_ALT_PRESSED     = DWORD(0x0002)
-    RIGHT_CTRL_PRESSED   = DWORD(0x0004)
-    LEFT_CTRL_PRESSED    = DWORD(0x0008)
-    SHIFT_PRESSED        = DWORD(0x0010)
-    # Lock keys (NUMLOCK_ON, SCROLLLOCK_ON, CAPSLOCK_ON, ENHANCED_KEY)
-    # are intentionally not decoded — the renderer-side `Modifier` enum
-    # has no slot for them and Textual matches.
+    # Control-key-state flags and their decoding live in
+    # `windows_key_decoder` (`decodeModifiers`).
 
     # Mouse event flags.
     MOUSE_MOVED          = DWORD(0x0001)
@@ -157,25 +156,6 @@ when defined(windows):
     CTRL_CLOSE_EVENT     = DWORD(2)
     CTRL_LOGOFF_EVENT    = DWORD(5)
     CTRL_SHUTDOWN_EVENT  = DWORD(6)
-
-    # Virtual-key codes used by the named-key map.
-    VK_BACK     = WORD(0x08)
-    VK_TAB      = WORD(0x09)
-    VK_RETURN   = WORD(0x0D)
-    VK_ESCAPE   = WORD(0x1B)
-    VK_SPACE    = WORD(0x20)
-    VK_PRIOR    = WORD(0x21)
-    VK_NEXT     = WORD(0x22)
-    VK_END      = WORD(0x23)
-    VK_HOME     = WORD(0x24)
-    VK_LEFT     = WORD(0x25)
-    VK_UP       = WORD(0x26)
-    VK_RIGHT    = WORD(0x27)
-    VK_DOWN     = WORD(0x28)
-    VK_INSERT   = WORD(0x2D)
-    VK_DELETE   = WORD(0x2E)
-    VK_F1       = WORD(0x70)
-    # VK_F2..VK_F24 are sequential from VK_F1.
 
     STD_INPUT_HANDLE_VAL  = DWORD(-10'i32)
     STD_OUTPUT_HANDLE_VAL = DWORD(-11'i32)
@@ -207,33 +187,12 @@ when defined(windows):
 # Inter-thread event queue (mirrors PosixDriver).
 # ---------------------------------------------------------------------------
 
-type
-  EventChannel = object
-    chan: Channel[events.TerminalEvent]
+# `EventChannel` is shared with the other threaded drivers
+# (`./event_channel`); it owns the channel and releases it on destruction.
 
-proc initEventChannel(ch: var EventChannel) =
-  open(ch.chan)
-
-proc deinitEventChannel(ch: var EventChannel) {.used.} =
-  close(ch.chan)
-
-proc pushEvent(ch: var EventChannel; ev: events.TerminalEvent) {.used.} =
-  ch.chan.send(ev)
-
-proc drainAll(ch: var EventChannel): seq[events.TerminalEvent] =
-  result = @[]
-  while true:
-    let (got, ev) = ch.chan.tryRecv()
-    if not got: break
-    result.add ev
-
-# ---------------------------------------------------------------------------
-# Stop flag (heap-stable address).
-# ---------------------------------------------------------------------------
-
-type
-  StopFlag = object
-    value: bool
+# The reader thread's exit request is a `StopFlag` (`./stop_flag`, an
+# atomic shared with the other threaded drivers), heap-stable inside the
+# driver's `ref object`.
 
 # ---------------------------------------------------------------------------
 # Reader-thread argument bundle.
@@ -244,7 +203,7 @@ when defined(windows):
     ReaderArgs = object
       inputHandle: HANDLE
       chan: ptr EventChannel
-      stopRequested: ptr bool
+      stopRequested: ptr StopFlag
 else:
   type
     ReaderArgs = object
@@ -252,7 +211,7 @@ else:
       ## has to exist so `Thread[ptr ReaderArgs]` is declarable and the
       ## driver compiles.
       chan: ptr EventChannel
-      stopRequested: ptr bool
+      stopRequested: ptr StopFlag
 
 # ---------------------------------------------------------------------------
 # WindowsDriver
@@ -348,87 +307,15 @@ proc newWindowsDriver*(cols, rows: int;
 # ---------------------------------------------------------------------------
 
 when defined(windows):
-  proc decodeModifiers(controlKeyState: DWORD): set[events.Modifier] =
-    ## Map Win32 control-key-state bits to the renderer-side `Modifier`
-    ## set. Lock keys (caps/num/scroll) drop on the floor — there's no
-    ## `Modifier` slot for them; mirroring Textual.
-    if (controlKeyState and SHIFT_PRESSED) != 0:
-      result.incl events.modShift
-    if (controlKeyState and (LEFT_CTRL_PRESSED or RIGHT_CTRL_PRESSED)) != 0:
-      result.incl events.modCtrl
-    if (controlKeyState and (LEFT_ALT_PRESSED or RIGHT_ALT_PRESSED)) != 0:
-      result.incl events.modAlt
-
-  proc namedKeyFor(vk: WORD): string =
-    ## Map Win32 virtual-key codes to canonical Textual-style key names.
-    ## Returns "" for keys that should be reported via their character
-    ## payload (printable runes).
-    case vk
-    of VK_BACK:   "backspace"
-    of VK_TAB:    "tab"
-    of VK_RETURN: "enter"
-    of VK_ESCAPE: "escape"
-    of VK_SPACE:  "space"
-    of VK_PRIOR:  "pageup"
-    of VK_NEXT:   "pagedown"
-    of VK_END:    "end"
-    of VK_HOME:   "home"
-    of VK_LEFT:   "left"
-    of VK_UP:     "up"
-    of VK_RIGHT:  "right"
-    of VK_DOWN:   "down"
-    of VK_INSERT: "insert"
-    of VK_DELETE: "delete"
-    else:
-      if vk >= VK_F1 and vk < VK_F1 + WORD(24):
-        "f" & $(int(vk) - int(VK_F1) + 1)
-      else:
-        ""
-
-  proc kindForName(name: string): events.KeyKind =
-    ## Pick the right `KeyKind` for a named key (matches the POSIX path
-    ## via `keymap.kindForName`). The naive switch covers the named
-    ## keys we emit; everything else is `kkChar`.
-    if name.len == 0: events.kkUnknown
-    elif name.len >= 2 and name[0] == 'f' and
-         (let c = name[1]; c >= '0' and c <= '9'):
-      events.kkFunction
-    elif name in ["up", "down", "left", "right",
-                  "home", "end", "pageup", "pagedown"]:
-      events.kkNavigation
-    else:
-      events.kkNamed
-
-  proc translateKeyRecord(rec: KeyEventRec): events.TerminalEvent =
-    ## Build a `TerminalEvent(kind: ekKey)` from a `KEY_EVENT_RECORD`.
-    ## Only key-down records emit events (key-up records are swallowed
-    ## to mirror POSIX behaviour, where we only see press semantics
-    ## from the byte-stream parser; the Pilot harness shape doesn't
-    ## carry release events either).
-    var key: events.KeyEvent
-    key.modifiers = decodeModifiers(rec.dwControlKeyState)
-    let named = namedKeyFor(rec.wVirtualKeyCode)
-    if named.len > 0:
-      key.kind = kindForName(named)
-      key.key = named
-      key.rune = 0'u32
-    elif rec.uChar != 0:
-      let cp = uint32(rec.uChar)
-      key.kind = events.kkChar
-      key.rune = cp
-      # Canonical Textual-style name: lowercase ASCII letter, or the
-      # rune itself UTF-8-encoded for printables.
-      var s = ""
-      try:
-        s.add toUTF8(Rune(int32(cp)))
-      except CatchableError:
-        s = ""
-      key.key = s
-    else:
-      key.kind = events.kkUnknown
-      key.key = ""
-      key.rune = 0'u32
-    result = events.newKeyTerminalEvent("keydown", key)
+  # Key records are decoded by `windows_key_decoder` (pure Nim, so it is
+  # tested on every host); the driver only copies each native record
+  # into the decoder's plain-integer shape.
+  proc toWinKeyRecord(rec: KeyEventRec): WinKeyRecord =
+    WinKeyRecord(keyDown: rec.bKeyDown != 0,
+                 virtualKeyCode: uint16(rec.wVirtualKeyCode),
+                 virtualScanCode: uint16(rec.wVirtualScanCode),
+                 unicodeChar: uint16(rec.uChar),
+                 controlKeyState: uint32(rec.dwControlKeyState))
 
   proc translateMouseRecord(rec: MouseEventRec): events.TerminalEvent =
     ## Build a `TerminalEvent(kind: ekMouseDown/Up/Move/Scroll)` from a
@@ -441,7 +328,7 @@ when defined(windows):
     var mouse: events.MouseEvent
     mouse.col = int(rec.dwMousePosition.x)
     mouse.row = int(rec.dwMousePosition.y)
-    mouse.modifiers = decodeModifiers(rec.dwControlKeyState)
+    mouse.modifiers = decodeModifiers(uint32(rec.dwControlKeyState))
 
     if (rec.dwEventFlags and MOUSE_WHEELED) != 0:
       # High word of dwButtonState is signed wheel delta.
@@ -522,11 +409,23 @@ when defined(windows):
     ## overlapped-capable in the documented Win32 surface. The
     ## "wait + read non-blocking" pattern is the standard idiom and
     ## what Microsoft's own samples use.
+    ##
+    ## Key records go through one `WinKeyDecoder` for the life of the
+    ## thread: in VT-input mode an escape sequence arrives as several
+    ## records, possibly split across reads. A wait that times out ages
+    ## out a bare Escape, as the POSIX reader does on a `select` timeout.
     var buf: array[64, InputRecord]
-    while not args.stopRequested[]:
+    var keys = initWinKeyDecoder()
+    var decoded: seq[events.TerminalEvent] = @[]
+    while not args.stopRequested.requested:
       let waitResult = waitForSingleObject(args.inputHandle, DWORD(50))
-      if args.stopRequested[]: break
-      if waitResult == WAIT_TIMEOUT: continue
+      if args.stopRequested.requested: break
+      if waitResult == WAIT_TIMEOUT:
+        decoded.setLen(0)
+        keys.tick(decoded)
+        for ev in decoded:
+          args.chan[].pushEvent(ev)
+        continue
       if waitResult != WAIT_OBJECT_0:
         # Handle error or abandoned — bail.
         break
@@ -542,15 +441,17 @@ when defined(windows):
         case recPtr.eventType
         of KEY_EVENT_KIND:
           # Reinterpret the union member. The actual KEY_EVENT_RECORD is
-          # in the eventBlob; cast through pointer arithmetic.
-          let kePtr = cast[ptr KeyEventRec](addr recPtr.eventBlob[0])
-          if kePtr.bKeyDown != 0:
-            args.chan[].pushEvent(translateKeyRecord(kePtr[]))
+          # in Event; taking the union's address preserves its SDK alignment.
+          let kePtr = cast[ptr KeyEventRec](addr recPtr.eventBlob)
+          decoded.setLen(0)
+          keys.decode(toWinKeyRecord(kePtr[]), decoded)
+          for ev in decoded:
+            args.chan[].pushEvent(ev)
         of MOUSE_EVENT_KIND:
-          let mePtr = cast[ptr MouseEventRec](addr recPtr.eventBlob[0])
+          let mePtr = cast[ptr MouseEventRec](addr recPtr.eventBlob)
           args.chan[].pushEvent(translateMouseRecord(mePtr[]))
         of WINDOW_BUFFER_SIZE_KIND:
-          let wePtr = cast[ptr WindowBufferSizeRec](addr recPtr.eventBlob[0])
+          let wePtr = cast[ptr WindowBufferSizeRec](addr recPtr.eventBlob)
           args.chan[].pushEvent(translateResizeRecord(wePtr[]))
         of MENU_EVENT_KIND, FOCUS_EVENT_KIND:
           # Menu and focus records aren't surfaced through the renderer
@@ -573,10 +474,17 @@ when defined(windows):
 # and lets the reader thread drain cleanly.
 
 when defined(windows):
+  # Process-wide, not `{.threadvar.}`: the system runs the handler on a new
+  # thread it creates for each event ("the system creates a new thread in
+  # the process to execute the function",
+  # https://learn.microsoft.com/en-us/windows/console/handlerroutine), whose
+  # copies of thread-local variables are all unset. Per thread, the handler
+  # found no stop flag and no output handle, so it claimed the event and did
+  # nothing: the reader never stopped and nothing was restored.
   var
-    gCtrlHandlerOutputHandle {.threadvar.}: HANDLE
-    gCtrlHandlerStopFlag {.threadvar.}: ptr bool
-    gCtrlHandlerInstalled {.threadvar.}: bool
+    gCtrlHandlerOutputHandle: HANDLE
+    gCtrlHandlerStopFlag: ptr StopFlag
+    gCtrlHandlerInstalled: bool
 
   proc emitLeaveSequencesViaConsole(h: HANDLE) =
     ## Async-signal-equivalent: emit the leave sequences directly via
@@ -605,7 +513,7 @@ when defined(windows):
     of CTRL_C_EVENT, CTRL_BREAK_EVENT, CTRL_CLOSE_EVENT,
        CTRL_LOGOFF_EVENT, CTRL_SHUTDOWN_EVENT:
       if gCtrlHandlerStopFlag != nil:
-        gCtrlHandlerStopFlag[] = true
+        gCtrlHandlerStopFlag[].request()
       emitLeaveSequencesViaConsole(gCtrlHandlerOutputHandle)
       return BOOL(1)
     else:
@@ -616,7 +524,7 @@ when defined(windows):
     ## remembers the latest start()'s output handle + stop flag. Called
     ## from `start()` after the rest of the lifecycle is in place.
     gCtrlHandlerOutputHandle = d.outputHandle
-    gCtrlHandlerStopFlag = addr d.stopFlag.value
+    gCtrlHandlerStopFlag = addr d.stopFlag
     if not gCtrlHandlerInstalled:
       gCtrlHandlerInstalled =
         setConsoleCtrlHandler(ctrlHandlerRoutine, BOOL(1)) != 0
@@ -634,6 +542,9 @@ when defined(windows):
 # ---------------------------------------------------------------------------
 # Start / stop
 # ---------------------------------------------------------------------------
+
+proc writeRaw*(d: WindowsDriver; s: string)
+proc flushPending*(d: WindowsDriver)
 
 proc start*(d: WindowsDriver) =
   ## Claim the console. The sequence mirrors PosixDriver: raw mode +
@@ -663,8 +574,11 @@ proc start*(d: WindowsDriver) =
       d.altScreen = enterAltScreen()
       d.altScreenOwned = true
 
-    # Step 4 — cursor hidden until paint.
-    write(cursorHide())
+    # Step 4 — cursor hidden until paint. Through the driver's own output
+    # path, so the sequence is recorded in `bytesEmitted` like every other
+    # byte the driver writes.
+    d.writeRaw(cursorHide())
+    d.flushPending()
     d.cursorHidden = true
 
     # Step 5 — mouse + paste.
@@ -677,11 +591,11 @@ proc start*(d: WindowsDriver) =
 
     # Step 6 — reader thread. ReaderArgs lives on the driver so
     # `addr` is heap-stable for the whole lifetime.
-    d.stopFlag.value = false
+    d.stopFlag.clear()
     d.readerArgs = ReaderArgs(
       inputHandle: d.inputHandle,
       chan: addr d.channel,
-      stopRequested: addr d.stopFlag.value)
+      stopRequested: addr d.stopFlag)
     createThread(d.readerThread, readerLoop, addr d.readerArgs)
     d.readerSpawned = true
 
@@ -710,7 +624,7 @@ proc stop*(d: WindowsDriver) =
   when defined(windows):
     # 1) Tell the reader thread to exit.
     if d.readerSpawned:
-      d.stopFlag.value = true
+      d.stopFlag.request()
       joinThread(d.readerThread)
       d.readerSpawned = false
 
@@ -733,7 +647,8 @@ proc stop*(d: WindowsDriver) =
     # 4) Show cursor + restore console modes.
     if d.cursorHidden:
       try:
-        write(cursorShow())
+        d.writeRaw(cursorShow())
+        d.flushPending()
       except CatchableError:
         discard
       d.cursorHidden = false
@@ -757,15 +672,12 @@ proc writeRaw*(d: WindowsDriver; s: string) =
 proc emitCellPayload(d: WindowsDriver; cell: Cell) =
   ## SGR-aware encode of one cell into the pending buffer.
   if cell.width == 0: return
-  let target = newStyle(cell.fg, cell.bg, cell.attrs)
+  let target = newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
   let sgr = renderSgr(d.currentStyle, target)
   if sgr.len > 0:
     d.writeBuf.add(sgr)
     d.currentStyle = target
-  if cell.rune.int32 != 0:
-    d.writeBuf.add(toUTF8(cell.rune))
-  else:
-    d.writeBuf.add(' ')
+  d.writeBuf.add(cellText(cell))
 
 proc write*(d: WindowsDriver; strip: Strip) =
   ## Compositor entry point. Mirrors PosixDriver.write.
@@ -825,6 +737,13 @@ proc resize*(d: WindowsDriver; cols, rows: int) =
 
 proc state*(d: WindowsDriver): DriverState {.inline.} =
   d.lifecycleState
+
+proc stopRequested*(d: WindowsDriver): bool =
+  ## Whether the reader thread has been told to stop since `start()`: by
+  ## `stop()`, or by the console control handler on Ctrl+C / Ctrl+Break /
+  ## close. A test reads it to see that the handler reached this driver
+  ## from the thread the system ran it on.
+  (addr d.stopFlag).requested
 
 # ---------------------------------------------------------------------------
 # Conformance

@@ -112,15 +112,12 @@ proc emitCellPayload(d: HeadlessDriver; cell: Cell) =
   ## ghost cells are skipped (the trailing-half of a width-2 grapheme
   ## doesn't get its own emission).
   if cell.width == 0: return
-  let target = newStyle(cell.fg, cell.bg, cell.attrs)
+  let target = newStyle(cell.fg, cell.bg, cell.attrs, cell.ul)
   let sgr = renderSgr(d.currentStyle, target)
   if sgr.len > 0:
     d.bytesEmitted.add(sgr)
     d.currentStyle = target
-  if cell.rune.int32 != 0:
-    d.bytesEmitted.add(toUTF8(cell.rune))
-  else:
-    d.bytesEmitted.add(' ')
+  d.bytesEmitted.add(cellText(cell))
 
 proc write*(d: HeadlessDriver; strip: Strip) =
   ## Compositor entry point. The strip's row position is implicit —

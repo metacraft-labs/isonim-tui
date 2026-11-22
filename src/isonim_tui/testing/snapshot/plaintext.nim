@@ -16,10 +16,7 @@ proc encodePlaintext*(buf: ScreenBuffer): string =
     for c in 0 ..< buf.cols:
       let cell = buf[r, c]
       if cell.width == 0: continue
-      if cell.rune.int32 == 0:
-        line.add ' '
-      else:
-        line.add $cell.rune
+      line.add cellText(cell)
     # Trim trailing whitespace so cosmetic blanks don't bloat the
     # snapshot. Tests can still detect content differences exactly.
     lines.add line.strip(leading = false, trailing = true)

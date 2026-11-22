@@ -1,7 +1,7 @@
 ## test_repo_requirements_envrc
 ##
-## Asserts the `.envrc` at the repo root contains `use flake`, per
-## `metacraft-specs/policies/repo-requirements.md` §2 (direnv).
+## Asserts the `.envrc` at the repo root contains `use flake`, so direnv
+## enters the same dev shell as `nix develop`.
 
 import unittest
 import std/[os, strutils]

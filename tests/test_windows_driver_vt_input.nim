@@ -32,14 +32,18 @@
 
 import std/unittest
 
+# Windows: run in a private console; see the fixture.
+import ./windows_console_fixture
+
 when defined(windows):
   import std/[os, times]
-  import isonim_tui
+  # These real console tests exercise the driver, independently of layout.
+  import isonim_tui/[events, drivers/driver, drivers/windows_driver]
 
 when defined(windows):
   type
     HANDLE = pointer
-    DWORD = uint32
+    DWORD {.importc: "DWORD", header: "<windows.h>".} = uint32
     BOOL = int32
     WORD = uint16
     WCHAR = uint16
@@ -50,13 +54,16 @@ when defined(windows):
       wRepeatCount: WORD
       wVirtualKeyCode: WORD
       wVirtualScanCode: WORD
-      uChar: WCHAR
+      uChar {.importc: "uChar.UnicodeChar".}: WCHAR
       dwControlKeyState: DWORD
+
+    InputEventPayload {.union, bycopy.} = object
+      keyEvent: KeyEventRec
 
     InputRecord {.importc: "INPUT_RECORD",
                    header: "<windows.h>", pure, final.} = object
-      eventType: WORD
-      eventBlob: array[16, byte]
+      eventType {.importc: "EventType".}: WORD
+      eventBlob {.importc: "Event".}: InputEventPayload
 
   const
     STD_INPUT_HANDLE = DWORD(-10'i32)
@@ -80,7 +87,7 @@ when defined(windows):
   proc makeKeyRec(vk: WORD; ch: WCHAR; ctrlState: DWORD): InputRecord =
     var rec: InputRecord
     rec.eventType = KEY_EVENT_KIND
-    let kePtr = cast[ptr KeyEventRec](addr rec.eventBlob[0])
+    let kePtr = cast[ptr KeyEventRec](addr rec.eventBlob)
     kePtr.bKeyDown = BOOL(1)
     kePtr.wRepeatCount = WORD(1)
     kePtr.wVirtualKeyCode = vk
@@ -89,63 +96,72 @@ when defined(windows):
     kePtr.dwControlKeyState = ctrlState
     result = rec
 
-suite "M10: WindowsDriver VT input parity":
+privateConsoleSuite("M10: WindowsDriver VT input parity", 1):
+  suite "M10: WindowsDriver VT input parity":
 
-  test "test_windows_driver_vt_input":
-    when not defined(windows):
-      skip()
-    else:
-      let d = newWindowsDriver(80, 24,
-                               enableMouse = false,
-                               enablePaste = false,
-                               enableAlt = false)
-      d.start()
-      check d.state == dsRunning
+    test "test_windows_driver_vt_input":
+      when not defined(windows):
+        skip()
+      else:
+        let d = newWindowsDriver(80, 24,
+                                 enableMouse = false,
+                                 enablePaste = false,
+                                 enableAlt = false)
+        d.start()
+        check d.state == dsRunning
 
-      # 1) ENABLE_VIRTUAL_TERMINAL_INPUT must be set on stdin.
-      let hin = winGetStdHandle(STD_INPUT_HANDLE)
-      var liveMode: DWORD
-      check getConsoleMode(hin, addr liveMode) != 0
-      check (liveMode and ENABLE_VIRTUAL_TERMINAL_INPUT) != 0
+        # 1) ENABLE_VIRTUAL_TERMINAL_INPUT must be set on stdin.
+        let hin = winGetStdHandle(STD_INPUT_HANDLE)
+        var liveMode: DWORD
+        check getConsoleMode(hin, addr liveMode) != 0
+        check (liveMode and ENABLE_VIRTUAL_TERMINAL_INPUT) != 0
 
-      # 2) Inject three structured records that exercise three
-      # different translateKeyRecord branches: modifier (Ctrl+A),
-      # navigation (Up arrow), and function (F1). Each must surface
-      # with the canonical Textual-style key name.
-      var recs: array[3, InputRecord]
-      # Ctrl+A — virtual key 'A', uChar = SOH (0x01), Ctrl modifier.
-      recs[0] = makeKeyRec(WORD(ord('A')), WCHAR(0x01), LEFT_CTRL_PRESSED)
-      # Up arrow — VK_UP, uChar = 0, no modifiers (named-key path).
-      recs[1] = makeKeyRec(VK_UP, WCHAR(0), DWORD(0))
-      # F1 — VK_F1, uChar = 0, no modifiers (function-key path).
-      recs[2] = makeKeyRec(VK_F1, WCHAR(0), DWORD(0))
+        # 2) Inject three structured records: modifier (Ctrl+A),
+        # navigation (Up arrow), and function (F1). Each must surface
+        # with the canonical Textual-style key name. With VT input on, a
+        # real conhost may hand any of them back as VT text records
+        # (Up as `ESC [ A`); `windows_key_decoder` decodes both shapes,
+        # and `test_windows_key_decoder` covers each shape directly.
+        var recs: array[3, InputRecord]
+        # Ctrl+A — virtual key 'A', uChar = SOH (0x01), Ctrl modifier.
+        recs[0] = makeKeyRec(WORD(ord('A')), WCHAR(0x01), LEFT_CTRL_PRESSED)
+        # Up arrow — VK_UP, uChar = 0, no modifiers (named-key path).
+        recs[1] = makeKeyRec(VK_UP, WCHAR(0), DWORD(0))
+        # F1 — VK_F1, uChar = 0, no modifiers (function-key path).
+        recs[2] = makeKeyRec(VK_F1, WCHAR(0), DWORD(0))
 
-      var nwritten: DWORD = 0
-      check writeConsoleInputW(hin, addr recs[0], DWORD(recs.len),
-                                addr nwritten) != 0
-      check int(nwritten) == 3
+        var nwritten: DWORD = 0
+        check writeConsoleInputW(hin, addr recs[0], DWORD(recs.len),
+                                  addr nwritten) != 0
+        check int(nwritten) == 3
 
-      var collected: seq[TerminalEvent] = @[]
-      let deadline = getTime() + initDuration(seconds = 2)
-      while getTime() < deadline and collected.len < 3:
-        for ev in d.readEvents():
-          if ev.kind == ekKey:
-            collected.add(ev)
-        sleep(20)
+        var collected: seq[TerminalEvent] = @[]
+        let deadline = getTime() + initDuration(seconds = 2)
+        while getTime() < deadline and collected.len < 3:
+          for ev in d.readEvents():
+            if ev.kind == ekKey:
+              collected.add(ev)
+          sleep(20)
 
-      d.stop()
+        d.stop()
 
-      check collected.len == 3
+        # Name every decoded event, so a failure on a real console says
+        # what the driver produced (a C0 control in `key` is invisible).
+        for i, ev in collected:
+          checkpoint "event " & $i & ": kind=" & $ev.key.kind & " key=" &
+            ev.key.key.repr & " rune=" & $ev.key.rune & " mods=" &
+            $ev.key.modifiers
+        check collected.len == 3
 
-      # Ctrl+A — must arrive with the modCtrl bit set. The key name
-      # follows the rune ('a' lowercase form, decoded from uChar=0x01
-      # is non-printable so we just assert the modifier and kind).
-      check modCtrl in collected[0].key.modifiers
+        # Ctrl+A — must arrive with the modCtrl bit set. The key name
+        # follows the rune ('a' lowercase form, decoded from uChar=0x01
+        # is non-printable so we just assert the modifier and kind).
+        check modCtrl in collected[0].key.modifiers
 
-      # Up arrow — must arrive as a navigation key with key="up".
-      check collected[1].key.kind == kkNavigation
-      check collected[1].key.key == "up"
+        # Up arrow — must arrive as a navigation key with key="up".
+        check collected[1].key.kind == kkNavigation
+        check collected[1].key.key == "up"
 
-      # F1 — must arrive as a function key with key="f1".
-      check collected[2].key.kind == kkFunction
-      check collected[2].key.key == "f1"
+        # F1 — must arrive as a function key with key="f1".
+        check collected[2].key.kind == kkFunction
+        check collected[2].key.key == "f1"
