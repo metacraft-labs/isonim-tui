@@ -126,6 +126,7 @@ jobs:
 
       - name: Run benchmark suite
         run: |
+          dev-exec just grammars
           dev-exec just bench --quick
 
       - name: Upload report artifact
