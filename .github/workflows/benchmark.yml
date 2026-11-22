@@ -140,6 +140,15 @@ jobs:
       - name: Compare benchmarks (PR)
         if: github.event_name == 'pull_request'
         uses: benchmark-action/github-action-benchmark@v1
+        # setup-dev-env exports GIT_CONFIG_KEY_0 = an Authorization extraHeader
+        # for github.com/metacraft-labs. The action adds its own header when it
+        # fetches gh-pages, and GitHub refuses the doubled header with HTTP 400
+        # ("Duplicate header"). Replace the exported entry with a harmless one,
+        # as the dev baseline step below already does.
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: commit.gpgsign
+          GIT_CONFIG_VALUE_0: "false"
         with:
           name: "isonim-tui Performance (Linux)"
           tool: customSmallerIsBetter
