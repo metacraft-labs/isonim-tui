@@ -209,6 +209,15 @@ jobs:
       - name: Compare smaller benchmarks (PR)
         if: github.event_name == 'pull_request'
         uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
+        # setup-dev-env exports GIT_CONFIG_KEY_0 = an Authorization extraHeader
+        # for github.com/metacraft-labs. The action adds its own header when it
+        # fetches gh-pages, and GitHub refuses the doubled header with HTTP 400
+        # ("Duplicate header"). Replace the exported entry with a harmless one,
+        # as the baseline steps below already do.
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: commit.gpgsign
+          GIT_CONFIG_VALUE_0: "false"
         with:
           name: "isonim-tui Performance (Linux)"
           tool: customSmallerIsBetter
@@ -225,6 +234,15 @@ jobs:
       - name: Compare bigger benchmarks (PR)
         if: github.event_name == 'pull_request'
         uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc
+        # setup-dev-env exports GIT_CONFIG_KEY_0 = an Authorization extraHeader
+        # for github.com/metacraft-labs. The action adds its own header when it
+        # fetches gh-pages, and GitHub refuses the doubled header with HTTP 400
+        # ("Duplicate header"). Replace the exported entry with a harmless one,
+        # as the baseline steps below already do.
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: commit.gpgsign
+          GIT_CONFIG_VALUE_0: "false"
         with:
           name: "isonim-tui Performance (Linux)"
           tool: customBiggerIsBetter
