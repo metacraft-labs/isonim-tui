@@ -29,7 +29,7 @@ permissions:
 jobs:
   benchmark-baseline-store:
     # Orchestration leg (gh-pages baseline prep) on a general Linux
-    # ephemeral class; the measurement job stays on [self-hosted, benchmark].
+    # ephemeral class; the measurement job stays on [linux, x64, benchmark].
     runs-on: [self-hosted, linux, x64]
     name: prepare benchmark baseline store
     steps:
@@ -81,7 +81,14 @@ jobs:
 
   benchmark-linux:
     needs: benchmark-baseline-store
-    runs-on: [self-hosted, benchmark]
+    # `linux, x64`: `[self-hosted, benchmark]` also matches the macOS
+    # benchmark runner on m3.
+    # NO `self-hosted`. The benchmark runner is being moved to dedicated labels
+    # only (registered without GitHub's default `self-hosted`/OS/arch labels) so
+    # that general `[self-hosted, linux, x64]` jobs can no longer take its single
+    # CPU-isolated slot. `[linux, x64, benchmark]` matches it both before and after
+    # that change, and never matches the macOS benchmark runner.
+    runs-on: [linux, x64, benchmark]
     name: benchmark (isonim-tui, Linux)
     steps:
       # `just bench` compiles the benchmark binaries against the same sibling
@@ -119,6 +126,7 @@ jobs:
 
       - name: Run benchmark suite
         run: |
+          dev-exec just grammars
           dev-exec just bench --quick
 
       - name: Upload report artifact
@@ -132,6 +140,15 @@ jobs:
       - name: Compare benchmarks (PR)
         if: github.event_name == 'pull_request'
         uses: benchmark-action/github-action-benchmark@v1
+        # setup-dev-env exports GIT_CONFIG_KEY_0 = an Authorization extraHeader
+        # for github.com/metacraft-labs. The action adds its own header when it
+        # fetches gh-pages, and GitHub refuses the doubled header with HTTP 400
+        # ("Duplicate header"). Replace the exported entry with a harmless one,
+        # as the dev baseline step below already does.
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: commit.gpgsign
+          GIT_CONFIG_VALUE_0: "false"
         with:
           name: "isonim-tui Performance (Linux)"
           tool: customSmallerIsBetter
