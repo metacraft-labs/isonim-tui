@@ -523,6 +523,20 @@ package isonim_tui:
   # POSIX keeps the toolchain supplied by the captured Nix development shell.
   defaultToolProvisioning(when defined(windows): "tarball" else: "path")
 
+  # CI clones these siblings beside the checkout (.github/sibling-repos), and
+  # the clone actions resolve each one from the committed lock, so the lock
+  # must pin them. No build edge declares them with `uses:`: they reach the
+  # build through `paths:` and the Justfile, so they are pinned, not used.
+  pinned:
+    "TermAssert"
+    "TermAssertClient"
+    "isonim-examples"
+    "nim-faststreams"
+    "nim-libvterm"
+    "nim-stew"
+    "tree-sitter-aiken"
+    "tree-sitter-nim"
+
   uses:
     # Toolchain floor — the PATH-resolvable binaries the build needs. ``nim``
     # compiles every test binary (the ``buildNimUnittest.build`` edges below,
